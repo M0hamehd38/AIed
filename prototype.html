@@ -295,6 +295,13 @@ canvas.wave{width:100%;height:60px;display:block;background:var(--bg);border-rad
   --green-bg:rgba(47,194,146,.15);--orange-bg:rgba(244,163,64,.16);--red-bg:rgba(240,112,124,.16);--purple-bg:rgba(169,137,238,.17);
   --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 20px rgba(0,0,0,.25);
 }
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  color-scheme:dark;
+  --bg:#0a1124;--card:#131c36;--ink:#e6ebf7;--muted:#93a0bd;--line:#243052;
+  --blue:#6b8cff;--pale:#1c2a55;--green:#2fc292;--orange:#f4a340;--red:#f0707c;--purple:#a989ee;
+  --green-bg:rgba(47,194,146,.15);--orange-bg:rgba(244,163,64,.16);--red-bg:rgba(240,112,124,.16);--purple-bg:rgba(169,137,238,.17);
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 20px rgba(0,0,0,.25);
+}}
 body{transition:background-color .25s,color .25s}
 :root[data-theme=dark] .card{border-color:#202b4b;box-shadow:0 1px 2px rgba(0,0,0,.35),0 10px 30px rgba(0,0,0,.25)}
 :root[data-theme=dark] .topbar{box-shadow:0 2px 12px rgba(0,0,0,.3)}
@@ -1090,9 +1097,14 @@ const ACT = {
   student: el => { if ($('#modalBg').classList.contains('open')) closeModal(); state.view = 'students'; state.studentId = +el.dataset.id; location.hash = 'student-' + state.studentId; closeMenu(); render(); window.scrollTo(0, 0); },
   exportStudent: el => {
     const s = students[+el.dataset.id], rs = responses.filter(r => r.sid === s.id).map(r => ({session:r.session, question:A.qById(r.qid).text, answer:A.qById(r.qid).options[r.opt], correct:r.ok}));
-    const url = URL.createObjectURL(new Blob([JSON.stringify({code:s.code, name:s.name, course:course.title, responses:rs}, null, 2)], {type:'application/json'}));
-    const link = document.createElement('a'); link.href = url; link.download = `student-${s.id + 1}.json`; link.click(); URL.revokeObjectURL(url);
-    toast('خروجی داده‌ها آماده شد.');
+    const json = JSON.stringify({code:s.code, name:s.name, course:course.title, responses:rs}, null, 2);
+    openModal(`خروجی داده‌های ${esc(studentName(s))}`, `<p class="muted small" style="margin-top:0">${fa(rs.length)} پاسخ · قالب JSON</p><pre id="exportJson" tabindex="0" style="direction:ltr;text-align:left;max-height:50vh;overflow:auto;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px;font-size:12px">${esc(json)}</pre><button class="btn primary mt" data-act="copyExport">کپی</button>`);
+  },
+  copyExport: () => {
+    const pre = $('#exportJson');
+    const select = () => { const r = document.createRange(); r.selectNodeContents(pre); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); };
+    if (navigator.clipboard) navigator.clipboard.writeText(pre.textContent).then(() => toast('کپی شد.'), () => { select(); toast('متن انتخاب شد؛ با Ctrl+C کپی کنید.'); });
+    else { select(); toast('متن انتخاب شد؛ با Ctrl+C کپی کنید.'); }
   },
   closeModal: () => closeModal(),
   modalBg: (el, e) => { if (e.target === el) closeModal(); },
