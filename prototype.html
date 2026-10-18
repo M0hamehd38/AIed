@@ -257,6 +257,31 @@ canvas.wave{width:100%;height:60px;display:block;background:var(--bg);border-rad
 @media (max-width:1100px){.span2{grid-column:auto}}
 @media (max-width:900px){.teacher>div:last-child,.lesson>div{display:none}.teacher{border:0;padding:0}}
 @media (max-width:720px){.page-head{padding:16px 16px 10px}.page-head h1{font-size:19px}.topbar{padding:10px 16px;gap:10px}.lesson{display:none}.live-chip .pill{display:none}.mini b{font-size:17px}}
+
+/* ===== students: profile cards & profile page ===== */
+.photo{border-radius:50%;display:block;flex:none}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
+.toolbar .hint{color:var(--muted);font-size:12px;margin-inline-start:auto}
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px}
+.pcard{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;padding:20px 14px 16px;transition:transform .15s,box-shadow .15s,border-color .15s;width:100%}
+.pcard:hover{transform:translateY(-3px);box-shadow:0 16px 36px rgba(65,105,245,.13);border-color:#cdd8fb}
+.pcard .photo{width:78px;height:78px;box-shadow:0 0 0 3px #fff,0 0 0 5px var(--st)}
+.pcard b{font-size:14px;margin-top:6px}
+.pcard .code{font-size:11px;color:var(--muted);margin-top:-6px}
+.pcard .meta{width:100%;font-size:12px;color:var(--muted);display:flex;justify-content:space-between;margin-top:6px}
+.pcard .progress{width:100%}
+.profile-head{display:flex;gap:22px;align-items:center;flex-wrap:wrap}
+.profile-head .photo{width:110px;height:110px;box-shadow:0 0 0 4px #fff,0 0 0 7px var(--pale)}
+.profile-head h2{font-size:22px;margin:0}
+.profile-head .facts{display:flex;gap:18px;flex-wrap:wrap;margin-top:10px;font-size:13px;color:var(--muted)}
+.profile-head .facts b{color:var(--ink);display:block;font-size:16px}
+.ring-card{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center}
+.act-item{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--line);font-size:13px}
+.act-item:last-child{border:0}
+.act-item .mk{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-size:12px;color:#fff;flex:none;font-weight:700}
+.act-item small{display:block;color:var(--muted)}
+.back{margin-bottom:14px}
+.dark-card .btn:not(.primary){background:rgba(255,255,255,.08);color:#fff;border-color:rgba(255,255,255,.22)}
 </style>
 </head>
 <body>
@@ -506,7 +531,7 @@ function buildSuggestions() {
 }
 
 /* ================= state ================= */
-const state = {view:'dashboard', stFilter:'all', stQuery:'', stSort:{k:'mastery', dir:1}};
+const state = {view:'dashboard', studentId:null, stFilter:'all', stQuery:'', stSort:{k:'mastery', dir:1}};
 const live = {running:false, code:null, qid:null, qState:null, answers:[], timer:null, pending:[], previewSel:null};
 const audio = {consent:false, listening:false, lines:[], counts:{question:0, confusion:0, repeat:0, example:0, topic:0}, timer:null, raf:null, idx:0};
 const studentName = s => settings.showNames ? s.name : `دانشجو ${s.code}`;
@@ -525,9 +550,23 @@ const C = {
   h2: (icon, color, title) => `<h2><span class="hic ${color}">${C.svg(icon)}</span>${title}</h2>`,
   stat: (label, value, delta, act, icon = 'dashboard', color = 'blue') => `<button class="card stat" data-act="${act}"><span class="top"><span><span class="label">${label}</span><span class="value" style="display:block">${value}</span></span><span class="hic sic ${color}">${C.svg(icon)}</span></span><span class="delta">${delta}</span></button>`,
   avatar(s, cls = 'sm') {
+    if (settings.showNames) return C.photo(s, 36);
     const cols = ['#4169f5', '#8c62db', '#13a67b', '#e08a17', '#e85b68', '#0e9fb5', '#c2477f'];
-    const txt = settings.showNames ? s.name.trim()[0] : s.code;
-    return `<span class="avatar ${cls}" style="background:${cols[s.id % cols.length]}" aria-hidden="true">${txt}</span>`;
+    return `<span class="avatar ${cls}" style="background:${cols[s.id % cols.length]}" aria-hidden="true">${s.code}</span>`;
+  },
+  // illustrated placeholder portrait; the product shows the photo from the university's student system
+  photo(s, size = 64) {
+    if (!settings.showNames) return `<span class="avatar photo" style="width:${size}px;height:${size}px;background:#77839b;font-size:${size / 3}px" aria-hidden="true">${s.code}</span>`;
+    const r = rng(s.id * 97 + 13), pick = a => a[Math.floor(r() * a.length)];
+    const skin = pick(['#f1c7a5', '#e5b48f', '#c98f68', '#f6d6bd', '#d9a07a']), hair = pick(['#2b1d16', '#4a2f22', '#1c1c1c', '#6b4a2e', '#3a2a20', '#7a5230']);
+    const shirt = pick(['#4169f5', '#8c62db', '#13a67b', '#e08a17', '#0e9fb5', '#c2477f', '#2e3f6e']), bg = pick(['#e8eeff', '#f1ebfb', '#e3f5ee', '#fff1df', '#e2f4f7', '#fbe8f0']);
+    const style = s.id % 4;
+    const back = style === 1 ? `<path d="M17 30Q16 11 32 11Q48 11 47 30L50 52L14 52Z" fill="${hair}"/>` : '';
+    const top = style === 3
+      ? [[22,22],[26,17],[32,15],[38,17],[42,22],[24,27],[40,27]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="5.5" fill="${hair}"/>`).join('')
+      : style === 2 ? `<path d="M20 30Q18 13 33 13Q46 14 45 28Q37 18 22 25Z" fill="${hair}"/>`
+      : `<path d="M20 29Q19 13 32 13Q45 13 44 29Q41 20 32 20Q23 20 20 29Z" fill="${hair}"/>`;
+    return `<svg class="photo" width="${size}" height="${size}" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" fill="${bg}"/>${back}<path d="M8 66Q10 46 32 46Q54 46 56 66Z" fill="${shirt}"/><rect x="27" y="37" width="10" height="11" rx="4" fill="${skin}"/><ellipse cx="32" cy="30" rx="11" ry="12.5" fill="${skin}"/>${top}<circle cx="28" cy="31" r="1.3" fill="#2b2b2b"/><circle cx="36" cy="31" r="1.3" fill="#2b2b2b"/><path d="M28.5 35.8Q32 38.4 35.5 35.8" stroke="#8a4b3a" stroke-width="1.3" fill="none" stroke-linecap="round"/></svg>`;
   },
   delta(d, unit = '', goodUp = true) {
     if (d === 0) return 'بدون تغییر نسبت به جلسه‌ی قبل';
@@ -673,27 +712,80 @@ V.dashboard = () => {
 };
 
 V.students = () => {
-  let rows = students.map(s => { const a = A.student(s.id); return {s, a, mastery:a.total.n ? a.total.ok / a.total.n : 0}; });
+  if (state.studentId != null && students[state.studentId]) return V.studentProfile(state.studentId);
+  const all = students.map(s => { const a = A.student(s.id); return {s, a, mastery:a.total.n ? a.total.ok / a.total.n : 0}; });
+  let rows = all;
   const q = state.stQuery.trim();
   if (q) rows = rows.filter(r => studentName(r.s).includes(q) || r.s.code.includes(fa(q)));
   if (state.stFilter === 'attention') rows = rows.filter(r => r.a.attention);
   if (state.stFilter === 'stable') rows = rows.filter(r => !r.a.attention);
   const {k, dir} = state.stSort;
   const key = {name:r => studentName(r.s), mastery:r => r.mastery, part:r => r.a.part}[k];
-  rows.sort((x, y) => (key(x) > key(y) ? 1 : key(x) < key(y) ? -1 : 0) * dir);
-  const sortH = (kk, label) => `<th aria-sort="${state.stSort.k === kk ? (dir > 0 ? 'ascending' : 'descending') : 'none'}"><button data-act="sort" data-k="${kk}">${label} ${state.stSort.k === kk ? (dir > 0 ? '▲' : '▼') : '↕'}</button></th>`;
-  return `<div class="card"><div class="card-head">
+  rows = rows.slice().sort((x, y) => (key(x) > key(y) ? 1 : key(x) < key(y) ? -1 : 0) * dir);
+  const sortVal = `${k}:${dir}`;
+  // class charts
+  const series = [
+    {name:'تسلط کلاس', color:'#8c62db', points:sessions.map(se => { const st = A.stat(responses.filter(r => r.session === se.n)); return st.n ? {v:st.ok / st.n, n:st.n, ok:st.n >= settings.minClass} : null; })},
+    {name:'نرخ پاسخ', color:'#4169f5', points:A.participationBySession().map((p, i) => p == null ? null : {v:p, n:responses.filter(r => r.session === i + 1).length, ok:true})},
+    {name:'دانشجویان پایدار', color:'#13a67b', points:sessions.map(se => responses.some(r => r.session === se.n) ? {v:students.filter(st => !A.student(st.id, se.n).attention).length / students.length, n:students.length, ok:true} : null)},
+  ];
+  const lvl = {g:0, o:0, r:0, na:0};
+  for (const r of all) lvl[r.a.total.n < settings.minStudent ? 'na' : A.level(r.mastery)]++;
+  const partB = [['۹۰٪ و بیشتر', p => p >= .9], ['۷۵ تا ۸۹٪', p => p >= .75 && p < .9], ['۶۰ تا ۷۴٪', p => p >= .6 && p < .75], ['کمتر از ۶۰٪', p => p < .6]].map(([l, f]) => [l, all.filter(r => f(r.a.part)).length]);
+  const bar = (label, n, color) => `<div class="opt-bar"><div class="top"><span>${label}</span><span><b>${fa(n)}</b> <span class="muted small">نفر · ${pct(n / all.length)}</span></span></div>${C.progress(n / all.length, color)}</div>`;
+  const need = all.filter(r => r.a.attention);
+  const weakest = concepts.map(c => ({c, ...A.upTo(c.id, A.lastSession())})).filter(x => x.n).sort((x, y) => x.ok / x.n - y.ok / y.n)[0];
+  return `<div class="toolbar">
     <input type="text" id="stSearch" placeholder="جست‌وجوی نام یا کد…" value="${esc(state.stQuery)}" aria-label="جست‌وجو">
-    <select id="stFilter" aria-label="فیلتر وضعیت"><option value="all">همه</option><option value="attention" ${state.stFilter === 'attention' ? 'selected' : ''}>نیازمند توجه</option><option value="stable" ${state.stFilter === 'stable' ? 'selected' : ''}>پایدار</option></select>
-    <span class="hint">${fa(rows.length)} نفر</span></div>
-    <div class="table-wrap"><table><thead><tr><th>کد</th>${sortH('name', 'دانشجو')}${sortH('mastery', 'تسلط کلی')}${sortH('part', 'مشارکت')}<th>مفهوم دشوار</th><th>وضعیت</th><th></th></tr></thead><tbody>
-    ${rows.map(({s, a, mastery}) => `<tr class="clickable" data-act="student" data-id="${s.id}"><td class="muted">${s.code}</td><td>${esc(studentName(s))}</td>
-      <td>${a.total.n >= settings.minStudent ? `<div class="inline">${C.progress(mastery)}<span>${pct(mastery)}</span><span class="muted small">n=${fa(a.total.n)}</span></div>` : `<span class="muted">${T.insufficient}</span>`}</td>
-      <td><div class="inline">${C.progress(a.part, 'var(--blue)')}<span>${pct(a.part)}</span></div></td>
-      <td>${a.hard ? `${a.hard.c.t} <span class="muted small">${pct(a.hard.ok / a.hard.n)}</span>` : '—'}</td>
-      <td>${a.attention ? C.tag('نیازمند پیگیری', 'orange') : C.tag('پایدار', 'green')}</td>
-      <td><button class="btn sm" data-act="student" data-id="${s.id}">شواهد</button></td></tr>`).join('') || '<tr><td colspan="7" class="empty">نتیجه‌ای پیدا نشد.</td></tr>'}
-    </tbody></table></div><div class="note">${T.notJudgement} «مفهوم دشوار» فقط از مفاهیمی با دست‌کم ${fa(settings.minStudent)} پاسخ محاسبه می‌شود.</div></div>`;
+    <select id="stFilter" aria-label="فیلتر وضعیت"><option value="all">همه‌ی دانشجویان</option><option value="attention" ${state.stFilter === 'attention' ? 'selected' : ''}>نیازمند پیگیری</option><option value="stable" ${state.stFilter === 'stable' ? 'selected' : ''}>پایدار</option></select>
+    <select id="stSort" aria-label="مرتب‌سازی">${[['mastery:1', 'کمترین تسلط'], ['mastery:-1', 'بیشترین تسلط'], ['part:1', 'کمترین مشارکت'], ['name:1', 'نام (الفبایی)']].map(([v, l]) => `<option value="${v}" ${v === sortVal ? 'selected' : ''}>${l}</option>`).join('')}</select>
+    <span class="hint">${fa(rows.length)} از ${fa(students.length)} دانشجو</span></div>
+  <div class="pgrid">${rows.map(({s, a, mastery}) => `<button class="card pcard" data-act="student" data-id="${s.id}" style="--st:${a.attention ? 'var(--orange)' : 'var(--green)'}" aria-label="نمایه‌ی ${esc(studentName(s))}">
+      ${C.photo(s, 78)}<b>${esc(studentName(s))}</b><span class="code">کد ${s.code}</span>
+      ${a.attention ? C.tag('نیازمند پیگیری', 'orange') : C.tag('پایدار', 'green')}
+      <span class="meta"><span>تسلط</span><span>${a.total.n >= settings.minStudent ? pct(mastery) : T.insufficient}</span></span>${C.progress(a.total.n >= settings.minStudent ? mastery : 0)}
+      <span class="meta"><span>مشارکت</span><span>${pct(a.part)}</span></span></button>`).join('') || '<div class="empty">نتیجه‌ای پیدا نشد.</div>'}</div>
+  <div class="grid g3 mt">
+    <div class="card span2"><div class="card-head">${C.h2('analytics', 'purple', 'وضعیت کلاس در طول ترم')}<span class="hint">در هر جلسه</span></div>${C.lineChart(series, {h:240, area:true, threshold:false, label:'وضعیت کلاس در طول ترم'})}</div>
+    <div class="card dark-card"><div class="card-head">${C.h2('spark', '', 'برداشت‌ها')}</div>
+      <div class="item"><span class="lbl">نیازمند پیگیری</span><b>${fa(need.length)} دانشجو</b> — بیشتر به‌دلیل ${need.filter(r => r.a.reasons.some(x => x.startsWith('مشارکت'))).length > need.length / 2 ? 'افت مشارکت' : 'دشواری مفهوم'}</div>
+      ${weakest ? `<div class="item"><span class="lbl">دشوارترین مفهوم برای کلاس</span><b>${weakest.c.t}</b> · ${pct(weakest.ok / weakest.n)} (n=${fa(weakest.n)})</div>` : ''}
+      <div class="item"><span class="lbl">پیشنهاد</span>تمرین بیشتر روی «${weakest ? weakest.c.t : '—'}» می‌تواند به این گروه کمک کند.</div>
+      <div class="actions" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><button class="btn primary" data-act="go" data-v="suggestions">مشاهده‌ی پیشنهادها</button><button class="btn" data-act="filterAttention">فقط نیازمند پیگیری</button></div>
+    </div>
+  </div>
+  <div class="grid g2 mt">
+    <div class="card"><div class="card-head">${C.h2('target', 'green', 'توزیع تسلط دانشجویان')}</div>
+      ${bar(`تسلط مناسب (≥ ${pct(settings.green)})`, lvl.g, 'var(--green)')}${bar('نیازمند تمرین', lvl.o, 'var(--orange)')}${bar(`دشوار (< ${pct(settings.orange)})`, lvl.r, 'var(--red)')}${bar('داده کافی نیست', lvl.na, '#b8c1d6')}</div>
+    <div class="card"><div class="card-head">${C.h2('students', 'blue', 'توزیع مشارکت دانشجویان')}</div>${partB.map(([l, n], i) => bar(l, n, ['var(--blue)', '#6f8ff7', '#a3b6fb', 'var(--orange)'][i])).join('')}</div>
+  </div>
+  <div class="note">${T.notJudgement} تصویرها نمونه‌ی نمایشی‌اند؛ در محصول، عکس از سامانه‌ی آموزشی دانشگاه خوانده می‌شود.</div>`;
+};
+
+V.studentProfile = id => {
+  const s = students[id], a = A.student(id), m = a.total.n ? a.total.ok / a.total.n : 0;
+  const series = a.per.map(p => ({name:p.c.t, color:p.c.color, points:sessions.map(se => { const st = A.stat(A.forConcept(p.c.id, a.rs).filter(r => r.session <= se.n)); return st.n ? {v:st.ok / st.n, n:st.n, ok:st.n >= settings.minStudent} : null; })}));
+  const recent = a.rs.slice().reverse();
+  return `<button class="btn back" data-act="go" data-v="students">→ بازگشت به دانشجویان</button>
+  <div class="grid g3">
+    <div class="card span2"><div class="profile-head">${C.photo(s, 110)}<div style="flex:1;min-width:200px">
+      <h2>${esc(studentName(s))}</h2><div class="muted">کد ${s.code} · ${course.title} · ${course.term}</div>
+      <div style="margin-top:8px">${a.attention ? C.tag('نیازمند پیگیری', 'orange') : C.tag('پایدار', 'green')}</div>
+      <div class="facts"><span><b>${pct(a.part)}</b>مشارکت کل</span><span><b>${pct(a.recentPart)}</b>سه جلسه‌ی اخیر</span><span><b>${fa(a.total.n)}</b>پاسخ ثبت‌شده</span><span><b>${a.hard ? a.hard.c.t : '—'}</b>مفهوم دشوار</span></div></div></div>
+      ${a.reasons.length ? `<div class="alert orange mt"><span class="ic">!</span><div><b>دلیل نیاز به پیگیری</b><p>${a.reasons.join(' · ')}</p></div></div>` : ''}</div>
+    <div class="card ring-card">${a.total.n >= settings.minStudent ? C.ring(m, 120) : `<b class="muted">${T.insufficient}</b>`}<b>تسلط کلی</b><span class="muted small">n=${fa(a.total.n)} · ${T.conf[A.confidence(a.total.ok, a.total.n, settings.minStudent)]}</span></div>
+  </div>
+  <div class="grid g2 mt">
+    <div class="card"><div class="card-head">${C.h2('target', 'blue', 'تسلط مفاهیم')}</div>
+      ${a.per.map(p => `<div class="opt-bar"><div class="top"><b>${p.c.t}</b><span>${p.n >= settings.minStudent ? `${pct(p.ok / p.n)} <span class="muted small">n=${fa(p.n)}</span>` : `<span class="muted small">${T.insufficient} (n=${fa(p.n)})</span>`}</span></div>${C.progress(p.n >= settings.minStudent ? p.ok / p.n : 0)}</div>`).join('')}</div>
+    <div class="card"><div class="card-head">${C.h2('doc', 'green', 'فعالیت اخیر')}</div>
+      ${recent.slice(0, 6).map(r => { const q = A.qById(r.qid); return `<div class="act-item"><span class="mk" style="background:${r.ok ? 'var(--green)' : 'var(--red)'}" aria-label="${r.ok ? 'درست' : 'نادرست'}">${r.ok ? '✓' : '✕'}</span><div><bdi>${esc(q.text)}</bdi><small>پاسخ: <bdi>${esc(q.options[r.opt])}</bdi> · جلسه‌ی ${fa(r.session)} · ${sessions[r.session - 1].date}</small></div></div>`; }).join('') || '<div class="empty">هنوز پاسخی ثبت نشده است.</div>'}</div>
+  </div>
+  <div class="card mt"><div class="card-head">${C.h2('analytics', 'purple', 'روند تسلط هر مفهوم در طول ترم')}<span class="hint">تجمعی</span></div>${C.lineChart(series, {h:220})}</div>
+  <div class="card mt"><div class="card-head">${C.h2('grid', 'orange', 'شواهد کامل (همه‌ی پاسخ‌ها)')}<div class="end"><button class="btn sm" data-act="exportStudent" data-id="${s.id}">خروجی داده‌های این دانشجو</button></div></div>
+    <div class="table-wrap"><table><thead><tr><th>تاریخ</th><th>سؤال</th><th>پاسخ داده‌شده</th><th>نتیجه</th></tr></thead><tbody>
+    ${recent.map(r => { const q = A.qById(r.qid); return `<tr><td class="small">${sessions[r.session - 1].date}</td><td class="small"><bdi>${esc(q.text)}</bdi></td><td class="small"><bdi>${esc(q.options[r.opt])}</bdi></td><td>${r.ok ? C.tag('✓ درست', 'green') : C.tag('✕ نادرست', 'red')}</td></tr>`; }).join('')}
+    </tbody></table></div><div class="note">${T.notJudgement} حذف داده‌های دانشجو فقط از پنل ادمین ممکن است.</div></div>`;
 };
 
 V.analytics = () => {
@@ -897,19 +989,6 @@ function showEvidence(ev) {
     openModal('شواهد: نرخ پاسخ در هر جلسه', `<table><thead><tr><th>جلسه</th><th>نرخ پاسخ</th><th></th></tr></thead><tbody>${sessions.map((s, i) => `<tr><td>${fa(s.n)} · ${s.date}</td><td>${ps[i] != null ? pct(ps[i]) : '—'}</td><td style="width:50%">${ps[i] != null ? C.progress(ps[i], 'var(--blue)') : ''}</td></tr>`).join('')}</tbody></table><div class="note">نرخ پاسخ = پاسخ‌های ثبت‌شده ÷ (سؤال‌ها × ${fa(students.length)} دانشجو). غیبت از عدم پاسخ قابل تفکیک نیست.</div>`);
   }
 }
-function showStudent(id) {
-  const s = students[id], a = A.student(id);
-  const series = a.per.map(p => ({name:p.c.t, color:p.c.color, points:sessions.map(se => { const st = A.stat(A.forConcept(p.c.id, a.rs).filter(r => r.session <= se.n)); return st.n ? {v:st.ok / st.n, n:st.n, ok:st.n >= settings.minStudent} : null; })}));
-  openModal(`${esc(studentName(s))} <span class="muted small">· کد ${s.code}</span>`, `
-    <div class="grid g4">${a.per.map(p => `<div class="card" style="padding:12px"><div class="small muted">${p.c.t}</div>${p.n >= settings.minStudent ? `<b style="font-size:18px">${pct(p.ok / p.n)}</b> <span class="small muted">n=${fa(p.n)}</span>${C.progress(p.ok / p.n)}` : `<b class="small muted">${T.insufficient}</b><div class="small muted">n=${fa(p.n)}</div>`}</div>`).join('')}</div>
-    <p class="small muted">مشارکت کل: ${pct(a.part)} · سه جلسه‌ی اخیر: ${pct(a.recentPart)}</p>
-    ${a.reasons.length ? `<div class="alert orange"><span class="ic">!</span><div><b>دلیل نیاز به توجه</b><p>${a.reasons.join(' · ')}</p></div></div>` : ''}
-    <h3 style="font-size:14px">تسلط تجمعی هر مفهوم در طول ترم</h3>${C.lineChart(series, {h:200})}
-    <h3 style="font-size:14px">شواهد (پاسخ‌ها)</h3><div class="table-wrap"><table><thead><tr><th>تاریخ</th><th>سؤال</th><th>پاسخ داده‌شده</th><th>نتیجه</th></tr></thead><tbody>
-    ${a.rs.slice().reverse().map(r => { const q = A.qById(r.qid); return `<tr><td class="small">${sessions[r.session - 1].date}</td><td class="small">${esc(q.text)}</td><td class="small">${esc(q.options[r.opt])}</td><td>${r.ok ? C.tag('✓ درست', 'green') : C.tag('✕ نادرست', 'red')}</td></tr>`; }).join('')}
-    </tbody></table></div><div class="note">${T.notJudgement}</div>`);
-}
-
 /* ================= live & audio engines ================= */
 function liveTick() {
   if (live.qState !== 'open' || !live.pending.length) return;
@@ -945,12 +1024,18 @@ function consentModal() {
 
 /* ================= actions ================= */
 const ACT = {
-  go: el => { state.view = el.dataset.v; location.hash = state.view; closeMenu(); render(); window.scrollTo(0, 0); },
+  go: el => { state.view = el.dataset.v; state.studentId = null; location.hash = state.view; closeMenu(); render(); window.scrollTo(0, 0); },
   openMenu: () => { $('#sidebar').classList.add('open'); $('#backdrop').classList.add('open'); $('#nav .nav-btn').focus(); },
   closeMenu: () => closeMenu(),
   filterAttention: () => { state.stFilter = 'attention'; ACT.go({dataset:{v:'students'}}); },
   evidence: el => showEvidence(JSON.parse(el.dataset.ev)),
-  student: el => showStudent(+el.dataset.id),
+  student: el => { if ($('#modalBg').classList.contains('open')) closeModal(); state.view = 'students'; state.studentId = +el.dataset.id; location.hash = 'student-' + state.studentId; closeMenu(); render(); window.scrollTo(0, 0); },
+  exportStudent: el => {
+    const s = students[+el.dataset.id], rs = responses.filter(r => r.sid === s.id).map(r => ({session:r.session, question:A.qById(r.qid).text, answer:A.qById(r.qid).options[r.opt], correct:r.ok}));
+    const url = URL.createObjectURL(new Blob([JSON.stringify({code:s.code, name:s.name, course:course.title, responses:rs}, null, 2)], {type:'application/json'}));
+    const link = document.createElement('a'); link.href = url; link.download = `student-${s.id + 1}.json`; link.click(); URL.revokeObjectURL(url);
+    toast('خروجی داده‌ها آماده شد.');
+  },
   closeModal: () => closeModal(),
   modalBg: (el, e) => { if (e.target === el) closeModal(); },
   sort: el => { const k = el.dataset.k; state.stSort = {k, dir:state.stSort.k === k ? -state.stSort.dir : (k === 'name' ? 1 : -1)}; render(); },
@@ -1016,6 +1101,7 @@ document.addEventListener('input', e => {
 });
 document.addEventListener('change', e => {
   if (e.target.id === 'stFilter') { state.stFilter = e.target.value; render(); }
+  if (e.target.id === 'stSort') { const [k, d] = e.target.value.split(':'); state.stSort = {k, dir:+d}; render(); }
   if (e.target.id === 'csv' && e.target.files[0]) {
     e.target.files[0].text().then(txt => {
       const rows = txt.split(/\r?\n/).map(l => l.split(/[,،;\t]/).map(x => x.trim())).filter(r => r.length >= 2 && r[1] && !/نام|name/i.test(r[1]));
@@ -1027,7 +1113,7 @@ document.addEventListener('change', e => {
 
 /* ================= render ================= */
 function render() {
-  $('#pageTitle').innerHTML = state.view === 'dashboard' ? `سلام ${esc(course.teacher)} <span class="hand" role="img" aria-label="دست تکان‌دادن">👋</span>` : T.nav[state.view];
+  $('#pageTitle').innerHTML = state.view === 'dashboard' ? `سلام ${esc(course.teacher)} <span class="hand" role="img" aria-label="دست تکان‌دادن">👋</span>` : state.view === 'students' && state.studentId != null ? 'نمایه‌ی دانشجو' : T.nav[state.view];
   $('#pageSub').textContent = state.view === 'dashboard' ? `${course.title} · ${course.term} · امروز ${sessions[sessions.length - 1].date} — نگاهی به وضعیت کلاس شما` : T.sub[state.view];
   $('#lessonTitle').textContent = course.title;
   $('#lessonSub').textContent = `جلسه‌ی ${fa(sessions.length)} · ${sessions[sessions.length - 1].topic}`;
@@ -1044,11 +1130,12 @@ function render() {
   document.querySelectorAll('tr[data-act]').forEach(tr => tr.tabIndex = 0);
   if (state.view === 'audio') { const el = $('#transcript'); el.scrollTop = el.scrollHeight; if (!audio.raf) drawWave(); }
 }
-window.addEventListener('hashchange', () => { const v = location.hash.slice(1); if (T.nav[v] && v !== state.view) { state.view = v; render(); } });
+function readHash() { const v = location.hash.slice(1), m = v.match(/^student-(\d+)$/); if (m) { state.view = 'students'; state.studentId = +m[1]; return true; } if (T.nav[v]) { state.view = v; state.studentId = null; return true; } return false; }
+window.addEventListener('hashchange', () => { if (readHash()) render(); });
 setInterval(() => { if (!live.running) return; const t = Math.floor((Date.now() - live.startedAt) / 1000); $('#timer').textContent = [t / 3600, t / 60 % 60, t % 60].map(x => String(Math.floor(x)).padStart(2, '0')).join(':'); }, 1000);
 document.addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('.person[data-act]')) { e.preventDefault(); ACT.student(e.target); } });
 buildSuggestions();
-{ const v = location.hash.slice(1); if (T.nav[v]) state.view = v; }
+readHash();
 render();
 </script>
 </body>
