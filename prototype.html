@@ -259,8 +259,8 @@ canvas.wave{width:100%;height:60px;display:block;background:var(--bg);border-rad
 .prio .txt{flex:1;font-size:13px}
 .span2{grid-column:span 2}
 @media (max-width:1100px){.span2{grid-column:auto}}
-@media (max-width:900px){.teacher>div:last-child,.lesson>div{display:none}.teacher{border:0;padding:0}}
-@media (max-width:720px){.page-head{padding:16px 16px 10px}.page-head h1{font-size:19px}.topbar{padding:10px 16px;gap:10px}.lesson{display:none}.live-chip .pill{display:none}.mini b{font-size:17px}}
+@media (max-width:900px){.teacher>div:last-child,.lesson small,.lesson-ic{display:none}.teacher{border:0;padding:0}}
+@media (max-width:720px){.page-head{padding:16px 16px 10px}.page-head h1{font-size:19px}.topbar{padding:10px 16px;gap:8px}.live-chip .pill{display:none}.mini b{font-size:17px}}
 
 /* ===== students: profile cards & profile page ===== */
 .photo{border-radius:50%;display:block;flex:none}
@@ -334,6 +334,28 @@ body{transition:background-color .25s,color .25s}
 .theme-btn{width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:var(--card);display:grid;place-items:center;color:var(--ink)}
 .theme-btn svg{width:20px;height:20px}
 .theme-btn:hover,.bell:hover{border-color:var(--blue);color:var(--blue)}
+
+/* ===== courses ===== */
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.course-sel{border:0;background:transparent;font-weight:700;font-size:14px;padding:0 0 0 18px;cursor:pointer;color:var(--ink);max-width:260px}
+.lesson small{display:block}
+.cgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:16px}
+.ccard{display:flex;flex-direction:column;gap:10px}
+.ccard.active{border-color:var(--blue);box-shadow:0 0 0 1px var(--blue),0 12px 32px rgba(65,105,245,.12)}
+.ccard-top{display:flex;align-items:center;gap:12px}
+.ccard-top b{display:block;font-size:15px}.ccard-top small{display:block;color:var(--muted);font-size:12px}
+.ccard-top .tag{margin-inline-start:auto}
+.cc-ic{width:44px;height:44px;border-radius:13px;color:#fff;display:grid;place-items:center;font-weight:700;font-size:18px;flex:none}
+.cstats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;text-align:center;font-size:11px;color:var(--muted);background:var(--bg);border-radius:12px;padding:8px 4px}
+.cstats b{display:block;font-size:16px;color:var(--ink)}
+.ccard-actions{display:flex;gap:8px;margin-top:auto}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}
+.form-grid .full{grid-column:1/-1}
+.field input[type=text],.field textarea,.field select{width:100%}
+.opt-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.opt-row input[type=text]{flex:1}
+@media (max-width:720px){.form-grid{grid-template-columns:1fr}.course-sel{max-width:150px;padding-left:4px}}
+@media (max-width:480px){.teacher{display:none}}
 </style>
 </head>
 <body>
@@ -347,7 +369,7 @@ body{transition:background-color .25s,color .25s}
   <main>
     <header class="topbar">
       <button class="menu-btn" data-act="openMenu" aria-label="باز کردن منو">☰</button>
-      <div class="lesson"><span class="lesson-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5"/></svg></span><div><b id="lessonTitle"></b><small id="lessonSub"></small></div></div>
+      <div class="lesson"><span class="lesson-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5"/></svg></span><div><label for="courseSel" class="sr-only">درس فعال</label><select id="courseSel" class="course-sel"></select><small id="lessonSub"></small></div></div>
       <div class="spacer"></div>
       <div class="live-chip" id="liveChip" role="status"><span class="pill">در حال برگزاری</span><span class="timer" id="timer">00:00:00</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></div>
       <span class="listen-pill" id="listenPill" role="status"><span class="dot" aria-hidden="true"></span>در حال شنود<button data-act="audioStop">توقف</button></span>
@@ -389,25 +411,19 @@ const nowTime = () => fa(new Date().toLocaleTimeString('en-GB', {hour:'2-digit',
 const settings = {green:0.75, orange:0.50, minClass:10, minStudent:8, showNames:true, retention:30, dropAlert:10, llm:'university-local', stt:'faster-whisper'};
 
 /* ================= seed data ================= */
-const course = {title:'مبانی برنامه‌نویسی', code:'CS101', term:'پاییز ۱۴۰۵', teacher:'دکتر شهرام گلزاری هرمزی'};
-const concepts = [
-  {id:0, t:'متغیر و نوع داده', from:1, color:'#4169f5'},
-  {id:1, t:'شرط‌ها', from:2, color:'#8c62db'},
-  {id:2, t:'حلقه‌ها', from:4, color:'#0e9fb5'},
-  {id:3, t:'توابع', from:6, color:'#c2477f'},
-];
-const sessions = [
-  {n:1, date:'۱ مهر', topic:'آشنایی، متغیرها'},
-  {n:2, date:'۵ مهر', topic:'عملگرها و شرط ساده'},
-  {n:3, date:'۸ مهر', topic:'شرط‌های ترکیبی'},
-  {n:4, date:'۱۲ مهر', topic:'حلقه‌ی for و range'},
-  {n:5, date:'۱۵ مهر', topic:'break و continue'},
-  {n:6, date:'۱۹ مهر', topic:'حلقه‌های تودرتو، معرفی تابع'},
-  {n:7, date:'۲۲ مهر', topic:'حوزه‌ی متغیر و توابع'},
-  {n:8, date:'۲۶ مهر', topic:'مقدار بازگشتی'},
-];
+const TEACHER = 'دکتر شهرام گلزاری هرمزی';
+const CONCEPT_COLORS = ['#4169f5', '#8c62db', '#0e9fb5', '#c2477f', '#e08a17', '#13a67b'];
+// the active course's data; useCourse() points these at one entry of `courses`
+let course, concepts, sessions, questions, students, responses, audit, suggestions = [];
+const courses = [];
+function useCourse(id) {
+  course = courses[id];
+  ({concepts, sessions, questions, students, responses, audit, suggestions} = course);
+}
+const curSession = () => sessions[sessions.length - 1];
+
 // [session, concepts, text, options, correct, misconception, difficulty, late]
-const Q_RAW = [
+const Q_CS101 = [
   [1,[0],'خروجی type(3.0) چیست؟',['int','float','str','bool'],1,0,-1.2],
   [1,[0],'کدام نام متغیر معتبر است؟',['2x','my-var','_total','class'],2,1,-0.4],
   [2,[0],'حاصل 7 // 2 چیست؟',['3.5','3','4','1'],1,0,0.3],
@@ -432,19 +448,26 @@ const Q_RAW = [
   [8,[0,3],'اگر def f(x): x = x + 1; return x * x باشد، f(2) چیست؟',['9','4','5','6'],0,1,0.6],
   [8,[1,3],'تابع h(n) برای n < 0 مقدار -1 و در غیر این صورت 1 برمی‌گرداند. h(0) چیست؟',['1','-1','0','None'],0,2,0.3],
 ];
-const questions = Q_RAW.map((r, i) => ({id:i+1, session:r[0], concepts:r[1], text:r[2], options:r[3], correct:r[4], mis:r[5], diff:r[6], late:!!r[7], status:'approved', source:'manual', asked:true}));
-// session 8: the last two questions are still in the bank, not asked yet
-questions[21].asked = false; questions[22].asked = false;
-
+const Q_CS201 = [
+  [1,[0],'دسترسی به عنصر k-ام در لیست پیوندی از چه مرتبه‌ای است؟',['O(1)','O(n)','O(log n)','O(n²)'],1,0,0.2],
+  [1,[0],'درج در ابتدای لیست پیوندی یک‌طرفه چه مرتبه‌ای دارد؟',['O(1)','O(n)','O(log n)','O(n log n)'],0,1,-0.3],
+  [2,[1],'کدام ساختار LIFO است؟',['صف','پشته','لیست','درخت'],1,0,-0.9],
+  [2,[1],'بررسی توازن پرانتزها با کدام ساختار انجام می‌شود؟',['پشته','صف','درخت','آرایه‌ی مرتب'],0,1,-0.2],
+  [3,[0,1],'در صفی که با لیست پیوندی ساخته شده، dequeue از کدام سر انجام می‌شود؟',['سر لیست','انتهای لیست','وسط لیست','هر دو سر'],0,1,0.5],
+  [3,[1],'صف حلقوی با آرایه‌ی ۵ خانه‌ای (با یک خانه‌ی خالی) حداکثر چند عنصر نگه می‌دارد؟',['۴','۵','۶','۳'],0,1,0.8],
+  [4,[2],'درخت دودویی با ارتفاع ۳ (ریشه در ارتفاع ۰) حداکثر چند گره دارد؟',['۷','۸','۱۵','۱۶'],2,0,0.9],
+  [4,[2],'ترتیب پیمایش inorder کدام است؟',['چپ، ریشه، راست','ریشه، چپ، راست','چپ، راست، ریشه','راست، ریشه، چپ'],0,1,0],
+  [5,[2],'برگ گره‌ای است که…',['فرزندی ندارد','پدری ندارد','دو فرزند دارد','در عمق ۱ است'],0,1,-1],
+  [5,[2],'پیمایش سطح‌به‌سطح با کدام ساختار پیاده می‌شود؟',['صف','پشته','بازگشت','هیپ'],0,1,0.4],
+  [6,[3],'در درخت جست‌وجوی دودویی کوچک‌ترین مقدار کجاست؟',['چپ‌ترین گره','ریشه','راست‌ترین گره','یک برگ دلخواه'],0,1,0.1],
+  [6,[3],'جست‌وجو در درخت جست‌وجوی دودویی نامتوازن در بدترین حالت؟',['O(n)','O(log n)','O(1)','O(n log n)'],0,1,1.2],
+  [7,[3],'حذف گره‌ای با دو فرزند با جایگزینی کدام گره انجام می‌شود؟',['جانشین inorder','ریشه','پدر گره','فرزند چپ'],0,3,1.0],
+  [7,[2,3],'پیمایش inorder یک درخت جست‌وجوی دودویی چه خروجی‌ای می‌دهد؟',['مقادیر مرتب صعودی','مقادیر مرتب نزولی','ترتیب درج','ترتیب سطحی'],0,2,0.5],
+  [7,[3],'درج 25 در درختی با ریشه‌ی 50 و فرزند چپ 30: گره‌ی جدید کجا قرار می‌گیرد؟',['فرزند چپ 30','فرزند راست 30','فرزند راست 50','ریشه'],0,1,0.3],
+];
 const NAMES = ['آرین کاظمی','بهاره صدری','پارسا نوروزی','ترانه موسوی','حامد یزدانی','دریا شکوهی','رامتین فرهادی','ریحانه اکبری','سامان قاسمی','ستاره جلالی','سینا مرادی','شیوا رضوانی','عرفان سلطانی','غزل نیک‌پور','فرهاد امینی','کیانا حسینی','کوروش بهرامی','لیلا طاهری','مهدی کریمی','مهسا افشار','نیما شریفی','نگار ملکی','هستی جعفری','یاسین رستمی','آیدا سبحانی','بردیا عسگری','پریا وحیدی','تینا خسروی','داوود پاکزاد','زهرا نادری'];
-const decliners = new Set([4, 11, 19, 26]);
-const students = NAMES.map((name, i) => {
-  const base = gauss() * 0.6;
-  return {id:i, code:fa(String(i + 1).padStart(2, '0')), name,
-    ability: concepts.map(() => 1.25 + base + gauss() * 0.45),
-    part: 0.82 + R() * 0.16, decl: decliners.has(i)};
-});
-const responses = [];
+const NAMES_CS201 = ['امیرحسین رنجبر','الهام فتحی','بنیامین شاکری','پرستو حیدری','جواد قربانی','حدیث کامرانی','رضا نجفی','سارا محمدی','سپیده اسدی','شایان ابراهیمی','علی رضایی','فاطمه زارعی','کیان صالحی','مبینا یوسفی','محمدرضا عباسی','مریم بهرامی','نازنین کرمی','نوید صادقی','هانیه مختاری','یگانه نوری','آرمان توکلی','دلارام شفیعی'];
+
 function attendProb(s, sess) { return s.decl && sess >= 5 ? Math.max(0.35, s.part - 0.13 * (sess - 4)) : s.part; }
 function simulateAnswer(s, q) {
   const x = sum(q.concepts.map(c => s.ability[c] + 0.12 * Math.max(0, q.session - concepts[c].from))) / q.concepts.length - q.diff;
@@ -453,14 +476,39 @@ function simulateAnswer(s, q) {
   const wrong = [0,1,2,3].filter(o => o !== q.correct && o !== q.mis);
   return wrong[Math.floor(R() * wrong.length)];
 }
-for (const sess of sessions) {
-  const present = students.filter(s => R() < attendProb(s, sess.n));
-  for (const q of questions.filter(q => q.session === sess.n && q.asked)) {
-    let pool = present.filter(() => R() < 0.95);
-    if (q.late) pool = pool.slice().sort(() => R() - 0.5).slice(0, 8);
-    for (const s of pool) { const opt = simulateAnswer(s, q); responses.push({sid:s.id, qid:q.id, session:sess.n, opt, ok:opt === q.correct}); }
-  }
+function makeStudent(name, i, decl = false) {
+  const base = gauss() * 0.6;
+  return {id:i, code:fa(String(i + 1).padStart(2, '0')), name, ability:concepts.map(() => 1.25 + base + gauss() * 0.45), part:0.82 + R() * 0.16, decl};
 }
+function addCourse(def) {
+  const c = {id:courses.length, title:def.title, code:def.code || '', group:def.group || '', term:def.term || 'پاییز ۱۴۰۵', schedule:def.schedule || '', teacher:TEACHER, consent:false,
+    concepts:def.concepts.map(([t, from], i) => ({id:i, t, from, color:CONCEPT_COLORS[i % CONCEPT_COLORS.length]})),
+    sessions:(def.sessions || []).map(([date, topic], i) => ({n:i + 1, date, topic})),
+    questions:(def.q || []).map((r, i) => ({id:i + 1, session:r[0], concepts:r[1], text:r[2], options:r[3], correct:r[4], mis:r[5], diff:r[6], late:!!r[7], status:'approved', source:'manual', asked:true})),
+    students:[], responses:[], audit:def.audit || [], suggestions:[]};
+  courses.push(c); useCourse(c.id);
+  (def.names || []).forEach((n, i) => students.push(makeStudent(n, i, (def.decliners || []).includes(i))));
+  for (const q of questions) if ((def.unasked || []).includes(q.id)) q.asked = false;
+  for (const sess of sessions) {
+    const present = students.filter(st => R() < attendProb(st, sess.n));
+    for (const q of questions.filter(q => q.session === sess.n && q.asked)) {
+      let pool = present.filter(() => R() < 0.95);
+      if (q.late) pool = pool.slice().sort(() => R() - 0.5).slice(0, 8);
+      for (const st of pool) { const opt = simulateAnswer(st, q); responses.push({sid:st.id, qid:q.id, session:sess.n, opt, ok:opt === q.correct}); }
+    }
+  }
+  return c;
+}
+addCourse({title:'مبانی برنامه‌نویسی', code:'CS101', group:'گروه ۱', schedule:'شنبه و سه‌شنبه ۱۰–۱۲',
+  concepts:[['متغیر و نوع داده', 1], ['شرط‌ها', 2], ['حلقه‌ها', 4], ['توابع', 6]],
+  sessions:[['۱ مهر', 'آشنایی، متغیرها'], ['۵ مهر', 'عملگرها و شرط ساده'], ['۸ مهر', 'شرط‌های ترکیبی'], ['۱۲ مهر', 'حلقه‌ی for و range'], ['۱۵ مهر', 'break و continue'], ['۱۹ مهر', 'حلقه‌های تودرتو، معرفی تابع'], ['۲۲ مهر', 'حوزه‌ی متغیر و توابع'], ['۲۶ مهر', 'مقدار بازگشتی']],
+  q:Q_CS101, unasked:[22, 23], names:NAMES, decliners:[4, 11, 19, 26],
+  audit:[{who:TEACHER, when:'۱۹ مهر · ۱۰:۴۲', action:'تأیید', target:'مرور شرط‌های ترکیبی با جدول درستی'}, {who:TEACHER, when:'۱۲ مهر · ۰۹:۱۵', action:'رد', target:'افزودن تکلیف اضافه برای کل کلاس'}]});
+addCourse({title:'ساختمان داده‌ها', code:'CS201', group:'گروه ۲', schedule:'یکشنبه و چهارشنبه ۸–۱۰',
+  concepts:[['لیست پیوندی', 1], ['پشته و صف', 2], ['درخت دودویی', 4], ['درخت جست‌وجوی دودویی', 6]],
+  sessions:[['۲ مهر', 'لیست پیوندی'], ['۶ مهر', 'پشته'], ['۹ مهر', 'صف و صف حلقوی'], ['۱۳ مهر', 'درخت دودویی'], ['۱۶ مهر', 'پیمایش درخت'], ['۲۰ مهر', 'درخت جست‌وجوی دودویی'], ['۲۳ مهر', 'حذف و درج در درخت جست‌وجو']],
+  q:Q_CS201, unasked:[15], names:NAMES_CS201, decliners:[6, 15]});
+useCourse(0);
 
 /* ================= analytics (pure) ================= */
 const A = {
@@ -482,7 +530,7 @@ const A = {
   level(m) { return m >= settings.green ? 'g' : m >= settings.orange ? 'o' : 'r'; },
   levelName(m) { return {g:'تسلط مناسب', o:'نیازمند تمرین', r:'دشوار'}[A.level(m)]; },
   askedQs: upTo => questions.filter(q => q.asked && q.session <= upTo && !q.late),
-  lastSession: () => Math.max(...responses.map(r => r.session)),
+  lastSession: () => responses.length ? Math.max(...responses.map(r => r.session)) : 0,
   student(sid, upTo = 99) {
     const rs = responses.filter(r => r.sid === sid && r.session <= upTo);
     const per = concepts.map(c => ({c, ...A.stat(A.forConcept(c.id, rs))}));
@@ -540,11 +588,6 @@ const A = {
 };
 
 /* ================= suggestions & audit ================= */
-const audit = [
-  {who:course.teacher, when:'۱۹ مهر · ۱۰:۴۲', action:'تأیید', target:'مرور شرط‌های ترکیبی با جدول درستی'},
-  {who:course.teacher, when:'۱۲ مهر · ۰۹:۱۵', action:'رد', target:'افزودن تکلیف اضافه برای کل کلاس'},
-];
-let suggestions = [];
 function buildSuggestions() {
   const last = A.lastSession(), list = [];
   const cm = concepts.map(c => ({c, ...A.upTo(c.id, last)})).filter(x => x.n).sort((a, b) => a.ok/a.n - b.ok/b.n);
@@ -580,13 +623,13 @@ function buildSuggestions() {
       action:'زمان آزادشده را به مفهوم دشوارتر اختصاص دهید.', status:'pending', output:null});
   }
   // keep decisions already taken
-  suggestions = list.map(s => { const old = suggestions.find(o => o.id === s.id); return old ? {...s, status:old.status, title:old.edited ? old.title : s.title, action:old.edited ? old.action : s.action, edited:old.edited} : s; });
+  course.suggestions = suggestions = list.map(s => { const old = suggestions.find(o => o.id === s.id); return old ? {...s, status:old.status, title:old.edited ? old.title : s.title, action:old.edited ? old.action : s.action, edited:old.edited} : s; });
 }
 
 /* ================= state ================= */
 const state = {view:'dashboard', studentId:null, stFilter:'all', stQuery:'', stSort:{k:'mastery', dir:1}};
 const live = {running:false, code:null, qid:null, qState:null, answers:[], timer:null, pending:[], previewSel:null};
-const audio = {consent:false, listening:false, lines:[], counts:{question:0, confusion:0, repeat:0, example:0, topic:0}, timer:null, raf:null, idx:0};
+const audio = {listening:false, lines:[], counts:{question:0, confusion:0, repeat:0, example:0, topic:0}, timer:null, raf:null, idx:0};
 const studentName = s => settings.showNames ? s.name : `دانشجو ${s.code}`;
 
 /* ================= components ================= */
@@ -654,6 +697,7 @@ const C = {
     </div>`;
   },
   lineChart(series, {h = 220, w = 640, yMin = 0, area = false, threshold = true, label = 'نمودار روند تسلط', hollowNote = true} = {}) {
+    if (sessions.length < 2) return '<div class="empty">برای رسم نمودار دست‌کم دو جلسه لازم است.</div>';
     const gid = 'g' + Math.random().toString(36).slice(2, 8); let defs = '';
     const W = w, H = h, P = {l:36, r:16, t:12, b:28}, n = sessions.length;
     const x = i => W - P.r - (i * (W - P.l - P.r) / (n - 1)); // RTL: session 1 on the right
@@ -700,6 +744,7 @@ function renderNav() {
 
 const V = {};
 V.dashboard = () => {
+  if (!responses.length) return V.emptyCourse();
   const last = A.lastSession(), prev = last - 1;
   const active = s => new Set(responses.filter(r => r.session === s).map(r => r.sid)).size;
   const avgM = s => { const xs = concepts.map(c => A.upTo(c.id, s)).filter(x => x.n); return sum(xs.map(x => x.ok / x.n)) / xs.length; };
@@ -735,7 +780,7 @@ V.dashboard = () => {
         : '<div class="ai-inner"><div class="empty">همه‌ی پیشنهادها بررسی شده‌اند.</div></div>'}
       <div class="mini">
         <div><b class="t-green">${lastStat.n ? pct(lastStat.ok / lastStat.n) : '—'}</b>درست‌پاسخی جلسه‌ی ${fa(last)}<br><span class="small">n=${fa(lastStat.n)}</span></div>
-        <div><b class="t-orange">${fa(audio.counts.confusion)}</b>نشانه‌ی ابهام گفتاری<br><span class="small">${audio.consent ? 'از رونوشت امروز' : 'شنود فعال نشده'}</span></div>
+        <div><b class="t-orange">${fa(audio.counts.confusion)}</b>نشانه‌ی ابهام گفتاری<br><span class="small">${course.consent ? 'از رونوشت امروز' : 'شنود فعال نشده'}</span></div>
         <div><b class="t-red">${pct(weakest.ok / weakest.n)}</b>دشوارترین مفهوم<br><span class="small">${weakest.c.t}</span></div>
       </div></div>
     <div class="card dark-card"><div class="card-head">${C.h2('doc', '', 'خلاصه‌ی ترم تا امروز')}</div>
@@ -776,6 +821,7 @@ V.students = () => {
   const key = {name:r => studentName(r.s), mastery:r => r.mastery, part:r => r.a.part}[k];
   rows = rows.slice().sort((x, y) => (key(x) > key(y) ? 1 : key(x) < key(y) ? -1 : 0) * dir);
   const sortVal = `${k}:${dir}`;
+  if (!students.length) return `<div class="card"><div class="empty">هنوز دانشجویی در این درس ثبت نشده است. از «درس‌ها و جلسات» فهرست دانشجویان را با فایل CSV وارد کنید.</div><div style="text-align:center"><button class="btn primary" data-act="go" data-v="courses">رفتن به درس‌ها و جلسات</button></div></div>`;
   // class charts
   const series = [
     {name:'تسلط کلاس', color:'#8c62db', points:sessions.map(se => { const st = A.stat(responses.filter(r => r.session === se.n)); return st.n ? {v:st.ok / st.n, n:st.n, ok:st.n >= settings.minClass} : null; })},
@@ -798,7 +844,7 @@ V.students = () => {
       ${a.attention ? C.tag('نیازمند پیگیری', 'orange') : C.tag('پایدار', 'green')}
       <span class="meta"><span>تسلط</span><span>${a.total.n >= settings.minStudent ? pct(mastery) : T.insufficient}</span></span>${C.progress(a.total.n >= settings.minStudent ? mastery : 0)}
       <span class="meta"><span>مشارکت</span><span>${pct(a.part)}</span></span></button>`).join('') || '<div class="empty">نتیجه‌ای پیدا نشد.</div>'}</div>
-  <div class="grid g3 mt">
+  ${!responses.length ? '<div class="note">نمودارهای کلاس پس از ثبت اولین پاسخ‌ها نمایش داده می‌شوند.</div>' : `<div class="grid g3 mt">
     <div class="card span2"><div class="card-head">${C.h2('analytics', 'purple', 'وضعیت کلاس در طول ترم')}<span class="hint">در هر جلسه</span></div>${C.lineChart(series, {h:240, area:true, threshold:false, label:'وضعیت کلاس در طول ترم'})}</div>
     <div class="card dark-card"><div class="card-head">${C.h2('spark', '', 'برداشت‌ها')}</div>
       <div class="item"><span class="lbl">نیازمند پیگیری</span><b>${fa(need.length)} دانشجو</b> — بیشتر به‌دلیل ${need.filter(r => r.a.reasons.some(x => x.startsWith('مشارکت'))).length > need.length / 2 ? 'افت مشارکت' : 'دشواری مفهوم'}</div>
@@ -811,7 +857,7 @@ V.students = () => {
     <div class="card"><div class="card-head">${C.h2('target', 'green', 'توزیع تسلط دانشجویان')}</div>
       ${bar(`تسلط مناسب (≥ ${pct(settings.green)})`, lvl.g, 'var(--green)')}${bar('نیازمند تمرین', lvl.o, 'var(--orange)')}${bar(`دشوار (< ${pct(settings.orange)})`, lvl.r, 'var(--red)')}${bar('داده کافی نیست', lvl.na, '#b8c1d6')}</div>
     <div class="card"><div class="card-head">${C.h2('students', 'blue', 'توزیع مشارکت دانشجویان')}</div>${partB.map(([l, n], i) => bar(l, n, ['var(--blue)', '#6f8ff7', '#a3b6fb', 'var(--orange)'][i])).join('')}</div>
-  </div>
+  </div>`}
   <div class="note">${T.notJudgement} تصویرها نمونه‌ی نمایشی‌اند؛ در محصول، عکس از سامانه‌ی آموزشی دانشگاه خوانده می‌شود.</div>`;
 };
 
@@ -842,6 +888,7 @@ V.studentProfile = id => {
 };
 
 V.analytics = () => {
+  if (!responses.length) return V.emptyCourse();
   const last = A.lastSession();
   const cm = concepts.map(c => ({c, ...A.upTo(c.id, last)}));
   const items = A.items();
@@ -890,8 +937,8 @@ V.live = () => {
   const bank = questions.filter(q => q.status === 'approved');
   const q = live.qid && A.qById(live.qid);
   if (!live.running) return `<div class="grid g2"><div class="card"><div class="card-head"><h2>شروع جلسه‌ی زنده</h2></div>
-      <p>جلسه‌ی ${fa(8)} · ${sessions[7].date} · ${sessions[7].topic}</p><p class="muted">با شروع جلسه یک کد ۶ رقمی و QR ساخته می‌شود تا دانشجوها از گوشی وارد شوند. کد پس از پایان جلسه باطل می‌شود.</p>
-      <button class="btn primary" data-act="liveStart">شروع جلسه</button></div>
+      ${curSession() ? `<p>جلسه‌ی ${fa(curSession().n)} · ${curSession().date} · ${curSession().topic}</p>` : '<p>برای این درس هنوز جلسه‌ای تعریف نشده است.</p>'}<p class="muted">با شروع جلسه یک کد ۶ رقمی و QR ساخته می‌شود تا دانشجوها از گوشی وارد شوند. کد پس از پایان جلسه باطل می‌شود.</p>
+      ${curSession() ? '<button class="btn primary" data-act="liveStart">شروع جلسه</button>' : '<button class="btn primary" data-act="go" data-v="courses">تعریف جلسه</button>'}</div>
     <div class="card"><div class="card-head"><h2>بانک سؤال این درس</h2><span class="hint">${fa(bank.length)} سؤال تأییدشده</span></div>${bankList(bank)}</div></div>`;
   const n = live.answers.length, counts = q ? q.options.map((_, i) => live.answers.filter(a => a.opt === i).length) : [];
   const okN = q ? counts[q.correct] : 0;
@@ -925,7 +972,7 @@ V.live = () => {
       <div class="phone">${q ? `<div class="small muted">کلاس‌یار · سؤال ${fa(q.id)}</div><div class="p-q">${esc(q.text)}</div>${q.options.map((o, i) => `<button class="${live.previewSel === i ? 'sel' : ''}" data-act="previewPick" data-i="${i}" ${live.qState !== 'open' ? 'disabled' : ''}>${esc(o)}</button>`).join('')}
         <p class="small muted">${live.previewSel != null ? 'پاسخ شما ثبت شد. تا بسته‌شدن سؤال می‌توانید آن را تغییر دهید.' : live.qState === 'open' ? 'یک گزینه را انتخاب کنید.' : 'منتظر سؤال بعدی…'}</p>`
         : '<div class="empty">منتظر سؤال استاد…</div>'}</div></div>
-    <div class="card"><div class="card-head"><h2>نکته</h2></div><p class="muted">پاسخ‌ها با بستن سؤال در جلسه‌ی ${fa(8)} ذخیره می‌شوند و نقشه‌ی تسلط و تحلیل‌ها بلافاصله به‌روز می‌شوند.</p><p class="muted">نتیجه‌ی فردی هیچ دانشجویی روی صفحه‌ی کلاس نمایش داده نمی‌شود.</p></div></div>`;
+    <div class="card"><div class="card-head"><h2>نکته</h2></div><p class="muted">پاسخ‌ها با بستن سؤال در جلسه‌ی ${fa(curSession().n)} ذخیره می‌شوند و نقشه‌ی تسلط و تحلیل‌ها بلافاصله به‌روز می‌شوند.</p><p class="muted">نتیجه‌ی فردی هیچ دانشجویی روی صفحه‌ی کلاس نمایش داده نمی‌شود.</p></div></div>`;
 };
 function bankList(bank, pick = false) {
   return `<div class="table-wrap"><table><tbody>${bank.map(q => `<tr><td class="muted">${fa(q.id)}</td><td>${esc(q.text)}<div class="chips">${q.concepts.map(c => C.tag(concepts[c].t, 'gray')).join('')}${q.asked ? C.tag(`پرسیده‌شده ج${fa(q.session)}`, 'gray') : C.tag('پرسیده‌نشده', 'blue')}</div></td>${pick ? `<td><button class="btn sm primary" data-act="liveAsk" data-id="${q.id}">پرسیدن</button></td>` : ''}</tr>`).join('')}</tbody></table></div>`;
@@ -977,20 +1024,47 @@ V.audio = () => `<div class="grid g-main">
 </div>`;
 function tline(l) { return `<div class="tline"><time>${l.t}</time>${esc(l.text)} ${l.sig.map(s => C.tag(SIG[s][0], SIG[s][1])).join(' ')}</div>`; }
 
-V.courses = () => `<div class="grid g2">
-  <div class="card"><div class="card-head"><h2>${course.title}</h2>${C.tag(course.code, 'gray')}${C.tag(course.term, 'gray')}</div>
-    <p class="muted" style="margin-top:0">استاد: ${course.teacher} · ${fa(students.length)} دانشجو · ${fa(sessions.length)} جلسه</p>
-    <h3 style="font-size:14px">مفاهیم درس</h3><div class="chips">${concepts.map(c => C.tag(`${c.t} · از ج${fa(c.from)}`, '')).join('')}</div>
-    <div class="inline mt"><input type="text" id="newConcept" placeholder="مفهوم جدید…" aria-label="نام مفهوم جدید"><button class="btn" data-act="addConcept">افزودن</button></div></div>
-  <div class="card"><div class="card-head"><h2>ورود دانشجویان</h2><span class="hint">CSV با ستون‌های «کد، نام»</span></div>
-    <input type="file" id="csv" accept=".csv,text/csv" aria-label="انتخاب فایل CSV"><div id="csvPreview" class="mt"></div></div>
-</div>
-<div class="card mt"><div class="card-head"><h2>جلسات</h2></div><div class="table-wrap"><table><thead><tr><th>جلسه</th><th>تاریخ</th><th>موضوع</th><th>سؤال‌ها</th><th>پاسخ‌ها</th></tr></thead><tbody>
-  ${sessions.map(s => `<tr><td>${fa(s.n)}</td><td>${s.date} ۱۴۰۵</td><td>${s.topic}</td><td>${fa(questions.filter(q => q.session === s.n && q.asked).length)}</td><td>${fa(responses.filter(r => r.session === s.n).length)}</td></tr>`).join('')}
-</tbody></table></div></div>
-<div class="card mt"><div class="card-head"><h2>بانک سؤال</h2><span class="hint">هر سؤال به یک یا چند مفهوم برچسب خورده است</span></div><div class="table-wrap"><table><thead><tr><th>#</th><th>سؤال</th><th>مفاهیم</th><th>وضعیت</th></tr></thead><tbody>
-  ${questions.map(q => `<tr><td class="muted">${fa(q.id)}</td><td>${esc(q.text)}</td><td>${q.concepts.map(c => C.tag(concepts[c].t, 'gray')).join(' ')}</td><td>${q.status === 'draft' ? `${C.tag('پیش‌نویس — نیازمند بازبینی', 'orange')} <button class="btn sm" data-act="approveQ" data-id="${q.id}">تأیید</button>` : C.tag('تأییدشده', 'green')}</td></tr>`).join('')}
-</tbody></table></div></div>`;
+V.emptyCourse = () => {
+  const steps = [[concepts.length, 'مفاهیم درس تعریف شده‌اند', `${fa(concepts.length)} مفهوم`], [students.length, 'دانشجویان وارد شده‌اند', `${fa(students.length)} دانشجو`], [sessions.length, 'دست‌کم یک جلسه تعریف شده است', `${fa(sessions.length)} جلسه`], [questions.length, 'بانک سؤال سؤال دارد', `${fa(questions.length)} سؤال`]];
+  return `<div class="card"><div class="card-head">${C.h2('doc', 'blue', `«${esc(course.title)}» هنوز داده‌ای ندارد`)}</div>
+    <p class="muted" style="margin-top:0">تحلیل‌ها پس از اولین آزمونک زنده ساخته می‌شوند. این مراحل را کامل کنید:</p>
+    ${steps.map(([ok, l, v]) => `<div class="act-item"><span class="mk" style="background:${ok ? 'var(--green)' : 'var(--line)'};color:${ok ? '#fff' : 'var(--muted)'}">${ok ? '✓' : '○'}</span><div>${l}<small>${v}</small></div></div>`).join('')}
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px"><button class="btn primary" data-act="go" data-v="courses">تکمیل اطلاعات درس</button><button class="btn" data-act="go" data-v="live" ${sessions.length && questions.length ? '' : 'disabled'}>شروع جلسه‌ی زنده</button></div></div>`;
+};
+
+function courseSummary(c) {
+  const ok = c.responses.filter(r => r.ok).length, n = c.responses.length;
+  return {students:c.students.length, sessions:c.sessions.length, questions:c.questions.length, mastery:n ? ok / n : null, n};
+}
+V.courses = () => {
+  const cur = curSession();
+  return `<div class="toolbar"><h2 style="margin:0;font-size:17px">درس‌های من</h2><span class="hint">${fa(courses.length)} درس · ${course.term}</span><button class="btn primary" data-act="newCourse">+ ایجاد درس جدید</button></div>
+  <div class="cgrid">${courses.map(c => { const m = courseSummary(c), active = c === course;
+    return `<div class="card ccard ${active ? 'active' : ''}"><div class="ccard-top"><span class="cc-ic" style="background:${CONCEPT_COLORS[c.id % CONCEPT_COLORS.length]}" aria-hidden="true">${esc(c.title.trim()[0])}</span><div style="min-width:0"><b>${esc(c.title)}</b><small>${[c.code, c.group, c.term].filter(Boolean).map(esc).join(' · ')}</small></div>${active ? C.tag('درس فعال', 'green') : ''}</div>
+      ${c.schedule ? `<div class="small muted">🗓 ${esc(c.schedule)}</div>` : ''}
+      <div class="cstats"><span><b>${fa(m.students)}</b>دانشجو</span><span><b>${fa(m.sessions)}</b>جلسه</span><span><b>${fa(m.questions)}</b>سؤال</span><span><b>${m.mastery == null ? '—' : pct(m.mastery)}</b>درست‌پاسخی</span></div>
+      ${m.mastery == null ? '<div class="small muted">هنوز پاسخی ثبت نشده</div>' : C.progress(m.mastery)}
+      <div class="ccard-actions"><button class="btn sm primary" data-act="enterCourse" data-id="${c.id}">ورود به درس</button>${active ? '' : `<button class="btn sm" data-act="manageCourse" data-id="${c.id}">مدیریت</button>`}</div></div>`; }).join('')}</div>
+
+  <div class="toolbar mt" style="margin-top:28px"><h2 style="margin:0;font-size:17px">مدیریت «${esc(course.title)}»</h2><span class="hint">استاد: ${esc(course.teacher)}</span></div>
+  <div class="grid g2">
+    <div class="card"><div class="card-head">${C.h2('target', 'purple', 'مفاهیم درس')}<span class="hint">پایه‌ی همه‌ی تحلیل‌ها</span></div>
+      <div class="chips">${concepts.map(c => C.tag(`${esc(c.t)} · از ج${fa(c.from)}`, '')).join('') || '<span class="muted small">هنوز مفهومی تعریف نشده</span>'}</div>
+      <div class="inline mt"><input type="text" id="newConcept" placeholder="مفهوم جدید…" aria-label="نام مفهوم جدید"><button class="btn" data-act="addConcept">افزودن</button></div></div>
+    <div class="card"><div class="card-head">${C.h2('students', 'blue', 'ورود دانشجویان')}<span class="hint">CSV با ستون‌های «کد، نام»</span></div>
+      <p class="small muted" style="margin-top:0">${fa(students.length)} دانشجو در این درس ثبت‌نام شده‌اند.</p>
+      <input type="file" id="csv" accept=".csv,text/csv" aria-label="انتخاب فایل CSV"><div id="csvPreview" class="mt"></div></div>
+  </div>
+  <div class="card mt"><div class="card-head">${C.h2('doc', 'green', 'جلسات')}</div>
+    <div class="table-wrap"><table><thead><tr><th>جلسه</th><th>تاریخ</th><th>موضوع</th><th>سؤال‌ها</th><th>پاسخ‌ها</th></tr></thead><tbody>
+    ${sessions.map(se => `<tr><td>${fa(se.n)}</td><td>${esc(se.date)} ۱۴۰۵</td><td>${esc(se.topic)}</td><td>${fa(questions.filter(q => q.session === se.n && q.asked).length)}</td><td>${fa(responses.filter(r => r.session === se.n).length)}</td></tr>`).join('') || '<tr><td colspan="5" class="empty">هنوز جلسه‌ای تعریف نشده است.</td></tr>'}
+    </tbody></table></div>
+    <div class="inline mt" style="flex-wrap:wrap"><input type="text" id="newSessDate" placeholder="تاریخ (مثلاً ۳۰ مهر)" aria-label="تاریخ جلسه‌ی جدید"><input type="text" id="newSessTopic" placeholder="موضوع جلسه" aria-label="موضوع جلسه‌ی جدید" style="flex:1;min-width:160px"><button class="btn" data-act="addSession">افزودن جلسه</button></div></div>
+  <div class="card mt"><div class="card-head">${C.h2('grid', 'orange', 'بانک سؤال')}<span class="hint">هر سؤال به یک یا چند مفهوم برچسب می‌خورد</span><div class="end"><button class="btn sm primary" data-act="newQuestion" ${concepts.length ? '' : 'disabled'}>+ سؤال جدید</button></div></div>
+    <div class="table-wrap"><table><thead><tr><th>#</th><th>سؤال</th><th>مفاهیم</th><th>وضعیت</th></tr></thead><tbody>
+    ${questions.map(q => `<tr><td class="muted">${fa(q.id)}</td><td><bdi>${esc(q.text)}</bdi></td><td>${q.concepts.map(c => C.tag(esc(concepts[c].t), 'gray')).join(' ')}</td><td>${q.status === 'draft' ? `${C.tag('پیش‌نویس — نیازمند بازبینی', 'orange')} <button class="btn sm" data-act="approveQ" data-id="${q.id}">تأیید</button>` : C.tag('تأییدشده', 'green')}</td></tr>`).join('') || '<tr><td colspan="4" class="empty">بانک سؤال خالی است.</td></tr>'}
+    </tbody></table></div></div>`;
+};
 
 V.settings = () => `<div class="grid g2">
   <div class="card"><div class="card-head"><h2>آستانه‌ها</h2></div>
@@ -1005,7 +1079,7 @@ V.settings = () => `<div class="grid g2">
     <div class="field"><label for="sRet">حذف خودکار رونوشت‌ها پس از (روز)</label><input type="number" id="sRet" min="1" max="365" value="${settings.retention}"></div>
     <div class="field"><label for="sLlm">ارائه‌دهنده‌ی هوش مصنوعی</label><select id="sLlm" disabled><option>مدل داخلی دانشگاه</option></select><span class="help">فقط ادمین می‌تواند تغییر دهد. به مدل فقط داده‌ی تجمیعی و بدون نام فرستاده می‌شود.</span></div>
     <div class="field"><label for="sStt">تبدیل گفتار به متن</label><select id="sStt" disabled><option>Whisper روی سرور دانشگاه</option></select><span class="help">فقط ادمین.</span></div>
-    <div class="field"><label>رضایت‌نامه‌ی شنود</label><span>${audio.consent ? C.tag('ثبت شده', 'green') : C.tag('ثبت نشده', 'gray')}</span></div></div>
+    <div class="field"><label>رضایت‌نامه‌ی شنود</label><span>${course.consent ? C.tag('ثبت شده', 'green') : C.tag('ثبت نشده', 'gray')}</span></div></div>
 </div>`;
 
 /* ================= modals ================= */
@@ -1125,7 +1199,7 @@ const ACT = {
   },
   draftQuestion: el => {
     const s = suggestions.find(x => x.id === el.dataset.id), src = A.qById(s.qid);
-    const nq = {id:questions.length + 1, session:8, concepts:src.concepts.slice(), text:`(پیش‌نویس، مشابه سؤال ${fa(src.id)}) ${src.text}`, options:src.options.slice(), correct:src.correct, mis:src.mis, diff:src.diff, status:'draft', source:'ai_draft', asked:false};
+    const nq = {id:questions.length + 1, session:curSession() ? curSession().n : 1, concepts:src.concepts.slice(), text:`(پیش‌نویس، مشابه سؤال ${fa(src.id)}) ${src.text}`, options:src.options.slice(), correct:src.correct, mis:src.mis, diff:src.diff, status:'draft', source:'ai_draft', asked:false};
     questions.push(nq); s.drafted = true;
     audit.unshift({who:course.teacher, when:'امروز · ' + nowTime(), action:'ساخت پیش‌نویس', target:`سؤال ${fa(nq.id)} برای بازبینی`});
     toast('پیش‌نویس به بانک سؤال اضافه شد و تا تأیید شما استفاده نمی‌شود.'); render();
@@ -1135,23 +1209,45 @@ const ACT = {
   liveEnd: () => { if (live.qState && live.qState !== 'closed') ACT.liveClose(); clearInterval(live.timer); Object.assign(live, {running:false, code:null, qid:null, qState:null, answers:[]}); toast('جلسه پایان یافت و کد ورود باطل شد.'); render(); },
   liveAsk: el => {
     live.qid = +el.dataset.id; live.qState = 'open'; live.answers = []; live.previewSel = null;
-    live.pending = students.filter(s => R() < attendProb(s, 8) * 0.95).sort(() => R() - 0.5);
+    live.pending = students.filter(s => R() < attendProb(s, curSession().n) * 0.95).sort(() => R() - 0.5);
     clearInterval(live.timer); live.timer = setInterval(liveTick, 700); render();
   },
   livePause: () => { live.qState = 'paused'; render(); },
   liveResume: () => { live.qState = 'open'; render(); },
   liveClose: () => {
     const q = A.qById(live.qid); live.qState = 'closed'; clearInterval(live.timer);
-    for (const r of responses.filter(r => r.qid === q.id && r.session === 8)) responses.splice(responses.indexOf(r), 1);
-    live.answers.forEach(a => responses.push({sid:a.sid, qid:q.id, session:8, opt:a.opt, ok:a.opt === q.correct}));
-    if (!q.asked) { q.asked = true; q.session = 8; } buildSuggestions(); toast(`${fa(live.answers.length)} پاسخ در جلسه‌ی ۸ ذخیره شد.`); render();
+    const sn = curSession().n;
+    for (const r of responses.filter(r => r.qid === q.id && r.session === sn)) responses.splice(responses.indexOf(r), 1);
+    live.answers.forEach(a => responses.push({sid:a.sid, qid:q.id, session:sn, opt:a.opt, ok:a.opt === q.correct}));
+    if (!q.asked) { q.asked = true; q.session = sn; } buildSuggestions(); toast(`${fa(live.answers.length)} پاسخ در جلسه‌ی ${fa(sn)} ذخیره شد.`); render();
   },
   liveNext: () => { live.qid = null; live.qState = null; live.answers = []; render(); },
   previewPick: el => { live.previewSel = +el.dataset.i; render(); },
-  audioStart: () => audio.consent ? startListening() : consentModal(),
+  audioStart: () => course.consent ? startListening() : consentModal(),
   audioStop: () => { audio.listening = false; clearInterval(audio.timer); toast('شنود متوقف شد.'); render(); },
-  consentOk: () => { if (!$('#announced').checked) { toast('لطفاً اعلام به کلاس را تأیید کنید.'); return; } audio.consent = true; closeModal(); startListening(); },
-  addConcept: () => { const v = $('#newConcept').value.trim(); if (!v) return; concepts.push({id:concepts.length, t:v, from:9, color:'#77839b'}); toast('مفهوم اضافه شد.'); render(); },
+  consentOk: () => { if (!$('#announced').checked) { toast('لطفاً اعلام به کلاس را تأیید کنید.'); return; } course.consent = true; closeModal(); startListening(); },
+  enterCourse: el => { switchCourse(+el.dataset.id); ACT.go({dataset:{v:'dashboard'}}); },
+  manageCourse: el => { switchCourse(+el.dataset.id); render(); },
+  newCourse: () => openModal('ایجاد درس جدید', `<form id="courseForm" novalidate><div class="form-grid">
+    <div class="field full"><label for="ncTitle">نام درس *</label><input type="text" id="ncTitle" placeholder="مثلاً طراحی الگوریتم" required></div>
+    <div class="field"><label for="ncCode">کد درس</label><input type="text" id="ncCode" placeholder="CS301"></div>
+    <div class="field"><label for="ncGroup">گروه</label><input type="text" id="ncGroup" placeholder="گروه ۱"></div>
+    <div class="field"><label for="ncTerm">ترم</label><input type="text" id="ncTerm" value="پاییز ۱۴۰۵"></div>
+    <div class="field"><label for="ncSchedule">زمان کلاس</label><input type="text" id="ncSchedule" placeholder="دوشنبه ۱۴–۱۶"></div>
+    <div class="field full"><label for="ncConcepts">مفاهیم درس *</label><textarea id="ncConcepts" placeholder="هر مفهوم در یک خط"></textarea><span class="help">بعداً هم می‌توانید مفهوم اضافه کنید.</span></div>
+    </div><p class="small" id="ncError" style="color:var(--red);min-height:1em"></p><div style="display:flex;gap:8px"><button class="btn primary" type="submit">ایجاد درس</button><button class="btn" type="button" data-act="closeModal">انصراف</button></div></form>`),
+  addSession: () => {
+    const d = $('#newSessDate').value.trim(), t = $('#newSessTopic').value.trim();
+    if (!d || !t) { toast('تاریخ و موضوع جلسه را وارد کنید.'); return; }
+    sessions.push({n:sessions.length + 1, date:d, topic:t}); toast(`جلسه‌ی ${fa(sessions.length)} اضافه شد.`); render();
+  },
+  newQuestion: () => openModal('سؤال جدید', `<form id="questionForm" novalidate>
+    <div class="field"><label for="nqText">متن سؤال *</label><textarea id="nqText"></textarea></div>
+    <div class="field"><label>گزینه‌ها * <span class="help">گزینه‌ی درست را علامت بزنید</span></label>
+      ${[0, 1, 2, 3].map(i => `<div class="opt-row"><input type="radio" name="nqCorrect" id="nqC${i}" value="${i}" ${i === 0 ? 'checked' : ''} aria-label="گزینه‌ی ${fa(i + 1)} درست است"><input type="text" id="nqO${i}" placeholder="گزینه‌ی ${fa(i + 1)}" aria-label="گزینه‌ی ${fa(i + 1)}"></div>`).join('')}</div>
+    <div class="field"><label>مفاهیم مرتبط *</label><div class="chips">${concepts.map(c => `<label class="tag gray" style="cursor:pointer"><input type="checkbox" name="nqConcept" value="${c.id}"> ${esc(c.t)}</label>`).join('')}</div></div>
+    <p class="small" id="nqError" style="color:var(--red);min-height:1em"></p><div style="display:flex;gap:8px"><button class="btn primary" type="submit">افزودن به بانک سؤال</button><button class="btn" type="button" data-act="closeModal">انصراف</button></div></form>`),
+  addConcept: () => { const v = $('#newConcept').value.trim(); if (!v) return; concepts.push({id:concepts.length, t:v, from:(curSession() ? curSession().n : 0) + 1, color:CONCEPT_COLORS[concepts.length % CONCEPT_COLORS.length]}); students.forEach(st => st.ability.push(1)); toast('مفهوم اضافه شد.'); render(); },
   confirmCsv: () => { const rows = window.__csv || []; rows.forEach(([code, name]) => students.push({id:students.length, code:fa(code), name, ability:concepts.map(() => 0.9), part:0.9, decl:false})); toast(`${fa(rows.length)} دانشجو اضافه شد.`); window.__csv = null; render(); },
   saveSettings: () => {
     const g = +$('#sGreen').value / 100, o = +$('#sOrange').value / 100;
@@ -1169,7 +1265,33 @@ document.addEventListener('keydown', e => {
 document.addEventListener('input', e => {
   if (e.target.id === 'stSearch') { state.stQuery = e.target.value; const pos = e.target.selectionStart; render(); const i = $('#stSearch'); i.focus(); i.setSelectionRange(pos, pos); }
 });
+function switchCourse(id) {
+  if (courses[id] === course) return;
+  if (live.running) ACT.liveEnd();
+  if (audio.listening) ACT.audioStop();
+  Object.assign(audio, {lines:[], idx:0, counts:{question:0, confusion:0, repeat:0, example:0, topic:0}});
+  useCourse(id); buildSuggestions();
+  Object.assign(state, {studentId:null, stQuery:'', stFilter:'all'});
+  toast(`درس فعال: ${course.title}`);
+}
+document.addEventListener('submit', e => {
+  e.preventDefault();
+  if (e.target.id === 'courseForm') {
+    const title = $('#ncTitle').value.trim(), cs = $('#ncConcepts').value.split(/[\n،,]/).map(x => x.trim()).filter(Boolean);
+    if (!title || !cs.length) { $('#ncError').textContent = 'نام درس و دست‌کم یک مفهوم لازم است.'; (title ? $('#ncConcepts') : $('#ncTitle')).focus(); return; }
+    const prev = course.id, c = addCourse({title, code:$('#ncCode').value.trim(), group:$('#ncGroup').value.trim(), term:$('#ncTerm').value.trim(), schedule:$('#ncSchedule').value.trim(), concepts:cs.map(t => [t, 1])});
+    useCourse(prev); closeModal(); switchCourse(c.id); render();
+  }
+  if (e.target.id === 'questionForm') {
+    const text = $('#nqText').value.trim(), opts = [0, 1, 2, 3].map(i => $('#nqO' + i).value.trim());
+    const correct = +document.querySelector('input[name=nqCorrect]:checked').value, cs = [...document.querySelectorAll('input[name=nqConcept]:checked')].map(x => +x.value);
+    if (!text || opts.some(o => !o) || !cs.length) { $('#nqError').textContent = 'متن سؤال، هر چهار گزینه و دست‌کم یک مفهوم لازم است.'; return; }
+    questions.push({id:questions.length + 1, session:curSession() ? curSession().n : 1, concepts:cs, text, options:opts, correct, mis:(correct + 1) % 4, diff:0, status:'approved', source:'manual', asked:false});
+    closeModal(); toast('سؤال به بانک اضافه شد.'); render();
+  }
+});
 document.addEventListener('change', e => {
+  if (e.target.id === 'courseSel') { switchCourse(+e.target.value); location.hash = state.view; render(); }
   if (e.target.id === 'stFilter') { state.stFilter = e.target.value; render(); }
   if (e.target.id === 'stSort') { const [k, d] = e.target.value.split(':'); state.stSort = {k, dir:+d}; render(); }
   if (e.target.id === 'csv' && e.target.files[0]) {
@@ -1184,9 +1306,9 @@ document.addEventListener('change', e => {
 /* ================= render ================= */
 function render() {
   $('#pageTitle').innerHTML = state.view === 'dashboard' ? `سلام ${esc(course.teacher)} <span class="hand" role="img" aria-label="دست تکان‌دادن">👋</span>` : state.view === 'students' && state.studentId != null ? 'نمایه‌ی دانشجو' : T.nav[state.view];
-  $('#pageSub').textContent = state.view === 'dashboard' ? `${course.title} · ${course.term} · امروز ${sessions[sessions.length - 1].date} — نگاهی به وضعیت کلاس شما` : T.sub[state.view];
-  $('#lessonTitle').textContent = course.title;
-  $('#lessonSub').textContent = `جلسه‌ی ${fa(sessions.length)} · ${sessions[sessions.length - 1].topic}`;
+  $('#pageSub').textContent = state.view === 'dashboard' ? `${course.title} · ${course.term} · ${curSession() ? 'آخرین جلسه ' + curSession().date : 'بدون جلسه'} — نگاهی به وضعیت کلاس شما` : T.sub[state.view];
+  $('#courseSel').innerHTML = courses.map(c => `<option value="${c.id}" ${c === course ? 'selected' : ''}>${esc(c.title)}${c.group ? ' · ' + esc(c.group) : ''}</option>`).join('');
+  $('#lessonSub').textContent = curSession() ? `جلسه‌ی ${fa(curSession().n)} · ${curSession().topic}` : 'هنوز جلسه‌ای تعریف نشده';
   $('#teacherName').textContent = course.teacher;
   $('#teacherAvatar').textContent = course.teacher.replace('دکتر', '').trim()[0];
   $('#liveChip').classList.toggle('on', live.running);
