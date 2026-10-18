@@ -171,23 +171,113 @@ canvas.wave{width:100%;height:60px;display:block;background:var(--bg);border-rad
   .g2,.g4{grid-template-columns:minmax(0,1fr)}
   .topbar .sub{display:none}
 }
+
+/* ===== visual theme: dark sidebar, white top bar, soft cards ===== */
+:root{--navy:#0c1532;--navy-2:#16224d;--side-ink:#aab6d6}
+.sidebar{background:linear-gradient(180deg,#101b3f 0%,#0a1230 100%);border-left:0;width:252px;padding:20px 14px}
+.brand{border-bottom:1px solid rgba(255,255,255,.08);margin-bottom:14px;padding:4px 8px 20px}
+.brand .logo{width:42px;height:42px;border-radius:13px;background:linear-gradient(135deg,#5b8cff,#3a5ce8);box-shadow:0 6px 20px rgba(65,105,245,.45)}
+.brand .logo svg{width:24px;height:24px}
+.brand b{color:#fff;font-size:18px}.brand small{color:var(--side-ink)}
+.nav-btn{color:var(--side-ink);padding:11px 14px;margin-bottom:4px;border-radius:12px}
+.nav-btn:hover{background:rgba(255,255,255,.06);color:#fff}
+.nav-btn[aria-current=page]{background:linear-gradient(270deg,rgba(65,105,245,.38),rgba(65,105,245,.12));color:#fff;font-weight:700;box-shadow:inset 0 0 0 1px rgba(120,150,255,.45)}
+.nav-btn[aria-current=page] svg{color:#86a6ff}
+.ai-widget{margin-top:auto;border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:14px;background:linear-gradient(160deg,rgba(91,140,255,.10),rgba(140,98,219,.06));color:#dfe6fa;font-size:12px;line-height:1.9}
+.ai-widget .bot{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#5b8cff,#8c62db);display:grid;place-items:center;font-weight:700;font-size:12px;color:#fff;box-shadow:0 0 18px rgba(91,140,255,.55);margin-bottom:8px}
+.ai-widget b{color:#fff}
+.eq{display:flex;align-items:center;gap:3px;height:30px;justify-content:center;margin-top:8px}
+.eq i{width:3px;border-radius:2px;background:#6f93ff;height:4px;opacity:.6}
+.eq.on i{animation:eq 1.1s ease-in-out infinite;opacity:1}
+@keyframes eq{0%,100%{height:4px}50%{height:26px}}
+.topbar{background:#fff;border-bottom:1px solid var(--line);padding:12px 28px;gap:16px;box-shadow:0 2px 10px rgba(25,38,64,.03)}
+.lesson{display:flex;align-items:center;gap:10px}
+.lesson-ic{width:42px;height:42px;border-radius:12px;background:var(--pale);color:var(--blue);display:grid;place-items:center}
+.lesson-ic svg{width:20px;height:20px}
+.lesson b{display:block;font-size:14px}.lesson small{color:var(--muted);font-size:12px}
+.live-chip{display:none;align-items:center;gap:10px;background:#f7f9fd;border:1px solid var(--line);border-radius:14px;padding:5px 12px 5px 8px}
+.live-chip.on{display:inline-flex}
+.live-chip .pill{background:var(--green-bg);color:#0b7a5a;border-radius:99px;padding:0 12px;font-size:12px;font-weight:700;line-height:26px}
+.live-chip .timer{color:var(--purple);font-weight:700;direction:ltr;font-size:15px;letter-spacing:.5px}
+.live-chip svg{width:18px;height:18px;color:var(--blue)}
+.bell{position:relative;width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:#fff;display:grid;place-items:center;color:var(--ink)}
+.bell svg{width:20px;height:20px}
+.bell .dot{position:absolute;top:8px;right:10px;width:9px;height:9px;border-radius:50%;background:var(--red);border:2px solid #fff}
+.teacher{display:flex;align-items:center;gap:10px;padding-inline-start:16px;border-inline-start:1px solid var(--line)}
+.teacher b{display:block;font-size:14px}.teacher small{color:var(--muted);font-size:12px}
+.avatar{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:700;flex:none;box-shadow:0 0 0 3px #fff,0 0 0 4px var(--line)}
+.avatar.sm{width:36px;height:36px;font-size:13px;box-shadow:none}
+.page-head{padding:24px 28px 16px}
+.page-head h1{font-size:24px;margin:0;display:flex;align-items:center;gap:8px}
+.page-head .sub{color:var(--muted);font-size:13px;margin-top:2px}
+.hand{display:inline-block;animation:wave 2.4s ease-in-out 2;transform-origin:70% 70%}
+@keyframes wave{0%,60%,100%{transform:rotate(0)}10%,30%{transform:rotate(16deg)}20%{transform:rotate(-8deg)}40%{transform:rotate(-4deg)}50%{transform:rotate(10deg)}}
+@media (prefers-reduced-motion:reduce){.hand,.eq.on i,.listen-pill .dot{animation:none}}
+.card{border:1px solid #e9edf6;box-shadow:0 1px 3px rgba(25,38,64,.03),0 12px 32px rgba(25,38,64,.05)}
+.card h2{font-size:15.5px}
+.hic{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;flex:none}
+.hic svg{width:18px;height:18px}
+.hic.blue{background:var(--pale);color:var(--blue)}.hic.green{background:var(--green-bg);color:var(--green)}
+.hic.orange{background:var(--orange-bg);color:#d98415}.hic.purple{background:var(--purple-bg);color:var(--purple)}.hic.red{background:var(--red-bg);color:var(--red)}
+.stat{padding:18px 20px;gap:6px}
+.stat .top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.stat .sic{width:46px;height:46px;border-radius:14px}
+.stat .value{font-size:28px;line-height:1.3}
+.ai-card{background:linear-gradient(135deg,#f3efff 0%,#edf2ff 55%,#f8faff 100%);border:1px solid #e0e2fb;position:relative;overflow:hidden}
+.ai-card::before{content:"";position:absolute;width:260px;height:260px;border-radius:50%;background:radial-gradient(circle,rgba(140,98,219,.20),transparent 70%);top:-110px;left:-70px;pointer-events:none}
+.ai-card>*{position:relative}
+.ai-badge{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#5b8cff,#8c62db);color:#fff;font-size:12px;font-weight:700;display:grid;place-items:center;box-shadow:0 4px 14px rgba(91,140,255,.4)}
+.ai-inner{background:#fff;border-radius:14px;padding:16px 18px;box-shadow:0 6px 20px rgba(65,105,245,.08)}
+.ai-inner h3{font-size:15px;margin:10px 0 6px}
+.ai-inner p{margin:4px 0;font-size:13px}
+.flag{display:inline-block;background:var(--orange);color:#fff;border-radius:8px;padding:0 12px;font-size:12px;font-weight:700;line-height:24px}
+.mini{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:14px}
+.mini>div{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 12px;text-align:center;font-size:12px;color:var(--muted)}
+.mini b{font-size:21px;display:block;line-height:1.5}
+.t-green{color:var(--green)}.t-orange{color:#e08a17}.t-red{color:var(--red)}.t-blue{color:var(--blue)}
+.dark-card{background:linear-gradient(165deg,#16224d,#0b1430);color:#dfe6fa;border:0}
+.dark-card h2{color:#fff}
+.dark-card .item{border-bottom:1px solid rgba(255,255,255,.08);padding:10px 0;font-size:13px}
+.dark-card .item:last-child{border:0}
+.dark-card .item .lbl{display:block;color:#9fb0d6;font-size:12px}
+.dark-card .item b{color:#fff}
+.dark-card .hic{background:rgba(255,255,255,.08);color:#9db7ff}
+.person{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);cursor:pointer}
+.person:last-child{border:0}
+.person .who{flex:1;min-width:0}
+.person .who b{display:block;font-size:13px}.person .who small{color:var(--muted);font-size:12px}
+.crow{padding:9px 0;border-bottom:1px solid var(--line);cursor:pointer;display:block;width:100%;background:none;border-width:0 0 1px;text-align:right}
+.crow:last-child{border:0}
+.crow .top{display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px;gap:8px}
+.prio{display:flex;align-items:center;gap:12px;border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:#fff}
+.prio+.prio{margin-top:10px}
+.prio .num{width:26px;height:26px;border-radius:50%;color:#fff;display:grid;place-items:center;font-size:12px;font-weight:700;flex:none}
+.prio .txt{flex:1;font-size:13px}
+.span2{grid-column:span 2}
+@media (max-width:1100px){.span2{grid-column:auto}}
+@media (max-width:900px){.teacher>div:last-child,.lesson>div{display:none}.teacher{border:0;padding:0}}
+@media (max-width:720px){.page-head{padding:16px 16px 10px}.page-head h1{font-size:19px}.topbar{padding:10px 16px;gap:10px}.lesson{display:none}.live-chip .pill{display:none}.mini b{font-size:17px}}
 </style>
 </head>
 <body>
 <div class="layout">
   <aside class="sidebar" id="sidebar" aria-label="منوی اصلی">
-    <div class="brand"><div class="logo" aria-hidden="true">ک</div><div><b>کلاس‌یار</b><small>دستیار هوشمند آموزش</small></div></div>
+    <div class="brand"><div class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c0 1.5 3 3 6 3s6-1.5 6-3v-5M22 9v6"/></svg></div><div><b>کلاس‌یار</b><small>دستیار هوشمند استاد</small></div></div>
     <nav id="nav"></nav>
-    <div class="me"><b>دکتر نرگس رحیمی</b><small>استاد · مبانی برنامه‌نویسی</small></div>
+    <div class="ai-widget" id="aiWidget"></div>
   </aside>
   <div class="backdrop" id="backdrop" data-act="closeMenu"></div>
   <main>
     <header class="topbar">
       <button class="menu-btn" data-act="openMenu" aria-label="باز کردن منو">☰</button>
-      <div><h1 id="pageTitle"></h1><div class="sub" id="pageSub"></div></div>
+      <div class="lesson"><span class="lesson-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5"/></svg></span><div><b id="lessonTitle"></b><small id="lessonSub"></small></div></div>
       <div class="spacer"></div>
+      <div class="live-chip" id="liveChip" role="status"><span class="pill">در حال برگزاری</span><span class="timer" id="timer">00:00:00</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></div>
       <span class="listen-pill" id="listenPill" role="status"><span class="dot" aria-hidden="true"></span>در حال شنود<button data-act="audioStop">توقف</button></span>
+      <button class="bell" data-act="go" data-v="suggestions" id="bell" aria-label="اعلان‌ها"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10 21h4"/></svg></button>
+      <div class="teacher"><div class="avatar" id="teacherAvatar" style="background:linear-gradient(135deg,#4169f5,#8c62db)" aria-hidden="true"></div><div><b id="teacherName"></b><small>استاد</small></div></div>
     </header>
+    <div class="page-head"><h1 id="pageTitle"></h1><div class="sub" id="pageSub"></div></div>
     <div class="view" id="view"></div>
   </main>
 </div>
@@ -221,7 +311,7 @@ const nowTime = () => fa(new Date().toLocaleTimeString('en-GB', {hour:'2-digit',
 const settings = {green:0.75, orange:0.50, minClass:10, minStudent:8, showNames:true, retention:30, dropAlert:10, llm:'university-local', stt:'faster-whisper'};
 
 /* ================= seed data ================= */
-const course = {title:'مبانی برنامه‌نویسی', code:'CS101', term:'پاییز ۱۴۰۵', teacher:'دکتر نرگس رحیمی'};
+const course = {title:'مبانی برنامه‌نویسی', code:'CS101', term:'پاییز ۱۴۰۵', teacher:'دکتر شهرام گلزاری هرمزی'};
 const concepts = [
   {id:0, t:'متغیر و نوع داده', from:1, color:'#4169f5'},
   {id:1, t:'شرط‌ها', from:2, color:'#8c62db'},
@@ -431,7 +521,14 @@ const C = {
     const r = size/2 - 7, L = 2 * Math.PI * r, col = {g:'var(--green)', o:'var(--orange)', r:'var(--red)'}[A.level(v)];
     return `<div class="ring" style="width:${size}px;height:${size}px"><svg width="${size}" height="${size}" aria-hidden="true"><circle cx="${size/2}" cy="${size/2}" r="${r}" stroke="var(--line)" stroke-width="7" fill="none"/><circle cx="${size/2}" cy="${size/2}" r="${r}" stroke="${col}" stroke-width="7" fill="none" stroke-linecap="round" stroke-dasharray="${L*v} ${L}" transform="rotate(-90 ${size/2} ${size/2})"/></svg><span>${pct(v)}</span></div>`;
   },
-  stat: (label, value, delta, act) => `<button class="card stat" data-act="${act}"><span class="label">${label}</span><span class="value">${value}</span><span class="delta">${delta}</span></button>`,
+  svg: (k) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${icons[k]}</svg>`,
+  h2: (icon, color, title) => `<h2><span class="hic ${color}">${C.svg(icon)}</span>${title}</h2>`,
+  stat: (label, value, delta, act, icon = 'dashboard', color = 'blue') => `<button class="card stat" data-act="${act}"><span class="top"><span><span class="label">${label}</span><span class="value" style="display:block">${value}</span></span><span class="hic sic ${color}">${C.svg(icon)}</span></span><span class="delta">${delta}</span></button>`,
+  avatar(s, cls = 'sm') {
+    const cols = ['#4169f5', '#8c62db', '#13a67b', '#e08a17', '#e85b68', '#0e9fb5', '#c2477f'];
+    const txt = settings.showNames ? s.name.trim()[0] : s.code;
+    return `<span class="avatar ${cls}" style="background:${cols[s.id % cols.length]}" aria-hidden="true">${txt}</span>`;
+  },
   delta(d, unit = '', goodUp = true) {
     if (d === 0) return 'بدون تغییر نسبت به جلسه‌ی قبل';
     const up = d > 0, good = up === goodUp;
@@ -464,27 +561,37 @@ const C = {
       ${s.status === 'approved' && s.output === 'question' && !compact ? `<div class="actions"><button class="btn" data-act="draftQuestion" data-id="${s.id}" ${s.drafted ? 'disabled' : ''}>${s.drafted ? 'پیش‌نویس سؤال ساخته شد' : 'ساخت پیش‌نویس سؤال مشابه'}</button></div>` : ''}
     </div>`;
   },
-  lineChart(series, {h = 220, yMin = 0} = {}) {
-    const W = 640, H = h, P = {l:36, r:16, t:12, b:28}, n = sessions.length;
+  lineChart(series, {h = 220, w = 640, yMin = 0, area = false, threshold = true, label = 'نمودار روند تسلط', hollowNote = true} = {}) {
+    const gid = 'g' + Math.random().toString(36).slice(2, 8); let defs = '';
+    const W = w, H = h, P = {l:36, r:16, t:12, b:28}, n = sessions.length;
     const x = i => W - P.r - (i * (W - P.l - P.r) / (n - 1)); // RTL: session 1 on the right
     const y = v => P.t + (1 - (v - yMin) / (1 - yMin)) * (H - P.t - P.b);
     let g = '';
     for (const t of [0, .25, .5, .75, 1]) g += `<line x1="${P.l}" x2="${W-P.r}" y1="${y(t)}" y2="${y(t)}" stroke="var(--line)"/><text x="${P.l-6}" y="${y(t)+4}" font-size="10" fill="var(--muted)" text-anchor="end">${pct(t)}</text>`;
-    g += `<line x1="${P.l}" x2="${W-P.r}" y1="${y(settings.green)}" y2="${y(settings.green)}" stroke="var(--green)" stroke-dasharray="4 4" opacity=".6"/>`;
+    if (threshold) g += `<line x1="${P.l}" x2="${W-P.r}" y1="${y(settings.green)}" y2="${y(settings.green)}" stroke="var(--green)" stroke-dasharray="4 4" opacity=".6"/>`;
     sessions.forEach((s, i) => g += `<text x="${x(i)}" y="${H-8}" font-size="10" fill="var(--muted)" text-anchor="middle">ج${fa(s.n)}</text>`);
-    for (const sr of series) {
+    for (const [si, sr] of series.entries()) {
       const pts = sr.points.map((p, i) => p && {x:x(i), y:y(p.v), ok:p.ok, v:p.v, n:p.n}).filter(Boolean);
       const solid = pts.filter(p => p.ok);
-      if (solid.length > 1) g += `<polyline fill="none" stroke="${sr.color}" stroke-width="2.2" points="${solid.map(p => `${p.x},${p.y}`).join(' ')}"/>`;
+      if (area && solid.length > 1) {
+        defs += `<linearGradient id="${gid}${si}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${sr.color}" stop-opacity=".26"/><stop offset="1" stop-color="${sr.color}" stop-opacity="0"/></linearGradient>`;
+        g += `<polygon fill="url(#${gid}${si})" points="${solid[0].x},${y(yMin)} ${solid.map(p => `${p.x},${p.y}`).join(' ')} ${solid[solid.length - 1].x},${y(yMin)}"/>`;
+      }
+      if (solid.length > 1) g += `<polyline fill="none" stroke-linejoin="round" stroke-linecap="round" stroke="${sr.color}" stroke-width="2.6" points="${solid.map(p => `${p.x},${p.y}`).join(' ')}"/>`;
       for (const p of pts) g += `<circle cx="${p.x}" cy="${p.y}" r="4" fill="${p.ok ? sr.color : '#fff'}" stroke="${sr.color}" stroke-width="2"><title>${sr.name}: ${pct(p.v)} (n=${fa(p.n)})${p.ok ? '' : ' — داده کافی نیست'}</title></circle>`;
     }
     const legend = series.map(s => `<span><i style="background:${s.color}"></i>${s.name}</span>`).join('');
-    return `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="نمودار روند تسلط">${g}</svg><div class="legend">${legend}<span><i style="background:#fff;border:2px solid var(--muted)"></i>نقطه‌ی توخالی: داده کافی نیست</span></div>`;
+    return `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="${label}"><defs>${defs}</defs>${g}</svg><div class="legend">${legend}${hollowNote ? '<span><i style="background:#fff;border:2px solid var(--muted)"></i>نقطه‌ی توخالی: داده کافی نیست</span>' : ''}</div>`;
   },
 };
 
 /* ================= views ================= */
 const icons = {
+  alert:'<path d="M12 3l10 18H2zM12 10v5M12 18v.5"/>',
+  target:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>',
+  doc:'<path d="M6 3h9l4 4v14H6z"/><path d="M9 12h7M9 16h5"/>',
+  spark:'<path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5L18 18M6 18l2.5-2.5M15.5 8.5L18 6"/>',
+  grid:'<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
   dashboard:'<path d="M3 3h7v7H3zM14 3h7v4h-7zM14 10h7v11h-7zM3 13h7v8H3z"/>',
   live:'<circle cx="12" cy="12" r="3"/><path d="M5 5a10 10 0 0 0 0 14M19 5a10 10 0 0 1 0 14"/>',
   audio:'<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/>',
@@ -508,24 +615,60 @@ V.dashboard = () => {
   const pending = suggestions.filter(s => s.status === 'pending');
   const need = students.map(s => ({s, a:A.student(s.id)})).filter(x => x.a.attention);
   const alerts = A.alerts();
+  const lastStat = A.stat(responses.filter(r => r.session === last));
+  const cm = concepts.map(c => ({c, ...A.upTo(c.id, last), prev:A.upTo(c.id, prev)})).filter(x => x.n);
+  const weakest = cm.slice().sort((x, y) => x.ok / x.n - y.ok / y.n)[0];
+  const ps = A.participationBySession();
+  const partSeries = [
+    {name:'نرخ پاسخ', color:'#4169f5', points:ps.map((p, i) => p == null ? null : {v:p, n:responses.filter(r => r.session === i + 1).length, ok:true})},
+    {name:'درست‌پاسخی', color:'#13a67b', points:sessions.map(se => { const st = A.stat(responses.filter(r => r.session === se.n)); return st.n ? {v:st.ok / st.n, n:st.n, ok:st.n >= settings.minClass} : null; })},
+  ];
+  const top = pending[0];
+  const avgPart = sum(ps.filter(p => p != null)) / ps.filter(p => p != null).length;
+  const overall = avgM(last);
   return `
   <div class="grid g4">
-    ${C.stat('دانشجویان فعال', `${fa(active(last))} <span class="muted small">از ${fa(students.length)}</span>`, C.delta(active(last) - active(prev)), 'go" data-v="students')}
-    ${C.stat('میانگین تسلط مفهومی', pct(avgM(last)), C.delta(Math.round((avgM(last) - avgM(prev)) * 100), '٪'), 'go" data-v="analytics')}
-    ${C.stat('نیازمند توجه', fa(att(last)), C.delta(att(last) - att(prev), '', false), 'filterAttention')}
-    ${C.stat('پیشنهادهای در انتظار', fa(pending.length), 'منتظر تصمیم شما', 'go" data-v="suggestions')}
+    ${C.stat('دانشجویان فعال', `${fa(active(last))} <span class="muted small">از ${fa(students.length)}</span>`, C.delta(active(last) - active(prev)), 'go" data-v="students', 'students', 'blue')}
+    ${C.stat('میانگین تسلط مفهومی', pct(avgM(last)), C.delta(Math.round((avgM(last) - avgM(prev)) * 100), '٪'), 'go" data-v="analytics', 'analytics', 'green')}
+    ${C.stat('نیازمند توجه', fa(att(last)), C.delta(att(last) - att(prev), '', false), 'filterAttention', 'alert', 'orange')}
+    ${C.stat('پیشنهادهای در انتظار', fa(pending.length), 'منتظر تصمیم شما', 'go" data-v="suggestions', 'suggestions', 'purple')}
   </div>
-  <div class="grid g-main mt">
-    <div class="card"><div class="card-head"><h2>نقشه‌ی تسلط مفاهیم</h2><span class="hint">برای دیدن سؤال‌ها و n روی هر خانه کلیک کنید</span></div>${C.heatmap()}</div>
-    <div class="card"><div class="card-head"><h2>هشدارهای آموزشی</h2></div>${alerts.length ? alerts.map(C.alert).join('') : '<div class="empty">هشداری وجود ندارد.</div>'}<div class="note">${T.notJudgement}</div></div>
+  <div class="grid g3 mt">
+    <div class="card ai-card span2"><div class="card-head"><h2><span class="ai-badge">AI</span>دستیار هوشمند کلاس</h2><span class="hint">پیش‌نویس — بدون تأیید شما اجرا نمی‌شود</span></div>
+      ${top ? `<div class="ai-inner"><div class="inline" style="flex-wrap:wrap"><span class="flag">پیشنهاد در انتظار تصمیم</span>${C.confTag(top.conf)}</div>
+        <h3>${esc(top.title)}</h3>
+        <p><span class="muted">شواهد:</span> ${top.evidence} · <button class="link" data-act="evidence" data-ev='${JSON.stringify(top.ev)}'>مشاهده</button></p>
+        <p><span class="muted">اقدام پیشنهادی:</span> ${esc(top.action)}</p>
+        <div class="sugg" style="border:0;padding:0"><div class="actions"><button class="btn primary" data-act="decide" data-id="${top.id}" data-d="approved">اعمال پیشنهاد</button><button class="btn" data-act="decide" data-id="${top.id}" data-d="rejected">رد کردن</button><span style="margin-inline-start:auto"></span><button class="link small" data-act="go" data-v="suggestions">همه‌ی پیشنهادها (${fa(pending.length)})</button></div></div></div>`
+        : '<div class="ai-inner"><div class="empty">همه‌ی پیشنهادها بررسی شده‌اند.</div></div>'}
+      <div class="mini">
+        <div><b class="t-green">${lastStat.n ? pct(lastStat.ok / lastStat.n) : '—'}</b>درست‌پاسخی جلسه‌ی ${fa(last)}<br><span class="small">n=${fa(lastStat.n)}</span></div>
+        <div><b class="t-orange">${fa(audio.counts.confusion)}</b>نشانه‌ی ابهام گفتاری<br><span class="small">${audio.consent ? 'از رونوشت امروز' : 'شنود فعال نشده'}</span></div>
+        <div><b class="t-red">${pct(weakest.ok / weakest.n)}</b>دشوارترین مفهوم<br><span class="small">${weakest.c.t}</span></div>
+      </div></div>
+    <div class="card dark-card"><div class="card-head">${C.h2('doc', '', 'خلاصه‌ی ترم تا امروز')}</div>
+      <div class="item"><span class="lbl">مفاهیم پوشش‌داده‌شده</span><b>${concepts.filter(c => cm.some(x => x.c.id === c.id)).map(c => c.t).join('، ')}</b></div>
+      <div class="item"><span class="lbl">جلسات و پاسخ‌ها</span><b>${fa(last)} جلسه · ${fa(responses.length)} پاسخ ثبت‌شده</b></div>
+      <div class="item"><span class="lbl">میانگین نرخ پاسخ</span><b>${pct(avgPart)}</b></div>
+      <div class="item"><span class="lbl">وضعیت کلی تسلط کلاس</span><b>${pct(overall)}</b> ${C.levelTag(overall)}</div>
+    </div>
   </div>
-  <div class="grid g-main mt">
-    <div class="card"><div class="card-head"><h2>دانشجویان نیازمند توجه</h2><span class="hint">${fa(need.length)} نفر</span><div class="end"><button class="btn sm" data-act="filterAttention">همه</button></div></div>
-      <div class="table-wrap"><table><thead><tr><th>دانشجو</th><th>مفهوم دشوار</th><th>دلیل</th><th></th></tr></thead><tbody>
-      ${need.slice(0, 6).map(({s, a}) => `<tr class="clickable" data-act="student" data-id="${s.id}"><td>${esc(studentName(s))}</td><td>${a.hard ? a.hard.c.t : '—'}</td><td class="small muted">${a.reasons[0]}</td><td><button class="btn sm" data-act="student" data-id="${s.id}">شواهد</button></td></tr>`).join('') || '<tr><td colspan="4" class="empty">موردی نیست.</td></tr>'}
-      </tbody></table></div></div>
-    <div class="card"><div class="card-head"><h2>پیشنهادهای اخیر</h2><div class="end"><button class="btn sm" data-act="go" data-v="suggestions">همه</button></div></div>
-      ${pending.slice(0, 2).map(s => C.suggestion(s, true)).join('') || '<div class="empty">پیشنهاد در انتظاری نیست.</div>'}</div>
+  <div class="grid g3 mt">
+    <div class="card"><div class="card-head">${C.h2('analytics', 'blue', 'نمودار مشارکت کلاس')}</div>${C.lineChart(partSeries, {h:300, w:380, area:true, threshold:false, label:'نمودار مشارکت و درست‌پاسخی', hollowNote:false})}</div>
+    <div class="card"><div class="card-head">${C.h2('target', 'purple', 'وضعیت درک مفاهیم')}<span class="hint">تجمعی</span></div>
+      ${cm.map(x => { const m = x.ok / x.n, d = x.prev.n ? Math.round((m - x.prev.ok / x.prev.n) * 100) : 0;
+        return `<button class="crow" data-act="evidence" data-ev='{"type":"concept","c":${x.c.id}}'><div class="top"><b>${x.c.t}</b><span><b class="${{g:'t-green', o:'t-orange', r:'t-red'}[A.level(m)]}">${pct(m)}</b> <span class="muted small">n=${fa(x.n)}</span> ${d ? `<span class="small ${d > 0 ? 't-green' : 't-red'}">${d > 0 ? '▲' : '▼'}${fa(Math.abs(d))}</span>` : ''}</span></div>${C.progress(m)}</button>`; }).join('')}
+    </div>
+    <div class="card"><div class="card-head">${C.h2('students', 'orange', 'دانشجویان نیازمند توجه')}<div class="end"><button class="link small" data-act="filterAttention">مشاهده‌ی همه (${fa(need.length)})</button></div></div>
+      ${need.slice(0, 5).map(({s, a}) => `<div class="person" data-act="student" data-id="${s.id}" tabindex="0" role="button">${C.avatar(s)}<div class="who"><b>${esc(studentName(s))}</b><small>${a.hard ? `مفهوم دشوار: ${a.hard.c.t}` : a.reasons[0]}</small></div>${C.tag('نیازمند پیگیری', 'orange')}</div>`).join('') || '<div class="empty">موردی نیست.</div>'}
+    </div>
+  </div>
+  <div class="grid g3 mt">
+    <div class="card span2"><div class="card-head">${C.h2('grid', 'green', 'نقشه‌ی تسلط مفاهیم')}<span class="hint">برای دیدن سؤال‌ها و n روی هر خانه کلیک کنید</span></div>${C.heatmap()}</div>
+    <div class="card"><div class="card-head">${C.h2('alert', 'red', 'هشدارهای آموزشی')}</div>${alerts.length ? alerts.map(C.alert).join('') : '<div class="empty">هشداری وجود ندارد.</div>'}<div class="note">${T.notJudgement}</div></div>
+  </div>
+  <div class="card mt"><div class="card-head">${C.h2('suggestions', 'orange', 'پیشنهادهای ادامه‌ی تدریس')}<span class="hint">به ترتیب اولویت · فقط با تأیید شما</span></div>
+    ${pending.map((sg, i) => `<div class="prio"><span class="num" style="background:${['var(--red)', 'var(--purple)', 'var(--orange)', 'var(--blue)'][i % 4]}">${fa(i + 1)}</span><span class="txt"><b>${esc(sg.title)}</b><br><span class="muted small">${sg.evidence}</span></span>${i < 2 ? C.tag('اولویت بالا', 'red') : C.tag('اولویت متوسط', 'green')}<button class="btn sm" data-act="go" data-v="suggestions">بررسی</button></div>`).join('') || '<div class="empty">پیشنهاد در انتظاری نیست.</div>'}
   </div>`;
 };
 
@@ -833,7 +976,7 @@ const ACT = {
     toast('پیش‌نویس به بانک سؤال اضافه شد و تا تأیید شما استفاده نمی‌شود.'); render();
   },
   approveQ: el => { A.qById(+el.dataset.id).status = 'approved'; toast('سؤال تأیید شد و به بانک اضافه شد.'); render(); },
-  liveStart: () => { live.running = true; live.code = String(100000 + Math.floor(Math.random() * 900000)); render(); },
+  liveStart: () => { live.running = true; live.startedAt = Date.now(); live.code = String(100000 + Math.floor(Math.random() * 900000)); render(); },
   liveEnd: () => { if (live.qState && live.qState !== 'closed') ACT.liveClose(); clearInterval(live.timer); Object.assign(live, {running:false, code:null, qid:null, qState:null, answers:[]}); toast('جلسه پایان یافت و کد ورود باطل شد.'); render(); },
   liveAsk: el => {
     live.qid = +el.dataset.id; live.qState = 'open'; live.answers = []; live.previewSel = null;
@@ -884,8 +1027,17 @@ document.addEventListener('change', e => {
 
 /* ================= render ================= */
 function render() {
-  $('#pageTitle').textContent = T.nav[state.view];
-  $('#pageSub').textContent = T.sub[state.view];
+  $('#pageTitle').innerHTML = state.view === 'dashboard' ? `سلام ${esc(course.teacher)} <span class="hand" role="img" aria-label="دست تکان‌دادن">👋</span>` : T.nav[state.view];
+  $('#pageSub').textContent = state.view === 'dashboard' ? `${course.title} · ${course.term} · امروز ${sessions[sessions.length - 1].date} — نگاهی به وضعیت کلاس شما` : T.sub[state.view];
+  $('#lessonTitle').textContent = course.title;
+  $('#lessonSub').textContent = `جلسه‌ی ${fa(sessions.length)} · ${sessions[sessions.length - 1].topic}`;
+  $('#teacherName').textContent = course.teacher;
+  $('#teacherAvatar').textContent = course.teacher.replace('دکتر', '').trim()[0];
+  $('#liveChip').classList.toggle('on', live.running);
+  const pend = suggestions.filter(s => s.status === 'pending').length;
+  $('#bell').innerHTML = $('#bell').innerHTML.replace(/<span class="dot"[^>]*><\/span>/, '') + (pend ? '<span class="dot" aria-hidden="true"></span>' : '');
+  $('#bell').setAttribute('aria-label', pend ? `اعلان‌ها: ${fa(pend)} پیشنهاد در انتظار` : 'اعلان‌ها');
+  $('#aiWidget').innerHTML = `<div class="bot" aria-hidden="true">AI</div>${audio.listening ? '<b>در حال تحلیل صدا</b><br>رونوشت و نشانه‌های گفتاری کلاس…' : live.running ? '<b>جلسه‌ی زنده فعال است</b><br>پاسخ‌ها لحظه‌ای تحلیل می‌شوند.' : `<b>دستیار آماده است</b><br>${fa(pend)} پیشنهاد منتظر تصمیم شما.`}<div class="eq ${audio.listening ? 'on' : ''}" aria-hidden="true">${Array.from({length:22}, (_, i) => `<i style="animation-delay:${(i % 7) * 0.12}s"></i>`).join('')}</div>`;
   $('#listenPill').classList.toggle('on', audio.listening);
   renderNav();
   $('#view').innerHTML = V[state.view]();
@@ -893,6 +1045,8 @@ function render() {
   if (state.view === 'audio') { const el = $('#transcript'); el.scrollTop = el.scrollHeight; if (!audio.raf) drawWave(); }
 }
 window.addEventListener('hashchange', () => { const v = location.hash.slice(1); if (T.nav[v] && v !== state.view) { state.view = v; render(); } });
+setInterval(() => { if (!live.running) return; const t = Math.floor((Date.now() - live.startedAt) / 1000); $('#timer').textContent = [t / 3600, t / 60 % 60, t % 60].map(x => String(Math.floor(x)).padStart(2, '0')).join(':'); }, 1000);
+document.addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('.person[data-act]')) { e.preventDefault(); ACT.student(e.target); } });
 buildSuggestions();
 { const v = location.hash.slice(1); if (T.nav[v]) state.view = v; }
 render();
