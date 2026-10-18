@@ -5,6 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>کلاس‌یار</title>
 <style>
+/* Licensed fonts: put the files in fonts/ (see fonts/README.md) or install them on the system */
+@font-face{font-family:'Anjoman';src:local('Anjoman'),url('fonts/Anjoman-Regular.woff2') format('woff2'),url('fonts/Anjoman-Regular.woff') format('woff');font-weight:400;font-display:swap}
+@font-face{font-family:'Anjoman';src:local('Anjoman Bold'),local('Anjoman-Bold'),url('fonts/Anjoman-Bold.woff2') format('woff2'),url('fonts/Anjoman-Bold.woff') format('woff');font-weight:700;font-display:swap}
+@font-face{font-family:'IRANSans';src:local('IRANSans'),url('fonts/IRANSans-Regular.woff2') format('woff2'),url('fonts/IRANSans-Regular.woff') format('woff');font-weight:400;font-display:swap}
+@font-face{font-family:'IRANSans';src:local('IRANSans Bold'),local('IRANSans-Bold'),url('fonts/IRANSans-Bold.woff2') format('woff2'),url('fonts/IRANSans-Bold.woff') format('woff');font-weight:700;font-display:swap}
 :root{
   --bg:#f5f7fb;--card:#fff;--ink:#192640;--muted:#77839b;--line:#e7ebf3;
   --blue:#4169f5;--pale:#edf1ff;--green:#13a67b;--orange:#f4a340;--red:#e85b68;--purple:#8c62db;
@@ -13,7 +18,7 @@
 }
 *{box-sizing:border-box}
 html,body{margin:0}
-body{background:var(--bg);color:var(--ink);font-family:Vazirmatn,Tahoma,"Segoe UI",sans-serif;font-size:14px;line-height:1.8}
+body{background:var(--bg);color:var(--ink);font-family:Anjoman,IRANSans,IRANSansX,Vazirmatn,Tahoma,"Segoe UI",sans-serif;font-size:14px;line-height:1.8}
 button,input,select,textarea{font:inherit;color:inherit}
 button{cursor:pointer}
 :focus-visible{outline:2px solid var(--blue);outline-offset:2px}
