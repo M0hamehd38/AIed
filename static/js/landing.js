@@ -95,7 +95,7 @@ function render(D, t, speed) {
 const frame = $('#frame');
 // where the opening pieces sit on each stage: [left, top, width, height]
 const LAYOUT = {
-  land:{headline:[736.9, 103.2, 554.6, 339.7], robot:[57.5, 120.6, 466.1, 446.4], desk:[-61, 476.1, 1401.5, 249.9], origin:'400px 560px'},
+  land:{headline:[666.9, 103.2, 554.6, 339.7], robot:[57.5, 120.6, 466.1, 446.4], desk:[-61, 476.1, 1401.5, 249.9], origin:'400px 560px'},
   port:{headline:[50, 150, 620, 380], robot:[96, 560, 528, 506], desk:[-90, 958, 900, 340], origin:'360px 1060px'},
 };
 function fit() {
@@ -103,7 +103,9 @@ function fit() {
   PORT = vw / vh < 0.9; [FW, FH] = PORT ? [720, 1280] : [1280, 720];
   frame.style.width = FW + 'px'; frame.style.height = FH + 'px';
   const L = LAYOUT[PORT ? 'port' : 'land'];
-  for (const id of ['headline', 'robot', 'desk']) { const [l, t, w, h] = L[id], e = $('#' + id); Object.assign(e.style, {left:l + 'px', top:t + 'px', width:w + 'px', height:h + 'px'}); }
+  // on windows narrower than the stage, its sides are cropped: keep the headline clear of the right edge
+  const crop = PORT ? 0 : Math.max(0, (FW - vw / Math.max(vw / FW, vh / FH)) / 2);
+  for (const id of ['headline', 'robot', 'desk']) { const [l, t, w, h] = L[id], e = $('#' + id); Object.assign(e.style, {left:l - (id === 'headline' ? crop : 0) + 'px', top:t + 'px', width:w + 'px', height:h + 'px'}); }
   els.fg.style.transformOrigin = L.origin;
   document.querySelectorAll('#stage .o').forEach(o => { o.style.left = FW / 2 + 'px'; o.style.top = FH * .48 + 'px'; });
   els.stats.style.display = PORT ? 'none' : '';
