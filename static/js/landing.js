@@ -33,7 +33,7 @@ const cards = CARDS.map(([ic, t, d, c, side], i) => {
 });
 const bokeh = [];
 const BK = ['rgba(120,200,255,', 'rgba(150,120,255,', 'rgba(90,150,255,', 'rgba(255,190,120,'];
-for (let i = 0; i < 28; i++) {
+for (let i = 0; i < 18; i++) {
   const el = document.createElement('div'); el.className = 'o';
   const r = k => Math.abs((Math.sin(i * k) * 43758.5453) % 1), sz = 10 + r(5.17) * 34, col = BK[i % 4];
   el.innerHTML = `<div class="bk" style="width:${sz}px;height:${sz}px;margin:${-sz / 2}px 0 0 ${-sz / 2}px;background:radial-gradient(circle,${col}.85),${col}.25) 45%,${col}0) 70%)"></div>`;
@@ -43,7 +43,10 @@ for (let i = 0; i < 28; i++) {
 $('#dots').innerHTML = ['ابتدا', ...CARDS.map(c => c[1]), 'تخته'].map((l, i) => `<button data-go="${i}" aria-label="${l}"><i></i></button>`).join('');
 
 const els = {cls:$('#cls'), scr:$('#scr'), head:$('#headline'), fg:$('#fgroup'), eyeL:$('#eyeL'), eyeR:$('#eyeR'), steam:$('#steam'), stats:$('#stats'), chev:$('#chev'), dots:[...document.querySelectorAll('#dots button')], menu:[...document.querySelectorAll('.menu button')]};
-const PLACE = (el, cx, cy, k) => { el.style.transform = `translate(${FW / 2 - cx * k}px, ${FH / 2 - cy * k}px) scale(${k})`; };
+// write a style only when its value changes: most frames touch few properties
+const set = (el, prop, v) => { const c = el._s || (el._s = {}); if (c[prop] !== v) { c[prop] = v; el.style[prop] = v; } };
+const PLACE = (el, cx, cy, k) => set(el, 'transform', `translate(${(FW / 2 - cx * k).toFixed(2)}px, ${(FH / 2 - cy * k).toFixed(2)}px) scale(${k.toFixed(4)})`);
+const farImg = $('#clsFar');
 
 function render(D, t, speed) {
   const pass = clamp(D, 0, 1);
@@ -55,14 +58,16 @@ function render(D, t, speed) {
   const hw = FW / 2 / kc, hh = FH / 2 / kc; cx = clamp(cx, hw, PW - hw); cy = clamp(cy, hh, Math.max(hh, Math.min(PH - hh, 782 - hh)));
   PLACE(els.cls, cx, cy, kc); PLACE(els.scr, cx, cy, kc);
   const foc = smooth(clamp((D - 0.08) / 0.75, 0, 1));
-  els.cls.style.filter = `blur(${((1 - foc) * 7 + speed * 0.7).toFixed(2)}px) saturate(${(1.4 - .45 * foc).toFixed(3)}) brightness(${(.66 + .38 * foc).toFixed(3)}) hue-rotate(${((1 - foc) * 14).toFixed(1)}deg)`;
+  set(farImg, 'opacity', (1 - foc).toFixed(3));
   // fly through the gap between the bot (with its desk) and the headline
-  const sp = smooth(pass), pr = Math.pow(pass, 1.35), sc = 1 + 1.15 * sp, ho = 1 - clamp((pass - 0.5) / 0.38, 0, 1), hb = (clamp(pass - .2, 0, 1) * 5).toFixed(2);
-  const hl = (e, tx, ty, s2) => { e.style.transform = `translate(${tx}px, ${ty}px) scale(${s2})`; e.style.opacity = ho.toFixed(3); e.style.filter = pass > .2 ? `blur(${hb}px)` : ''; e.style.visibility = ho > 0.001 ? '' : 'hidden'; };
+  const sp = smooth(pass), pr = Math.pow(pass, 1.35), sc = 1 + 1.15 * sp, ho = 1 - clamp((pass - 0.5) / 0.38, 0, 1), hb = (Math.round(clamp(pass - .2, 0, 1) * 10) / 2).toFixed(1);
+  const hl = (e, tx, ty, s2) => { set(e, 'transform', `translate(${tx.toFixed(1)}px, ${ty.toFixed(1)}px) scale(${s2.toFixed(4)})`); set(e, 'opacity', ho.toFixed(3)); set(e, 'filter', pass > .2 && hb !== '0.0' ? `blur(${hb}px)` : ''); set(e, 'visibility', ho > 0.001 ? '' : 'hidden'); };
   if (PORT) { hl(els.head, 0, -900 * pr, sc * .95); hl(els.fg, 0, 850 * pr, 1 + .9 * sp); }
   else { hl(els.head, 1350 * pr + 22, -150 * pr + 8, sc * .88); hl(els.fg, -760 * pr, 420 * pr, 1 + .9 * sp); }
-  const g = (0.5 + 0.5 * Math.sin(t * 1.7)).toFixed(2); els.eyeL.style.opacity = g; els.eyeR.style.opacity = g;
-  els.steam.style.transform = `translateY(${-(t * 14) % 18}px)`; els.steam.style.opacity = (0.26 + 0.12 * Math.sin(t * 2.1)).toFixed(2);
+  if (pass < 1) {
+    const g = (0.5 + 0.5 * Math.sin(t * 1.7)).toFixed(2); set(els.eyeL, 'opacity', g); set(els.eyeR, 'opacity', g);
+    set(els.steam, 'transform', `translateY(${(-(t * 14) % 18).toFixed(1)}px)`); set(els.steam, 'opacity', (0.26 + 0.12 * Math.sin(t * 2.1)).toFixed(2));
+  }
   // feature cards: the current one is sharp, the next ones wait deeper in the room
   const appear = clamp((D - 0.55) / 0.3, 0, 1);
   for (const c of cards) {
@@ -71,24 +76,31 @@ function render(D, t, speed) {
     else { zz = (D - n) * 1100; op = clamp(1 - zz / 480, 0, 1); blur = clamp(zz / 120, 0, 6); }
     op *= appear;
     const x = c.side * (PORT ? 60 : 300), y = [-70, 30, -40, 20, -60, 30][c.i] + Math.sin(t * 1.4 + c.i) * 5;
-    c.el.style.transform = `translate3d(${x}px, ${y}px, ${zz}px) rotateY(${c.side * 12}deg)`;
-    c.el.style.opacity = op.toFixed(3); c.el.style.filter = blur > .05 ? `blur(${blur.toFixed(2)}px) brightness(${(1 - blur * .04).toFixed(3)})` : '';
-    c.el.style.zIndex = Math.round(10000 + zz); c.el.style.display = op > 0.005 && zz < 860 ? '' : 'none';
+    const show = op > 0.005 && zz < 860;
+    set(c.el, 'display', show ? '' : 'none');
+    if (!show) continue;
+    // blur in whole-pixel steps, at most 4px: each new radius costs a new raster
+    const bq = Math.min(4, Math.round(blur));
+    set(c.el, 'transform', `translate3d(${x}px, ${y.toFixed(1)}px, ${zz.toFixed(1)}px) rotateY(${c.side * 12}deg)`);
+    set(c.el, 'opacity', op.toFixed(3)); set(c.el, 'filter', bq ? `blur(${bq}px) brightness(${(1 - bq * .04).toFixed(2)})` : '');
+    set(c.el, 'zIndex', String(Math.round(10000 + zz)));
   }
   for (const b of bokeh) {
     const z2 = ((b.z0 + D * 700 + t * 30) % 3200) - 2600;
     const op = clamp((z2 + 2600) / 900, 0, 1) * clamp((700 - z2) / 400, 0, 1) * (0.22 + 0.25 * Math.abs(Math.sin(t * .8 + b.z0))) * appear;
-    b.el.style.transform = `translate3d(${b.x}px, ${b.y}px, ${z2}px)`; b.el.style.opacity = op.toFixed(3);
+    if (op < 0.004) { set(b.el, 'opacity', '0'); continue; }
+    set(b.el, 'transform', `translate3d(${b.x.toFixed(0)}px, ${b.y.toFixed(0)}px, ${z2.toFixed(0)}px)`); set(b.el, 'opacity', op.toFixed(3));
   }
   // opening UI and progress
   const hero = 1 - clamp(D / 0.25, 0, 1);
-  els.stats.style.opacity = hero; els.stats.style.transform = `translateY(${(1 - hero) * 40}px)`; els.stats.style.visibility = hero > 0 ? '' : 'hidden';
-  els.chev.style.opacity = hero; els.chev.style.visibility = hero > 0 ? '' : 'hidden'; els.chev.style.transform = `translateY(${Math.abs(Math.sin(t * 2.4)) * 6}px)`;
+  set(els.stats, 'opacity', hero.toFixed(3)); set(els.stats, 'transform', `translateY(${((1 - hero) * 40).toFixed(1)}px)`); set(els.stats, 'visibility', hero > 0 ? '' : 'hidden');
+  set(els.chev, 'opacity', hero.toFixed(3)); set(els.chev, 'visibility', hero > 0 ? '' : 'hidden');
+  if (hero > 0) set(els.chev, 'transform', `translateY(${(Math.abs(Math.sin(t * 2.4)) * 6).toFixed(1)}px)`);
   const at = Math.round(D);
   els.dots.forEach((d, i) => d.classList.toggle('on', i === at));
   els.menu[0].classList.toggle('on', D < 0.5); els.menu[1].classList.toggle('on', D >= 0.5 && D < 6.5);
   const bo = clamp((D - 6.4) / 0.55, 0, 1);
-  els.scr.style.opacity = bo; els.scr.style.display = bo > 0 ? '' : 'none';
+  set(els.scr, 'opacity', bo.toFixed(3)); set(els.scr, 'display', bo > 0 ? '' : 'none');
 }
 
 // ---------- scroll drives the camera ----------
@@ -107,6 +119,7 @@ function fit() {
   const crop = PORT ? 0 : Math.max(0, (FW - vw / Math.max(vw / FW, vh / FH)) / 2);
   for (const id of ['headline', 'robot', 'desk']) { const [l, t, w, h] = L[id], e = $('#' + id); Object.assign(e.style, {left:l - (id === 'headline' ? crop : 0) + 'px', top:t + 'px', width:w + 'px', height:h + 'px'}); }
   els.fg.style.transformOrigin = L.origin;
+  els.head.style.fontSize = (L.headline[2] / 554.6 * 16).toFixed(2) + 'px';
   document.querySelectorAll('#stage .o').forEach(o => { o.style.left = FW / 2 + 'px'; o.style.top = FH * .48 + 'px'; });
   els.stats.style.display = PORT ? 'none' : '';
   frame.style.setProperty('--cs', PORT ? .72 : .8);

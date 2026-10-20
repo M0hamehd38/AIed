@@ -37,7 +37,7 @@ html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Sahel,Tahom
 #board .s{background:linear-gradient(90deg,#1ad6f0,#6d5cff);box-shadow:0 0 12px rgba(80,170,255,.7)}
 #board .l{background:transparent;border:1px solid rgba(220,235,255,.85)}
 .stats{position:absolute;left:203.6px;width:871.7px;top:571px;height:83.5px;z-index:9;border-radius:22px;display:flex;align-items:center;
-  background:rgba(10,18,52,.55);border:1px solid rgba(150,180,255,.22);backdrop-filter:blur(10px)}
+  background:rgba(10,18,52,.8);border:1px solid rgba(150,180,255,.22);}
 .stats .col{flex:1;display:flex;align-items:center;gap:16px;padding:0 26px;height:66px;border-left:1px solid rgba(150,180,255,.25)}
 .stats .col:first-child{border:0}
 .stats svg{width:32px;height:32px;flex:none}
@@ -89,3 +89,17 @@ html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Sahel,Tahom
 @media (prefers-reduced-motion:reduce){#track{height:calc(100vh * 8)}}
 .auth form{margin:0}
 .auth .btn-link{display:inline-flex;align-items:center;height:38px;padding:0 24px;border-radius:22px;font:700 15px Sahel,Tahoma,sans-serif;color:#fff;text-decoration:none;background:linear-gradient(90deg,#1ad6f0,#6d5cff 70%,#9b5cff);box-shadow:0 0 18px rgba(80,150,255,.45)}
+
+/* headline as real text (sharp at any size); 1em = 16px on the 554.6px-wide desktop box */
+.hl-text{direction:rtl;color:#fff;font-family:Sahel,Tahoma,sans-serif}
+.hl-text .ht{position:absolute;right:10.5em;top:.3em;text-align:right;white-space:nowrap}
+.hl-text .k{margin:0;font-size:1.55em;line-height:1.5;color:#e3ebff;text-shadow:0 2px 14px rgba(4,10,40,.7)}
+.hl-text h1{margin:.12em 0 0;font-size:6.1em;line-height:1.08;font-weight:700;letter-spacing:-.01em;text-shadow:0 4px 26px rgba(4,10,40,.55)}
+.hl-text h1 .yar{display:inline-block;padding:0 .04em;background:linear-gradient(180deg,#6fe7ff 25%,#3fa8ff 55%,#5b74ff 90%);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:none;filter:drop-shadow(0 0 16px rgba(70,150,255,.45))}
+.hl-text .sub{margin:.05em 0 0;font-size:2.45em;line-height:1.3;font-weight:700;background:linear-gradient(180deg,#fff 30%,#bcd2ff);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 3px 12px rgba(4,10,40,.6))}
+.hl-text .lead{margin:.7em 0 0;font-size:1.1em;line-height:1.85;color:#e6edff;text-shadow:0 1px 10px rgba(4,10,40,.85)}
+.hl-text>img.cube{position:absolute;right:0;left:auto;top:4.1em;bottom:auto;width:9.6em;height:auto;filter:drop-shadow(0 0 22px rgba(60,140,255,.55))}
+#cls img{position:absolute;left:0;top:0;width:1671px;height:941px}
+#cls{will-change:transform}
+#clsFar{will-change:opacity}
+#stage .o .bk{will-change:transform}
