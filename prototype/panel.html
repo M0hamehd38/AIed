@@ -773,6 +773,7 @@ V.dashboard = () => {
     ${C.stat('نیازمند توجه', fa(att(last)), C.delta(att(last) - att(prev), '', false), 'filterAttention', 'alert', 'orange')}
     ${C.stat('پیشنهادهای در انتظار', fa(pending.length), 'منتظر تصمیم شما', 'go" data-v="suggestions', 'suggestions', 'purple')}
   </div>
+  <div class="card mt"><div class="card-head">${C.h2('grid', 'green', 'نقشه‌ی تسلط مفاهیم')}<span class="hint">برای دیدن سؤال‌ها و n روی هر خانه کلیک کنید</span></div>${C.heatmap()}</div>
   <div class="grid g3 mt">
     <div class="card ai-card span2"><div class="card-head"><h2><span class="ai-badge">AI</span>دستیار هوشمند کلاس</h2><span class="hint">پیش‌نویس — بدون تأیید شما اجرا نمی‌شود</span></div>
       ${top ? `<div class="ai-inner"><div class="inline" style="flex-wrap:wrap"><span class="flag">پیشنهاد در انتظار تصمیم</span>${C.confTag(top.conf)}</div>
@@ -804,11 +805,10 @@ V.dashboard = () => {
     </div>
   </div>
   <div class="grid g3 mt">
-    <div class="card span2"><div class="card-head">${C.h2('grid', 'green', 'نقشه‌ی تسلط مفاهیم')}<span class="hint">برای دیدن سؤال‌ها و n روی هر خانه کلیک کنید</span></div>${C.heatmap()}</div>
     <div class="card"><div class="card-head">${C.h2('alert', 'red', 'هشدارهای آموزشی')}</div>${alerts.length ? alerts.map(C.alert).join('') : '<div class="empty">هشداری وجود ندارد.</div>'}<div class="note">${T.notJudgement}</div></div>
-  </div>
-  <div class="card mt"><div class="card-head">${C.h2('suggestions', 'orange', 'پیشنهادهای ادامه‌ی تدریس')}<span class="hint">به ترتیب اولویت · فقط با تأیید شما</span></div>
+    <div class="card span2"><div class="card-head">${C.h2('suggestions', 'orange', 'پیشنهادهای ادامه‌ی تدریس')}<span class="hint">به ترتیب اولویت · فقط با تأیید شما</span></div>
     ${pending.map((sg, i) => `<div class="prio"><span class="num" style="background:${['var(--red)', 'var(--purple)', 'var(--orange)', 'var(--blue)'][i % 4]}">${fa(i + 1)}</span><span class="txt"><b>${esc(sg.title)}</b><br><span class="muted small">${sg.evidence}</span></span>${i < 2 ? C.tag('اولویت بالا', 'red') : C.tag('اولویت متوسط', 'green')}<button class="btn sm" data-act="go" data-v="suggestions">بررسی</button></div>`).join('') || '<div class="empty">پیشنهاد در انتظاری نیست.</div>'}
+    </div>
   </div>`;
 };
 

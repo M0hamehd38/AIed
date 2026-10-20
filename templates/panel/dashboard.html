@@ -6,6 +6,8 @@
   <a class="card stat" href="{% url 'panel:students' %}?f=attention"><span class="top"><span><span class="label">نیازمند توجه</span><span class="value" style="display:block">{{ stats.attention|fa }}</span></span><span class="hic sic orange">{% icon 'alert' %}</span></span><span class="delta">{% delta stats.attention_delta '' False %}</span></a>
   <a class="card stat" href="{% url 'panel:suggestions' %}"><span class="top"><span><span class="label">پیشنهادهای در انتظار</span><span class="value" style="display:block">{{ pending|length|fa }}</span></span><span class="hic sic purple">{% icon 'suggestions' %}</span></span><span class="delta">منتظر تصمیم شما</span></a>
 </div>
+<div class="card mt"><div class="card-head">{% h2 'grid' 'green' 'نقشه‌ی تسلط مفاهیم' %}<span class="hint">برای دیدن سؤال‌ها و n روی هر خانه کلیک کنید</span></div>{% include "panel/_heatmap.html" %}</div>
+
 <div class="grid g3 mt">
   <div class="card ai-card span2"><div class="card-head"><h2><span class="ai-badge">AI</span>دستیار هوشمند کلاس</h2><span class="hint">پیش‌نویس — بدون تأیید شما اجرا نمی‌شود</span></div>
     {% if top %}<div class="ai-inner"><div class="inline" style="flex-wrap:wrap"><span class="flag">پیشنهاد در انتظار تصمیم</span>{% conf_tag top.confidence %}</div>
@@ -37,13 +39,12 @@
   </div>
 </div>
 <div class="grid g3 mt">
-  <div class="card span2"><div class="card-head">{% h2 'grid' 'green' 'نقشه‌ی تسلط مفاهیم' %}<span class="hint">برای دیدن سؤال‌ها و n روی هر خانه کلیک کنید</span></div>{% include "panel/_heatmap.html" %}</div>
   <div class="card"><div class="card-head">{% h2 'alert' 'red' 'هشدارهای آموزشی' %}</div>
     {% for a in alerts %}<div class="alert {{ a.kind }}"><span class="ic" aria-hidden="true">{% alert_ic a.kind %}</span><div><b>{{ a.title }}</b><p>{{ a.text }} · <button class="link" data-act="evidence" data-ev="{{ a.ev|evjson }}">شواهد</button></p></div></div>
     {% empty %}<div class="empty">هشداری وجود ندارد.</div>{% endfor %}<div class="note">{{ T.NOT_JUDGEMENT }}</div></div>
-</div>
-<div class="card mt"><div class="card-head">{% h2 'suggestions' 'orange' 'پیشنهادهای ادامه‌ی تدریس' %}<span class="hint">به ترتیب اولویت · فقط با تأیید شما</span></div>
+  <div class="card span2"><div class="card-head">{% h2 'suggestions' 'orange' 'پیشنهادهای ادامه‌ی تدریس' %}<span class="hint">به ترتیب اولویت · فقط با تأیید شما</span></div>
   {% for sg in pending %}<div class="prio"><span class="num" style="background:{% cycle 'var(--red)' 'var(--purple)' 'var(--orange)' 'var(--blue)' %}">{{ forloop.counter|fa }}</span><span class="txt"><b>{{ sg.title }}</b><br><span class="muted small">{{ sg.evidence }}</span></span>{% if forloop.counter <= 2 %}{% tag 'اولویت بالا' 'red' %}{% else %}{% tag 'اولویت متوسط' 'green' %}{% endif %}<a class="btn sm" href="{% url 'panel:suggestions' %}">بررسی</a></div>
   {% empty %}<div class="empty">پیشنهاد در انتظاری نیست.</div>{% endfor %}
+</div>
 </div>
 {% endblock %}
