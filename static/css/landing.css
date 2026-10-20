@@ -50,7 +50,7 @@ html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Sahel,Tahom
 .nav{position:fixed;top:0;left:0;right:0;height:72px;z-index:20;display:flex;align-items:center;gap:28px;padding:0 max(24px,4vw);direction:rtl;
   background:linear-gradient(180deg,rgba(3,8,30,.78),rgba(3,8,30,0))}
 .logo{display:flex;align-items:center;gap:8px;text-decoration:none;color:#fff;order:3;margin-inline-start:auto}
-.logo img{width:30px;height:31px;display:block}
+.logo img{width:31px;height:31px;display:block}
 .logo b{font-size:21px;font-weight:700}
 .menu{display:flex;gap:30px;font-size:15px;order:2;margin-inline:auto}
 .menu button{background:none;border:0;color:#d7defa;font:inherit;cursor:pointer;padding:6px 0;position:relative}

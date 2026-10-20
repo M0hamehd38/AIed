@@ -13,7 +13,7 @@
 <body data-evidence-url="{% url 'panel:evidence' %}">
 <div class="layout">
   <aside class="sidebar" id="sidebar" aria-label="منوی اصلی">
-    <div class="brand"><img src="{% static 'assets/emblem.webp' %}" alt="" style="width:40px;height:41px;flex:none"><div><b>کلاس‌یار</b><small>دستیار هوشمند استاد</small></div></div>
+    <div class="brand"><img src="{% static 'assets/emblem.webp' %}" alt="" style="width:40px;height:40px;flex:none"><div><b>کلاس‌یار</b><small>دستیار هوشمند استاد</small></div></div>
     <nav id="nav">
       {% for key, label in nav %}<a class="nav-btn" href="{% url 'panel:'|add:key %}" {% if view == key %}aria-current="page"{% endif %}>{% icon key %}{{ label }}{% if key == 'suggestions' and pending_count %}<span class="badge" aria-label="{{ pending_count|fa }} پیشنهاد در انتظار">{{ pending_count|fa }}</span>{% endif %}</a>{% endfor %}
     </nav>
