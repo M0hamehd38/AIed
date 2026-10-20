@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>کلاس‌یار</title>
 <script>
+// only signed-in teachers reach the panel (prototype: the session lives in this browser)
+try { if (!localStorage.getItem('classyar-user')) location.replace('index.html?login=1'); } catch (e) {}
 // night/day mode: saved choice, else the system setting
 (function () { var t; try { t = localStorage.getItem('classyar-theme'); } catch (e) {} if (t !== 'dark' && t !== 'light') t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'; document.documentElement.dataset.theme = t; })();
 </script>
@@ -361,7 +363,7 @@ body{transition:background-color .25s,color .25s}
 <body>
 <div class="layout">
   <aside class="sidebar" id="sidebar" aria-label="منوی اصلی">
-    <div class="brand"><div class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c0 1.5 3 3 6 3s6-1.5 6-3v-5M22 9v6"/></svg></div><div><b>کلاس‌یار</b><small>دستیار هوشمند استاد</small></div></div>
+    <div class="brand"><img src="assets/emblem.webp" alt="" style="width:40px;height:41px;flex:none"><div><b>کلاس‌یار</b><small>دستیار هوشمند استاد</small></div></div>
     <nav id="nav"></nav>
     <div class="ai-widget" id="aiWidget"></div>
   </aside>
@@ -376,6 +378,7 @@ body{transition:background-color .25s,color .25s}
       <button class="theme-btn" id="themeBtn" data-act="toggleTheme"></button>
       <button class="bell" data-act="go" data-v="suggestions" id="bell" aria-label="اعلان‌ها"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10 21h4"/></svg></button>
       <div class="teacher"><div class="avatar" id="teacherAvatar" style="background:linear-gradient(135deg,#4169f5,#8c62db)" aria-hidden="true"></div><div><b id="teacherName"></b><small>استاد</small></div></div>
+      <button class="theme-btn" data-act="logout" aria-label="خروج" title="خروج"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 16l-4-4 4-4M6 12h10"/></svg></button>
     </header>
     <div class="page-head"><h1 id="pageTitle"></h1><div class="sub" id="pageSub"></div></div>
     <div class="view" id="view"></div>
@@ -411,7 +414,7 @@ const nowTime = () => fa(new Date().toLocaleTimeString('en-GB', {hour:'2-digit',
 const settings = {green:0.75, orange:0.50, minClass:10, minStudent:8, showNames:true, retention:30, dropAlert:10, llm:'university-local', stt:'faster-whisper'};
 
 /* ================= seed data ================= */
-const TEACHER = 'دکتر شهرام گلزاری هرمزی';
+const TEACHER = (() => { try { const u = JSON.parse(localStorage.getItem('classyar-user')); if (u && u.name) return u.name; } catch (e) {} return 'دکتر شهرام گلزاری هرمزی'; })();
 const CONCEPT_COLORS = ['#4169f5', '#8c62db', '#0e9fb5', '#c2477f', '#e08a17', '#13a67b'];
 // the active course's data; useCourse() points these at one entry of `courses`
 let course, concepts, sessions, questions, students, responses, audit, suggestions = [];
@@ -1157,6 +1160,7 @@ function paintThemeBtn() {
   b.setAttribute('aria-label', dark ? 'حالت روز' : 'حالت شب'); b.title = dark ? 'حالت روز' : 'حالت شب';
 }
 const ACT = {
+  logout: () => { try { localStorage.removeItem('classyar-user'); } catch (e) {} location.href = 'index.html'; },
   toggleTheme: () => {
     const t = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
     document.documentElement.dataset.theme = t;

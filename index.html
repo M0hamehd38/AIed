@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>کلاس‌یار</title>
+<style>
+/* Sahel by Saber Rastikerdar — SIL OFL 1.1 (fonts/LICENSE-Sahel) */
+@font-face{font-family:Sahel;src:url('fonts/Sahel.woff') format('woff');font-weight:400;font-display:swap}
+@font-face{font-family:Sahel;src:url('fonts/Sahel-Bold.woff') format('woff');font-weight:700;font-display:swap}
+:root{color-scheme:dark;--bg:#050b22;--ink:#fff;--muted:#cfd8f6;--accent:#55dcff}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Sahel,Tahoma,sans-serif}
+/* the scroll track: one screen of scrolling per stop */
+#track{height:calc(100vh * 8)}
+#view{position:fixed;inset:0;overflow:hidden;background:var(--bg)}
+/* the scene is laid out on a 1280×720 stage and scaled to cover the window */
+#frame{position:absolute;left:50%;top:50%;width:1280px;height:720px;transform-origin:50% 50%;direction:ltr}
+.layer{position:absolute;left:0;top:0;width:1670px;height:941px;transform-origin:0 0}
+.hl{position:absolute;transform-origin:50% 50%}.hl>img{position:absolute;inset:0;width:100%;height:100%}
+.fx{position:absolute;border-radius:50%;pointer-events:none}
+#stage{position:absolute;inset:0;perspective:900px;perspective-origin:50% 48%;overflow:hidden;pointer-events:none}
+#stage .o{position:absolute;left:640px;top:345px;transform-style:preserve-3d}
+.card{width:520px;height:176px;margin:-88px 0 0 -260px;transform:scale(var(--cs,.8));border-radius:30px;padding:22px 30px;display:flex;align-items:center;gap:24px;direction:rtl;
+  background:linear-gradient(135deg,var(--c1),var(--c2));border:1px solid var(--bd);
+  box-shadow:0 8px 30px rgba(10,20,60,.35),0 0 16px var(--gl),inset 0 1px 0 rgba(255,255,255,.3)}
+.card .ic{width:104px;height:104px;border-radius:50%;flex:none;display:grid;place-items:center;
+  background:radial-gradient(circle at 35% 30%,var(--a1),var(--a2) 70%);box-shadow:0 0 30px var(--a2),inset 0 0 0 3px rgba(255,255,255,.3),inset 0 -8px 20px rgba(0,0,0,.2)}
+.card .ic svg{width:54px;height:54px}
+.card h3{margin:0 0 6px;font-size:28px;white-space:nowrap;font-weight:700;text-shadow:0 0 18px rgba(170,210,255,.7)}
+.card p{margin:0;font-size:19px;line-height:1.65;color:#e2ebff}
+.bk{border-radius:50%}
+.vig{position:absolute;inset:0;z-index:8;pointer-events:none;background:radial-gradient(ellipse at 50% 50%,transparent 60%,rgba(2,5,18,.55) 100%)}
+/* welcome content on the classroom's big screen */
+#board{position:absolute;left:815px;top:258px;width:430px;height:224px;border-radius:4px;overflow:hidden;direction:rtl;
+  background:linear-gradient(160deg,rgba(16,58,190,.97),rgba(8,30,120,.97));box-shadow:0 0 30px rgba(60,140,255,.8),inset 0 0 30px rgba(120,190,255,.35);border:1.5px solid rgba(140,200,255,.8)}
+#board .glow{position:absolute;inset:0;background:radial-gradient(ellipse at 70% 30%,rgba(120,200,255,.35),transparent 60%)}
+#board .txt{position:absolute;right:24px;top:20px;text-align:right}
+#board .cap{width:34px;height:34px}
+#board h2{margin:4px 0 4px;font-size:27px;line-height:1.3;white-space:nowrap;text-shadow:0 0 14px rgba(120,200,255,.8)}
+#board p{margin:0;font-size:11.5px;color:#d3e4ff;white-space:nowrap}
+#board .row{position:absolute;left:22px;bottom:22px;display:flex;gap:8px}
+#board button{padding:6px 16px;border-radius:16px;font:700 12px Sahel,Tahoma,sans-serif;color:#fff;cursor:pointer;border:0}
+#board .s{background:linear-gradient(90deg,#1ad6f0,#6d5cff);box-shadow:0 0 12px rgba(80,170,255,.7)}
+#board .l{background:transparent;border:1px solid rgba(220,235,255,.85)}
+.stats{position:absolute;left:203.6px;width:871.7px;top:571px;height:83.5px;z-index:9;border-radius:22px;display:flex;align-items:center;
+  background:rgba(10,18,52,.55);border:1px solid rgba(150,180,255,.22);backdrop-filter:blur(10px)}
+.stats .col{flex:1;display:flex;align-items:center;gap:16px;padding:0 26px;height:66px;border-left:1px solid rgba(150,180,255,.25)}
+.stats .col:first-child{border:0}
+.stats svg{width:32px;height:32px;flex:none}
+.stats .t{direction:rtl;text-align:right}
+.stats b{display:block;font-size:20px;line-height:1.1;direction:ltr;text-align:left}
+.stats small{display:block;font-size:10.5px;white-space:nowrap;line-height:1.55;color:var(--muted)}
+.chev{position:absolute;left:615px;top:672px;z-index:9;width:50px;height:36px;border:0;background:none;cursor:pointer;padding:11px 13px}
+.chev svg{width:24px;height:14px;display:block}
+/* page chrome: real size, not scaled with the scene */
+.nav{position:fixed;top:0;left:0;right:0;height:72px;z-index:20;display:flex;align-items:center;gap:28px;padding:0 max(24px,4vw);direction:rtl;
+  background:linear-gradient(180deg,rgba(3,8,30,.78),rgba(3,8,30,0))}
+.logo{display:flex;align-items:center;gap:8px;text-decoration:none;color:#fff;order:3;margin-inline-start:auto}
+.logo img{width:30px;height:31px;display:block}
+.logo b{font-size:21px;font-weight:700}
+.menu{display:flex;gap:30px;font-size:15px;order:2;margin-inline:auto}
+.menu button{background:none;border:0;color:#d7defa;font:inherit;cursor:pointer;padding:6px 0;position:relative}
+.menu button:hover{color:#fff}
+.menu button.on{color:var(--accent)}
+.menu button.on::after{content:"";position:absolute;left:-10px;right:-10px;bottom:-6px;height:3px;border-radius:2px;background:linear-gradient(90deg,#22d3ee,#8b5cf6)}
+.auth{display:flex;gap:12px;order:1}
+.auth button{height:38px;padding:0 24px;border-radius:22px;font:700 15px Sahel,Tahoma,sans-serif;color:#fff;cursor:pointer}
+.auth .l{border:1.5px solid rgba(220,230,255,.7);background:transparent;font-weight:400}
+.auth .s{border:0;background:linear-gradient(90deg,#1ad6f0,#6d5cff 70%,#9b5cff);box-shadow:0 0 18px rgba(80,150,255,.45)}
+.dots{position:fixed;left:22px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:10px;z-index:20}
+.dots button{width:15px;height:15px;border:0;padding:3px;background:none;cursor:pointer}
+.dots button i{display:block;width:9px;height:9px;border-radius:50%;background:rgba(200,215,255,.35)}
+.dots button.on i{background:var(--accent);box-shadow:0 0 12px var(--accent);transform:scale(1.4)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+/* sign-in / sign-up dialog */
+.modal-bg{position:fixed;inset:0;z-index:50;background:rgba(3,6,20,.6);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;padding:16px}
+.modal-bg.open{display:flex}
+.modal{width:100%;max-width:400px;border-radius:22px;padding:26px 26px 22px;direction:rtl;background:linear-gradient(160deg,#16224d,#0c1532);border:1px solid rgba(140,170,255,.25);box-shadow:0 30px 80px rgba(0,0,0,.5)}
+.modal .head{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+.modal .head img{width:30px}
+.modal .head b{font-size:19px}
+.modal .x{margin-inline-start:auto;width:34px;height:34px;border-radius:10px;border:0;background:rgba(255,255,255,.08);color:#fff;font-size:18px;cursor:pointer}
+.tabs{display:flex;background:rgba(255,255,255,.06);border-radius:12px;padding:4px;margin-bottom:18px}
+.tabs button{flex:1;border:0;background:none;color:#b9c6ea;font:700 14px Sahel,Tahoma,sans-serif;padding:8px;border-radius:9px;cursor:pointer}
+.tabs button[aria-selected=true]{background:#4169f5;color:#fff}
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
+.field label{font-size:13px;color:#cfd8f6}
+.field input{height:42px;border-radius:11px;border:1px solid rgba(150,175,255,.3);background:rgba(5,10,30,.5);color:#fff;padding:0 12px;font:15px Sahel,Tahoma,sans-serif}
+.field input:focus{outline:none;border-color:var(--accent)}
+.err{min-height:20px;font-size:12.5px;color:#ff8f9a;margin:2px 0 8px}
+.submit{width:100%;height:44px;border:0;border-radius:12px;background:linear-gradient(90deg,#1ad6f0,#6d5cff);color:#fff;font:700 16px Sahel,Tahoma,sans-serif;cursor:pointer}
+.note{font-size:11.5px;color:#8f9cc4;text-align:center;margin-top:12px;line-height:1.7}
+.info p{font-size:14px;line-height:1.9;color:#d7defa;margin:0}
+@media (max-width:760px){.menu{display:none}.logo b{font-size:18px}.auth button{padding:0 16px;height:34px;font-size:14px}.dots{left:10px}}
+@media (prefers-reduced-motion:reduce){#track{height:calc(100vh * 8)}}
+</style>
+</head>
+<body>
+<div id="track"></div>
+<div id="view">
+ <div id="frame">
+  <div id="cls" class="layer"><img src="assets/classroom.jpg" alt="" style="position:absolute;left:0;top:0;width:1671px;height:941px"></div>
+  <div id="stage"></div>
+  <div id="scr" class="layer" style="display:none">
+    <div id="board"><div class="glow"></div><div class="txt"><svg class="cap" viewBox="0 0 24 24" fill="none" stroke="#9fe0ff" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M2 9l10-5 10 5-10 5z" fill="rgba(80,170,255,.35)"/><path d="M6 11v5c0 1.5 3 3 6 3s6-1.5 6-3v-5M22 9v6"/></svg>
+      <h2>به کلاس‌یار خوش آمدید</h2><p>دستیار هوشمندی در کنار استاد؛ تصمیم همیشه با شماست.</p></div>
+      <div class="row"><button class="s" data-auth="signup">شروع کنید</button><button class="l" data-auth="login">ورود استاد</button></div></div>
+    <img src="assets/teacher.webp" alt="" style="position:absolute;left:1020px;top:380px;width:112px;height:212px">
+  </div>
+  <div id="fgroup" style="position:absolute;inset:0;transform-origin:400px 560px">
+    <div id="desk" class="hl" style="left:-61px;top:476.1px;width:1401.5px;height:249.9px"><img src="assets/desk.webp" alt=""></div>
+    <div id="robot" class="hl" style="transform:scale(.9);transform-origin:50% 100%;left:57.5px;top:120.6px;width:466.1px;height:446.4px"><img src="assets/bot.webp" alt="بات کلاس‌یار">
+      <div class="fx" id="eyeL" style="left:196.5px;top:125.6px;width:44.6px;height:44.6px;background:radial-gradient(circle,rgba(110,210,255,.5),rgba(110,210,255,0) 70%)"></div>
+      <div class="fx" id="eyeR" style="left:287.6px;top:125.6px;width:44.6px;height:44.6px;background:radial-gradient(circle,rgba(110,210,255,.5),rgba(110,210,255,0) 70%)"></div>
+      <svg id="steam" style="position:absolute;left:208.6px;top:293.7px;width:81px;height:81px;overflow:visible" viewBox="0 0 110 110" aria-hidden="true">
+        <defs><filter id="sb"><feGaussianBlur stdDeviation="3.5"/></filter></defs>
+        <g filter="url(#sb)" stroke="#fff" stroke-width="7" fill="none" stroke-linecap="round"><path d="M40 100 C 26 80, 54 64, 40 44 S 50 14, 42 0"/><path d="M68 100 C 82 80, 54 64, 68 44 S 58 14, 66 0"/></g>
+      </svg>
+    </div>
+  </div>
+  <div id="headline" class="hl" style="left:736.9px;top:103.2px;width:554.6px;height:339.7px"><img src="assets/headline.webp" alt="کلاس‌یار — دستیار هوشمند آموزش. با تحلیل لحظه‌ای عملکرد و سطح درک دانشجویان، به اساتید کمک می‌کنیم تا تدریس خود را شخصی‌سازی و اثربخش‌تر کنند."></div>
+  <div class="vig"></div>
+  <div class="stats" id="stats">
+    <div class="col"><svg viewBox="0 0 24 24" fill="#3fa3ff" aria-hidden="true"><circle cx="12" cy="7" r="3.4"/><circle cx="5.5" cy="9" r="2.6"/><circle cx="18.5" cy="9" r="2.6"/><path d="M5 20c0-4 3-6.5 7-6.5s7 2.5 7 6.5z"/><path d="M0.5 19c0-3 2-5 5-5 .8 0 1.5.1 2.1.4C5.8 15.6 4.6 17.4 4.4 19zM23.5 19c0-3-2-5-5-5-.8 0-1.5.1-2.1.4 1.8 1.2 3 3 3.2 4.6z"/></svg><div class="t"><b>۷۹٪</b><small>از اساتید، برنامه‌های کلاس‌یار را<br>برای بهبود کیفیت تدریس مفید می‌دانند.</small></div></div>
+    <div class="col"><svg viewBox="0 0 24 24" fill="none" stroke="#3fa3ff" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M12 6.5V12l3.5 2.5"/></svg><div class="t"><b>۶۶٪</b><small>از کسب‌وکارها انتظار دارند دستیارهای هوشمند،<br>بیش از ۳ ساعت در هفته صرفه‌جویی کنند</small></div></div>
+    <div class="col"><svg viewBox="0 0 24 24" fill="none" stroke="#3fa3ff" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><circle cx="12" cy="12" r="5.5"/><circle cx="12" cy="12" r="1.6" fill="#3fa3ff"/><path d="M12 12l8-8M17 3.5l3.5 3.5"/></svg><div class="t"><b>۷۵٪</b><small>از دانشجویان، آموزش شخصی‌سازی‌شده<br>را مؤثرتر از آموزش سنتی می‌دانند.</small></div></div>
+  </div>
+  <button class="chev" id="chev" data-go="1" aria-label="رفتن به ویژگی‌ها"><svg viewBox="0 0 24 14"><path d="M2 2l10 10 10-10" stroke="#8fb4ff" stroke-width="2.4" fill="none" stroke-linecap="round"/></svg></button>
+ </div>
+</div>
+
+<header class="nav">
+  <a class="logo" href="#" data-go="0" aria-label="کلاس‌یار، بازگشت به ابتدا"><img src="assets/emblem.webp" alt=""><b>کلاس‌یار</b></a>
+  <nav class="menu" aria-label="منوی اصلی"><button class="on" data-go="0">خانه</button><button data-go="1">ویژگی‌ها</button><button data-info="pricing">قیمت‌گذاری</button><button data-info="about">درباره ما</button><button data-info="contact">تماس با ما</button></nav>
+  <div class="auth"><button class="l" data-auth="login">ورود</button><button class="s" data-auth="signup">ثبت‌نام</button></div>
+</header>
+<div class="dots" id="dots" aria-label="بخش‌های صفحه"></div>
+
+<div class="modal-bg" id="modalBg">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="mTitle" id="modal"></div>
+</div>
+
+<script>
+'use strict';
+const $ = s => document.querySelector(s);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const smooth = x => x * x * (3 - 2 * x);
+const PW = 1670, PH = 941, STOPS = 7;
+let FW = 1280, FH = 720, PORT = false;   // stage size; phones in portrait get a tall stage
+
+// ---------- scene ----------
+const ICONS = {
+  cal:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4M7 14h2M11 14h2M15 14h2M7 17h2M11 17h2"/></svg>',
+  brain:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4.5c-1.6-1.8-5.3-1.1-5.3 1.9-2.3.4-3 3.3-1.3 4.8-1.5 1.8-.3 4.7 2.1 4.8.3 2 2.9 3.1 4.5 1.6 1.6 1.5 4.2.4 4.5-1.6 2.4-.1 3.6-3 2.1-4.8 1.7-1.5 1-4.4-1.3-4.8 0-3-3.7-3.7-5.3-1.9zM12 4.5V19M9 9.5c1 .3 2 .3 3-.5M15 13c-1-.3-2-.2-3 .6"/></svg>',
+  mic:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>',
+  doc:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round"><path d="M6 3h9l4 4v14H6z"/><path d="M9 11h7M9 14h7M9 17h5"/></svg>',
+  db:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9"><ellipse cx="12" cy="5.5" rx="7" ry="2.5"/><path d="M5 5.5v13c0 1.4 3.1 2.5 7 2.5s7-1.1 7-2.5v-13M5 12c0 1.4 3.1 2.5 7 2.5s7-1.1 7-2.5"/></svg>',
+  chart:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round"><path d="M4 20V4M4 20h16M8 16v-4M12 16V9M16 16v-6M7 9l4-3 3 2 5-4"/></svg>',
+};
+const BLUE = {c1:'rgba(46,92,230,.9)', c2:'rgba(26,48,150,.92)', bd:'rgba(120,175,255,.85)', gl:'rgba(70,140,255,.7)', a1:'#7cc0ff', a2:'#2b63ff'};
+const TEAL = {c1:'rgba(20,150,170,.9)', c2:'rgba(18,70,130,.92)', bd:'rgba(110,230,240,.85)', gl:'rgba(40,210,230,.6)', a1:'#7af0f0', a2:'#0ab3c6'};
+const PURP = {c1:'rgba(110,70,230,.9)', c2:'rgba(56,40,160,.92)', bd:'rgba(185,155,255,.85)', gl:'rgba(150,100,255,.65)', a1:'#c9a4ff', a2:'#7c3aed'};
+const CARDS = [
+  ['cal', 'مدیریت کلاس', 'برنامه‌ریزی، حضور و غیاب<br>و مدیریت هوشمند جلسات', BLUE, 1],
+  ['brain', 'تحلیل یادگیری', 'شناسایی سطح فهم و<br>الگوهای یادگیری هر دانشجو', BLUE, -1],
+  ['mic', 'شنود و تحلیل زنده کلاس', 'درک لحظه‌ای فضای کلاس و<br>کمک به استاد در روند برگزاری', PURP, 1],
+  ['doc', 'محتوای آموزشی', 'تولید و ارائه محتوای متناسب<br>با سطح و نیاز دانشجویان', TEAL, -1],
+  ['db', 'پایگاه داده', 'ذخیره و تحلیل<br>داده‌های آموزشی', TEAL, 1],
+  ['chart', 'گزارش‌ها و داده‌ها', 'تحلیل دقیق عملکرد و پیشرفت<br>دانشجویان و کلاس‌ها', PURP, -1],
+];
+const stage = $('#stage');
+const cards = CARDS.map(([ic, t, d, c, side], i) => {
+  const el = document.createElement('div'); el.className = 'o';
+  el.innerHTML = `<div class="card" style="--c1:${c.c1};--c2:${c.c2};--bd:${c.bd};--gl:${c.gl};--a1:${c.a1};--a2:${c.a2}"><div class="ic">${ICONS[ic]}</div><div><h3>${t}</h3><p>${d}</p></div></div>`;
+  stage.appendChild(el); return {el, side, i};
+});
+const bokeh = [];
+const BK = ['rgba(120,200,255,', 'rgba(150,120,255,', 'rgba(90,150,255,', 'rgba(255,190,120,'];
+for (let i = 0; i < 28; i++) {
+  const el = document.createElement('div'); el.className = 'o';
+  const r = k => Math.abs((Math.sin(i * k) * 43758.5453) % 1), sz = 10 + r(5.17) * 34, col = BK[i % 4];
+  el.innerHTML = `<div class="bk" style="width:${sz}px;height:${sz}px;margin:${-sz / 2}px 0 0 ${-sz / 2}px;background:radial-gradient(circle,${col}.85),${col}.25) 45%,${col}0) 70%)"></div>`;
+  stage.appendChild(el);
+  bokeh.push({el, x:(r(12.9898) - .5) * 2200, y:(r(78.233) - .5) * 1300, z0:r(39.425) * 3200});
+}
+$('#dots').innerHTML = ['ابتدا', ...CARDS.map(c => c[1]), 'تخته'].map((l, i) => `<button data-go="${i}" aria-label="${l}"><i></i></button>`).join('');
+
+const els = {cls:$('#cls'), scr:$('#scr'), head:$('#headline'), fg:$('#fgroup'), eyeL:$('#eyeL'), eyeR:$('#eyeR'), steam:$('#steam'), stats:$('#stats'), chev:$('#chev'), dots:[...document.querySelectorAll('#dots button')], menu:[...document.querySelectorAll('.menu button')]};
+const PLACE = (el, cx, cy, k) => { el.style.transform = `translate(${FW / 2 - cx * k}px, ${FH / 2 - cy * k}px) scale(${k})`; };
+
+function render(D, t, speed) {
+  const pass = clamp(D, 0, 1);
+  // classroom: down the middle toward the big screen
+  const zc = 1.3 * Math.pow(2.2 / 1.3, clamp(D, 0, 7) / 7) * (1 + 0.006 * Math.sin(t * .9));
+  const q = smooth(clamp(D / 7, 0, 1));
+  let cx = 835 + 195 * q + Math.sin(t * .5) * 3, cy = 410 - 5 * q + Math.cos(t * .6) * 2;
+  const kc = PORT ? FH / PH : (FW / PW) * zc;   // portrait: the photo already fills the height, so the cards carry the motion
+  const hw = FW / 2 / kc, hh = FH / 2 / kc; cx = clamp(cx, hw, PW - hw); cy = clamp(cy, hh, Math.max(hh, Math.min(PH - hh, 782 - hh)));
+  PLACE(els.cls, cx, cy, kc); PLACE(els.scr, cx, cy, kc);
+  const foc = smooth(clamp((D - 0.08) / 0.75, 0, 1));
+  els.cls.style.filter = `blur(${((1 - foc) * 7 + speed * 0.7).toFixed(2)}px) saturate(${(1.4 - .45 * foc).toFixed(3)}) brightness(${(.66 + .38 * foc).toFixed(3)}) hue-rotate(${((1 - foc) * 14).toFixed(1)}deg)`;
+  // fly through the gap between the bot (with its desk) and the headline
+  const sp = smooth(pass), pr = Math.pow(pass, 1.35), sc = 1 + 1.15 * sp, ho = 1 - clamp((pass - 0.5) / 0.38, 0, 1), hb = (clamp(pass - .2, 0, 1) * 5).toFixed(2);
+  const hl = (e, tx, ty, s2) => { e.style.transform = `translate(${tx}px, ${ty}px) scale(${s2})`; e.style.opacity = ho.toFixed(3); e.style.filter = pass > .2 ? `blur(${hb}px)` : ''; e.style.visibility = ho > 0.001 ? '' : 'hidden'; };
+  if (PORT) { hl(els.head, 0, -900 * pr, sc * .95); hl(els.fg, 0, 850 * pr, 1 + .9 * sp); }
+  else { hl(els.head, 1350 * pr + 22, -150 * pr + 8, sc * .88); hl(els.fg, -760 * pr, 420 * pr, 1 + .9 * sp); }
+  const g = (0.5 + 0.5 * Math.sin(t * 1.7)).toFixed(2); els.eyeL.style.opacity = g; els.eyeR.style.opacity = g;
+  els.steam.style.transform = `translateY(${-(t * 14) % 18}px)`; els.steam.style.opacity = (0.26 + 0.12 * Math.sin(t * 2.1)).toFixed(2);
+  // feature cards: the current one is sharp, the next ones wait deeper in the room
+  const appear = clamp((D - 0.55) / 0.3, 0, 1);
+  for (const c of cards) {
+    const n = c.i + 1; let zz, op, blur;
+    if (D <= n) { zz = (D - n) * 1300; op = clamp((zz + 3300) / 900, 0, 1); blur = clamp(-zz / 210, 0, 9); }
+    else { zz = (D - n) * 1100; op = clamp(1 - zz / 480, 0, 1); blur = clamp(zz / 120, 0, 6); }
+    op *= appear;
+    const x = c.side * (PORT ? 60 : 300), y = [-70, 30, -40, 20, -60, 30][c.i] + Math.sin(t * 1.4 + c.i) * 5;
+    c.el.style.transform = `translate3d(${x}px, ${y}px, ${zz}px) rotateY(${c.side * 12}deg)`;
+    c.el.style.opacity = op.toFixed(3); c.el.style.filter = blur > .05 ? `blur(${blur.toFixed(2)}px) brightness(${(1 - blur * .04).toFixed(3)})` : '';
+    c.el.style.zIndex = Math.round(10000 + zz); c.el.style.display = op > 0.005 && zz < 860 ? '' : 'none';
+  }
+  for (const b of bokeh) {
+    const z2 = ((b.z0 + D * 700 + t * 30) % 3200) - 2600;
+    const op = clamp((z2 + 2600) / 900, 0, 1) * clamp((700 - z2) / 400, 0, 1) * (0.22 + 0.25 * Math.abs(Math.sin(t * .8 + b.z0))) * appear;
+    b.el.style.transform = `translate3d(${b.x}px, ${b.y}px, ${z2}px)`; b.el.style.opacity = op.toFixed(3);
+  }
+  // opening UI and progress
+  const hero = 1 - clamp(D / 0.25, 0, 1);
+  els.stats.style.opacity = hero; els.stats.style.transform = `translateY(${(1 - hero) * 40}px)`; els.stats.style.visibility = hero > 0 ? '' : 'hidden';
+  els.chev.style.opacity = hero; els.chev.style.visibility = hero > 0 ? '' : 'hidden'; els.chev.style.transform = `translateY(${Math.abs(Math.sin(t * 2.4)) * 6}px)`;
+  const at = Math.round(D);
+  els.dots.forEach((d, i) => d.classList.toggle('on', i === at));
+  els.menu[0].classList.toggle('on', D < 0.5); els.menu[1].classList.toggle('on', D >= 0.5 && D < 6.5);
+  const bo = clamp((D - 6.4) / 0.55, 0, 1);
+  els.scr.style.opacity = bo; els.scr.style.display = bo > 0 ? '' : 'none';
+}
+
+// ---------- scroll drives the camera ----------
+const frame = $('#frame');
+// where the opening pieces sit on each stage: [left, top, width, height]
+const LAYOUT = {
+  land:{headline:[736.9, 103.2, 554.6, 339.7], robot:[57.5, 120.6, 466.1, 446.4], desk:[-61, 476.1, 1401.5, 249.9], origin:'400px 560px'},
+  port:{headline:[50, 150, 620, 380], robot:[96, 560, 528, 506], desk:[-90, 958, 900, 340], origin:'360px 1060px'},
+};
+function fit() {
+  const vw = innerWidth, vh = innerHeight;
+  PORT = vw / vh < 0.9; [FW, FH] = PORT ? [720, 1280] : [1280, 720];
+  frame.style.width = FW + 'px'; frame.style.height = FH + 'px';
+  const L = LAYOUT[PORT ? 'port' : 'land'];
+  for (const id of ['headline', 'robot', 'desk']) { const [l, t, w, h] = L[id], e = $('#' + id); Object.assign(e.style, {left:l + 'px', top:t + 'px', width:w + 'px', height:h + 'px'}); }
+  els.fg.style.transformOrigin = L.origin;
+  document.querySelectorAll('#stage .o').forEach(o => { o.style.left = FW / 2 + 'px'; o.style.top = FH * .48 + 'px'; });
+  els.stats.style.display = PORT ? 'none' : '';
+  frame.style.setProperty('--cs', PORT ? .72 : .8);
+  Object.assign(els.chev.style, PORT ? {left:FW / 2 - 25 + 'px', top:FH - 90 + 'px'} : {left:'615px', top:'672px'});
+  const s = Math.max(vw / FW, vh / FH);
+  frame.style.transform = `translate(-50%, -50%) scale(${s})`;
+}
+addEventListener('resize', fit); fit();
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const target = () => clamp(scrollY / innerHeight, 0, STOPS);
+let D = target(), last = -1;
+function tick(now) {
+  const t = reduce ? 0 : now / 1000, goal = target();
+  D += (goal - D) * (reduce ? 1 : 0.11);
+  if (Math.abs(goal - D) < 0.0005) D = goal;
+  render(D, t, clamp(Math.abs(goal - D) * 1.2, 0, 1));
+  requestAnimationFrame(tick);
+}
+requestAnimationFrame(tick);
+function go(i) { scrollTo({top:i * innerHeight, behavior:reduce ? 'auto' : 'smooth'}); }
+document.addEventListener('click', e => {
+  const g = e.target.closest('[data-go]'); if (g) { e.preventDefault(); go(+g.dataset.go); return; }
+  const a = e.target.closest('[data-auth]'); if (a) { openAuth(a.dataset.auth); return; }
+  const n = e.target.closest('[data-info]'); if (n) { openInfo(n.dataset.info); return; }
+  if (e.target.id === 'modalBg' || e.target.closest('.x')) closeModal();
+});
+addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+// ---------- sign in / sign up (prototype: no server yet) ----------
+const bg = $('#modalBg'), modal = $('#modal');
+let lastFocus = null;
+const head = title => `<div class="head"><img src="assets/emblem.webp" alt=""><b id="mTitle">${title}</b><button class="x" aria-label="بستن">×</button></div>`;
+function show(html) { lastFocus = document.activeElement; modal.innerHTML = html; bg.classList.add('open'); (modal.querySelector('input') || modal.querySelector('button')).focus(); }
+function closeModal() { if (!bg.classList.contains('open')) return; bg.classList.remove('open'); if (lastFocus) lastFocus.focus(); }
+function openAuth(mode) {
+  const signup = mode === 'signup';
+  show(`${head('ورود به پنل استاد')}
+    <div class="tabs" role="tablist"><button role="tab" aria-selected="${!signup}" data-auth="login">ورود</button><button role="tab" aria-selected="${signup}" data-auth="signup">ثبت‌نام</button></div>
+    <form id="authForm" novalidate>
+      ${signup ? '<div class="field"><label for="fName">نام و نام خانوادگی</label><input id="fName" autocomplete="name" placeholder="مثلاً دکتر شهرام گلزاری هرمزی"></div>' : ''}
+      <div class="field"><label for="fEmail">ایمیل دانشگاهی</label><input id="fEmail" type="email" autocomplete="email" dir="ltr" placeholder="name@university.ac.ir"></div>
+      <div class="field"><label for="fPass">رمز عبور</label><input id="fPass" type="password" autocomplete="${signup ? 'new-password' : 'current-password'}" dir="ltr"></div>
+      <div class="err" id="fErr" role="alert"></div>
+      <button class="submit" type="submit">${signup ? 'ساخت حساب و ورود' : 'ورود'}</button>
+    </form>
+    <p class="note">نسخه‌ی نمایشی: اطلاعات فقط در همین مرورگر نگه داشته می‌شود و به هیچ سروری ارسال نمی‌شود.</p>`);
+  $('#authForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const name = signup ? $('#fName').value.trim() : '', email = $('#fEmail').value.trim(), pass = $('#fPass').value;
+    const err = m => { $('#fErr').textContent = m; };
+    if (signup && name.length < 3) return err('نام خود را وارد کنید.');
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return err('ایمیل معتبر وارد کنید.');
+    if (pass.length < 6) return err('رمز عبور باید دست‌کم ۶ کاراکتر باشد.');
+    let saved = null; try { saved = JSON.parse(localStorage.getItem('classyar-user') || 'null'); } catch (x) {}
+    const user = {name: name || (saved && saved.email === email && saved.name) || 'استاد گرامی', email};
+    try { localStorage.setItem('classyar-user', JSON.stringify(user)); } catch (x) {}
+    location.href = 'panel.html';
+  });
+}
+const INFO = {
+  pricing:['قیمت‌گذاری', 'کلاس‌یار در حال حاضر در مرحله‌ی آزمایشی است و استفاده از آن برای اساتید رایگان است.'],
+  about:['درباره ما', 'کلاس‌یار دستیار هوشمند استاد است: تسلط دانشجویان روی هر مفهوم را از روی پاسخ‌های کلاس نشان می‌دهد و پیشنهادهای آموزشی مبتنی بر شواهد می‌دهد؛ تصمیم همیشه با استاد است.'],
+  contact:['تماس با ما', 'برای همکاری یا ارائه‌ی بازخورد، از طریق ایمیل info@classyar.ir با ما در ارتباط باشید.'],
+};
+function openInfo(k) { const [t, b] = INFO[k]; show(`${head(t)}<div class="info"><p>${b}</p></div>`); }
+if (/[?&]login=1/.test(location.search)) openAuth('login');
+</script>
+</body>
+</html>
