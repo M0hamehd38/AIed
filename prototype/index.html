@@ -335,6 +335,13 @@ const INFO = {
 };
 function openInfo(k) { const [t, b] = INFO[k]; show(`${head(t)}<div class="info"><p>${b}</p></div>`); }
 if (/[?&]login=1/.test(location.search)) openAuth('login');
+// mouse wheel: rolling the wheel forward (away from you) moves the camera forward into the class
+addEventListener('wheel', e => {
+  if (e.ctrlKey || document.getElementById('modalBg').classList.contains('open')) return;
+  e.preventDefault();
+  const unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? innerHeight : 1;
+  scrollBy(0, -e.deltaY * unit);
+}, {passive: false});
 </script>
 </body>
 </html>

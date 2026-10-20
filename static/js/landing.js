@@ -149,3 +149,11 @@ function openAuth(mode) { show(tpl(mode === 'signup' ? 'tpl-signup' : 'tpl-login
 function openInfo(k) { show(tpl('tpl-' + k)); }
 const opened = document.body.dataset.openAuth;
 if (opened === 'login' || opened === 'signup') openAuth(opened);
+
+// mouse wheel: rolling the wheel forward (away from you) moves the camera forward into the class
+addEventListener('wheel', e => {
+  if (e.ctrlKey || document.getElementById('modalBg').classList.contains('open')) return;
+  e.preventDefault();
+  const unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? innerHeight : 1;
+  scrollBy(0, -e.deltaY * unit);
+}, {passive: false});
