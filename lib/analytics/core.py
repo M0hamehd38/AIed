@@ -98,6 +98,24 @@ class Analytics:
         self.th = th or Thresholds()
         self.q = {q.id: q for q in data.questions}
         self._qconcepts = {q.id: set(q.concepts) for q in data.questions}
+        # one pass over the responses; every lookup below is then a dictionary hit instead of a full scan
+        self._by_student, self._by_question, self._by_session, self._by_concept, self._cells = {}, {}, {}, {}, {}
+        for r in data.responses:
+            self._by_student.setdefault(r.sid, []).append(r)
+            self._by_question.setdefault(r.qid, []).append(r)
+            self._by_session.setdefault(r.session, []).append(r)
+            for c in self._qconcepts[r.qid]:
+                self._by_concept.setdefault(c, []).append(r)
+                cell = self._cells.setdefault((c, r.session), [0, 0, {}])
+                cell[0] += r.ok
+                cell[1] += 1
+                cell[2][r.qid] = None
+        self._memo = {}
+
+    def _cached(self, key, make):
+        if key not in self._memo:
+            self._memo[key] = make()
+        return self._memo[key]
 
     # --- building blocks -------------------------------------------------
     def level(self, m):
@@ -107,27 +125,41 @@ class Analytics:
         return T.LEVEL_NAMES[self.level(m)]
 
     def for_concept(self, c, rs=None):
-        rs = self.d.responses if rs is None else rs
+        if rs is None:
+            return self._by_concept.get(c, [])
         return [r for r in rs if c in self._qconcepts[r.qid]]
 
+    def in_session(self, s):
+        return self._by_session.get(s, [])
+
+    def of_student(self, sid):
+        return self._by_student.get(sid, [])
+
+    def of_question(self, qid):
+        return self._by_question.get(qid, [])
+
     def cell(self, c, s):
-        rs = [r for r in self.for_concept(c) if r.session == s]
-        st = stat(rs)
-        return {'ok': st.ok, 'n': st.n, 'qs': list(dict.fromkeys(r.qid for r in rs))}
+        ok, n, qs = self._cells.get((c, s), (0, 0, {}))
+        return {'ok': ok, 'n': n, 'qs': list(qs)}
 
     def up_to(self, c, s, rs=None):
+        if rs is None:
+            return self._cached(('up_to', c, s), lambda: stat([r for r in self.for_concept(c) if r.session <= s]))
         return stat([r for r in self.for_concept(c, rs) if r.session <= s])
 
     def asked_questions(self, up_to):
-        return [q for q in self.d.questions if q.asked and q.session <= up_to and not q.late]
+        return self._cached(('asked', up_to), lambda: [q for q in self.d.questions if q.asked and q.session <= up_to and not q.late])
 
     def last_session(self):
-        return max((r.session for r in self.d.responses), default=0)
+        return self._cached('last', lambda: max((r.session for r in self.d.responses), default=0))
 
     # --- per student -----------------------------------------------------
     def student(self, sid, up_to=99):
+        return self._cached(('student', sid, up_to), lambda: self._student(sid, up_to))
+
+    def _student(self, sid, up_to):
         th = self.th
-        rs = [r for r in self.d.responses if r.sid == sid and r.session <= up_to]
+        rs = [r for r in self._by_student.get(sid, []) if r.session <= up_to]
         per = [{'c': c, **vars(stat(self.for_concept(c.id, rs)))} for c in self.d.concepts]
         asked = self.asked_questions(up_to)
         answered = {r.qid for r in rs}
@@ -149,15 +181,18 @@ class Analytics:
 
     # --- per question ----------------------------------------------------
     def items(self):
+        return self._cached('items', self._items)
+
+    def _items(self):
         scores = {}
         for sid in self.d.students:
-            st = stat([r for r in self.d.responses if r.sid == sid])
+            st = stat(self._by_student.get(sid, []))
             scores[sid] = st.ok / st.n if st.n else 0
         out = []
         for q in self.d.questions:
             if not q.asked:
                 continue
-            rs = [r for r in self.d.responses if r.qid == q.id]
+            rs = self._by_question.get(q.id, [])
             n = len(rs)
             p = sum(1 for r in rs if r.ok) / n if n else 0
             ordered = sorted(rs, key=lambda r: -scores.get(r.sid, 0))
@@ -172,18 +207,23 @@ class Analytics:
 
     # --- class level -----------------------------------------------------
     def participation_by_session(self):
+        return self._cached('participation_by_session', self._participation_by_session)
+
+    def _participation_by_session(self):
         out = []
         for s in self.d.sessions:
             qs = [q for q in self.d.questions if q.session == s.number and q.asked and not q.late]
             if not qs or not self.d.students:
                 out.append(None)
                 continue
-            ids = {q.id for q in qs}
-            answered = sum(1 for r in self.d.responses if r.qid in ids)
+            answered = sum(len(self._by_question.get(q.id, ())) for q in qs)
             out.append(answered / (len(qs) * len(self.d.students)))
         return out
 
     def alerts(self):
+        return self._cached('alerts', self._alerts)
+
+    def _alerts(self):
         th, out = self.th, []
         for c in self.d.concepts:
             pts = [(s.number, self.cell(c.id, s.number)) for s in self.d.sessions]

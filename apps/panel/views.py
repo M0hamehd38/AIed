@@ -10,7 +10,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
-from django.db.models import Max
+from django.db.models import F, Func, IntegerField, Max, OuterRef, Subquery
 from django.http import Http404, HttpResponseBadRequest, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.http import url_has_allowed_host_and_scheme
@@ -18,10 +18,10 @@ from django.views.decorators.http import require_POST
 
 from apps.accounts.models import User
 from apps.audit.models import AuditLog, record
-from apps.courses.models import Concept, Course, Enrollment, Option, Question, QuestionConcept, Session
+from apps.courses.models import Concept, Course, Enrollment, Option, Question, QuestionConcept, Response, Session
 from apps.insights import services
 from apps.insights.models import Suggestion
-from lib.analytics import confidence, stat, wilson
+from lib.analytics import Stat, confidence, stat, wilson
 from lib.analytics.fmt import fa, js_round, pct
 
 from . import strings as S
@@ -48,8 +48,8 @@ def my_courses(request):
 def active_course(request):
     courses = my_courses(request)
     course = courses.filter(pk=request.session.get('course_id')).first() or courses.first()
-    if course:
-        request.session['course_id'] = course.pk
+    if course and request.session.get('course_id') != course.pk:
+        request.session['course_id'] = course.pk  # only on change: writing would re-save the session every request
     return course
 
 
@@ -93,13 +93,17 @@ def point(st, minimum):
     return {'v': st.ok / st.n, 'n': st.n, 'ok': st.n >= minimum} if st.n else None
 
 
+def stat_of(cell):
+    return Stat(cell['ok'], cell['n'])
+
+
 def session_stat(data, number):
-    return stat([r for r in data.responses if r.session == number])
+    return stat(data.a.in_session(number))
 
 
 def participation_series(data):
     ps = data.a.participation_by_session()
-    return [None if p is None else {'v': p, 'n': sum(1 for r in data.responses if r.session == i + 1), 'ok': True}
+    return [None if p is None else {'v': p, 'n': len(data.a.in_session(i + 1)), 'ok': True}
             for i, p in enumerate(ps)]
 
 
@@ -114,7 +118,7 @@ def dashboard(request, data):
     prev = last - 1
 
     def active(s):
-        return len({r.sid for r in data.responses if r.session == s})
+        return len({r.sid for r in a.in_session(s)})
 
     def avg_mastery(s):
         xs = [a.up_to(c.id, s) for c in a.d.concepts]
@@ -231,7 +235,7 @@ def students(request, data):
         cm = sorted((x for x in a.concept_mastery() if x['n']), key=lambda x: x['ok'] / x['n'])
         stable_series = []
         for se in data.sessions:
-            if any(r.session == se.number for r in data.responses):
+            if a.in_session(se.number):
                 stable = sum(1 for s in data.students if not a.student(s.index, se.number)['attention'])
                 stable_series.append({'v': stable / n, 'n': n, 'ok': True})
             else:
@@ -285,7 +289,7 @@ def student_export(request, data, pk):
     s = enrollment_ref(data, pk)
     rs = [{'session': r.session, 'question': data.question_by_number[r.qid].text,
            'answer': data.qrefs[r.qid].options[r.opt], 'correct': r.ok}
-          for r in data.responses if r.sid == s.index]
+          for r in data.a.of_student(s.index)]
     record(request.user, 'export_student', data.course, f'خروجی داده‌های دانشجو {s.code}', course=data.course)
     resp = JsonResponse({'code': s.code, 'name': s.name, 'course': data.course.title, 'responses': rs},
                         json_dumps_params={'ensure_ascii': False, 'indent': 2})
@@ -318,7 +322,7 @@ def analytics(request, data):
         it['distractor_text'] = it['q'].options[it['distractor']['i']] if it['distractor'] else ''
         it['enough'] = it['n'] >= th.min_class
     series = [{'name': c.title, 'color': c.color,
-               'points': [point(stat([r for r in a.for_concept(i) if r.session == s.number]), th.min_class) for s in data.sessions]}
+               'points': [point(stat_of(a.cell(i, s.number)), th.min_class) for s in data.sessions]}
               for i, c in enumerate(data.concepts)]
     ctx = panel_context(
         request, 'analytics', data, cm=cm, last=last, weakest=ordered[0] if ordered else None, best=ordered[-1] if ordered else None,
@@ -407,7 +411,7 @@ def evidence(request, data):
         q = data.qrefs.get(qnum)
         if q is None:
             raise Http404
-        rs = [r for r in data.responses if r.qid == qnum and (session is None or r.session == session)]
+        rs = [r for r in a.of_question(qnum) if session is None or r.session == session]
         n = len(rs)
         ok = sum(1 for r in rs if r.ok)
         opts = [{'text': o, 'correct': i == q.correct, 'c': sum(1 for r in rs if r.opt == i)} for i, o in enumerate(q.options)]
@@ -463,14 +467,17 @@ def audio(request, data):
 
 # ---------------------------------------------------------------- courses
 def course_cards(request, active):
-    cards = []
-    for c in my_courses(request).prefetch_related('enrollments', 'sessions', 'questions'):
-        data_n = Option.objects.filter(response__session_question__session__course=c)
-        n = data_n.count()
-        ok = data_n.filter(is_correct=True).count()
-        cards.append({'c': c, 'active': active and c.pk == active.pk, 'students': c.enrollments.count(),
-                      'sessions': c.sessions.count(), 'questions': c.questions.count(), 'mastery': ok / n if n else None})
-    return cards
+    """All of the teacher's courses with their counts, in one query (each count is a subquery, so joins don't multiply)."""
+    def count(model, **filters):
+        q = model.objects.filter(**filters).order_by().values('pk')
+        return Subquery(q.annotate(n=Func(F('pk'), function='COUNT')).values('n')[:1], output_field=IntegerField())
+    courses = my_courses(request).annotate(
+        n_students=count(Enrollment, course=OuterRef('pk')), n_sessions=count(Session, course=OuterRef('pk')),
+        n_questions=count(Question, course=OuterRef('pk')),
+        n_responses=count(Response, session_question__session__course=OuterRef('pk')),
+        n_correct=count(Response, session_question__session__course=OuterRef('pk'), option__is_correct=True))
+    return [{'c': c, 'active': active and c.pk == active.pk, 'students': c.n_students, 'sessions': c.n_sessions,
+             'questions': c.n_questions, 'mastery': c.n_correct / c.n_responses if c.n_responses else None} for c in courses]
 
 
 @with_course
@@ -480,7 +487,7 @@ def courses(request, data):
     for se in data.sessions:
         sessions.append({'s': se, 'date': jdate_label(se.date), 'year': fa(jdatetime.date.fromgregorian(date=se.date).year) if se.date else '',
                          'questions': sum(1 for q in a.d.questions if q.asked and q.session == se.number),
-                         'responses': sum(1 for r in data.responses if r.session == se.number)})
+                         'responses': len(a.in_session(se.number))})
     questions = [{'q': q, 'concepts': [data.concepts[i].title for i in data.qrefs[q.number].concepts]} for q in data.questions]
     ctx = panel_context(request, 'courses', data, cards=course_cards(request, data.course), sessions=sessions,
                         questions=questions, colors=['#4169f5', '#8c62db', '#0e9fb5', '#c2477f', '#e08a17', '#13a67b'])

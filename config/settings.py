@@ -64,7 +64,9 @@ def database_from_url(url):
         return {'ENGINE': 'django.db.backends.sqlite3', 'NAME': BASE_DIR / 'db.sqlite3'}
     u = urlparse(url)
     return {'ENGINE': 'django.db.backends.postgresql', 'NAME': u.path.lstrip('/'), 'USER': u.username or '',
-            'PASSWORD': u.password or '', 'HOST': u.hostname or '', 'PORT': str(u.port or 5432)}
+            'PASSWORD': u.password or '', 'HOST': u.hostname or '', 'PORT': str(u.port or 5432),
+            # reuse connections across requests instead of reconnecting every time
+            'CONN_MAX_AGE': 60, 'CONN_HEALTH_CHECKS': True}
 
 
 DATABASES = {'default': database_from_url(os.environ.get('DATABASE_URL'))}

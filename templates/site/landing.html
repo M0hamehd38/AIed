@@ -5,12 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>کلاس‌یار</title>
 <link rel="stylesheet" href="{% static 'css/landing.css' %}">
+<link rel="preload" href="{% static 'assets/classroom-far.webp' %}" as="image">
+<link rel="preload" href="{% static 'assets/bot.webp' %}" as="image">
+<link rel="preload" href="{% static 'fonts/Sahel-Bold.woff2' %}" as="font" type="font/woff2" crossorigin>
 </head>
 <body data-open-auth="{{ auth_open|default:'' }}">
 <div id="track"></div>
 <div id="view">
  <div id="frame">
-  <div id="cls" class="layer"><img src="{% static 'assets/classroom-near.jpg' %}" alt=""><img id="clsFar" src="{% static 'assets/classroom-far.jpg' %}" alt=""></div>
+  <div id="cls" class="layer"><img src="{% static 'assets/classroom-near.webp' %}" alt=""><img id="clsFar" src="{% static 'assets/classroom-far.webp' %}" alt=""></div>
   <div id="stage"></div>
   <div id="scr" class="layer" style="display:none">
     <div id="board"><div class="glow"></div><div class="txt"><svg class="cap" viewBox="0 0 24 24" fill="none" stroke="#9fe0ff" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M2 9l10-5 10 5-10 5z" fill="rgba(80,170,255,.35)"/><path d="M6 11v5c0 1.5 3 3 6 3s6-1.5 6-3v-5M22 9v6"/></svg>

@@ -6,8 +6,8 @@
 <title>کلاس‌یار</title>
 <style>
 /* Sahel by Saber Rastikerdar — SIL OFL 1.1 (fonts/LICENSE-Sahel) */
-@font-face{font-family:Sahel;src:url('fonts/Sahel.woff') format('woff');font-weight:400;font-display:swap}
-@font-face{font-family:Sahel;src:url('fonts/Sahel-Bold.woff') format('woff');font-weight:700;font-display:swap}
+@font-face{font-family:Sahel;src:url('fonts/Sahel.woff2') format('woff2'),url('fonts/Sahel.woff') format('woff');font-weight:400;font-display:swap}
+@font-face{font-family:Sahel;src:url('fonts/Sahel-Bold.woff2') format('woff2'),url('fonts/Sahel-Bold.woff') format('woff');font-weight:700;font-display:swap}
 :root{color-scheme:dark;--bg:#050b22;--ink:#fff;--muted:#cfd8f6;--accent:#55dcff}
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Sahel,Tahoma,sans-serif}
@@ -114,13 +114,13 @@ html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Sahel,Tahom
 <div id="track"></div>
 <div id="view">
  <div id="frame">
-  <div id="cls" class="layer"><img src="assets/classroom-near.jpg" alt=""><img id="clsFar" src="assets/classroom-far.jpg" alt=""></div>
+  <div id="cls" class="layer"><img src="assets/classroom-near.webp" alt="" decoding="async"><img id="clsFar" src="assets/classroom-far.webp" alt=""></div>
   <div id="stage"></div>
   <div id="scr" class="layer" style="display:none">
     <div id="board"><div class="glow"></div><div class="txt"><svg class="cap" viewBox="0 0 24 24" fill="none" stroke="#9fe0ff" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M2 9l10-5 10 5-10 5z" fill="rgba(80,170,255,.35)"/><path d="M6 11v5c0 1.5 3 3 6 3s6-1.5 6-3v-5M22 9v6"/></svg>
       <h2>به کلاس‌یار خوش آمدید</h2><p>دستیار هوشمندی در کنار استاد؛ تصمیم همیشه با شماست.</p></div>
       <div class="row"><button class="s" data-auth="signup">شروع کنید</button><button class="l" data-auth="login">ورود استاد</button></div></div>
-    <img src="assets/teacher.webp" alt="" style="position:absolute;left:1020px;top:380px;width:112px;height:212px">
+    <img src="assets/teacher.webp" alt="" loading="lazy" style="position:absolute;left:1020px;top:380px;width:112px;height:212px">
   </div>
   <div id="fgroup" style="position:absolute;inset:0;transform-origin:400px 560px">
     <div id="desk" class="hl" style="left:-61px;top:476.1px;width:1401.5px;height:249.9px"><img src="assets/desk.webp" alt=""></div>
