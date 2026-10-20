@@ -1,0 +1,6 @@
+.git
+db.sqlite3
+staticfiles
+.env
+__pycache__
+prototype

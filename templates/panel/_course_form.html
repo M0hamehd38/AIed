@@ -1,0 +1,8 @@
+<template id="tpl-new-course" data-title="ایجاد درس جدید"><form method="post" action="{% url 'panel:course_create' %}">{% csrf_token %}<div class="form-grid">
+  <div class="field full"><label for="ncTitle">نام درس *</label><input type="text" id="ncTitle" name="title" placeholder="مثلاً طراحی الگوریتم" required maxlength="120"></div>
+  <div class="field"><label for="ncCode">کد درس</label><input type="text" id="ncCode" name="code" placeholder="CS301" maxlength="20"></div>
+  <div class="field"><label for="ncGroup">گروه</label><input type="text" id="ncGroup" name="group" placeholder="گروه ۱" maxlength="40"></div>
+  <div class="field"><label for="ncTerm">ترم</label><input type="text" id="ncTerm" name="term" value="پاییز ۱۴۰۵" maxlength="40"></div>
+  <div class="field"><label for="ncSchedule">زمان کلاس</label><input type="text" id="ncSchedule" name="schedule" placeholder="دوشنبه ۱۴–۱۶" maxlength="80"></div>
+  <div class="field full"><label for="ncConcepts">مفاهیم درس *</label><textarea id="ncConcepts" name="concepts" placeholder="هر مفهوم در یک خط" required></textarea><span class="help">بعداً هم می‌توانید مفهوم اضافه کنید.</span></div>
+  </div><div style="display:flex;gap:8px"><button class="btn primary">ایجاد درس</button><button class="btn" type="button" data-act="closeModal">انصراف</button></div></form></template>

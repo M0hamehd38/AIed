@@ -1,0 +1,12 @@
+{% extends "panel/base.html" %}{% load ui %}
+{% block content %}
+<div class="card"><div class="card-head">{% h2 'doc' 'blue' 'این درس هنوز داده‌ای ندارد' %}</div>
+  <p class="muted" style="margin-top:0">تحلیل‌ها پس از اولین آزمونک زنده ساخته می‌شوند. این مراحل را کامل کنید:</p>
+  {% with c=data.concepts|length s=data.students|length se=data.sessions|length q=data.questions|length %}
+  <div class="act-item"><span class="mk" style="background:{% if c %}var(--green){% else %}var(--line){% endif %}">{% if c %}✓{% else %}○{% endif %}</span><div>مفاهیم درس تعریف شده‌اند<small>{{ c|fa }} مفهوم</small></div></div>
+  <div class="act-item"><span class="mk" style="background:{% if s %}var(--green){% else %}var(--line){% endif %}">{% if s %}✓{% else %}○{% endif %}</span><div>دانشجویان وارد شده‌اند<small>{{ s|fa }} دانشجو</small></div></div>
+  <div class="act-item"><span class="mk" style="background:{% if se %}var(--green){% else %}var(--line){% endif %}">{% if se %}✓{% else %}○{% endif %}</span><div>دست‌کم یک جلسه تعریف شده است<small>{{ se|fa }} جلسه</small></div></div>
+  <div class="act-item"><span class="mk" style="background:{% if q %}var(--green){% else %}var(--line){% endif %}">{% if q %}✓{% else %}○{% endif %}</span><div>بانک سؤال سؤال دارد<small>{{ q|fa }} سؤال</small></div></div>
+  {% endwith %}
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px"><a class="btn primary" href="{% url 'panel:courses' %}">تکمیل اطلاعات درس</a><a class="btn" href="{% url 'panel:live' %}">جلسه‌ی زنده</a></div></div>
+{% endblock %}

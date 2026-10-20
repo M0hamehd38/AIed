@@ -1,0 +1,14 @@
+{% extends "panel/base.html" %}{% load ui %}
+{% block content %}
+<div class="alert blue"><span class="ic">i</span><div><b>پیشنهادها پیش‌نویس هستند</b><p>فقط داده‌ی تجمیعی و بدون نام تحلیل می‌شود. هیچ پیشنهادی بدون تأیید شما اجرا یا به دانشجو نشان داده نمی‌شود.</p></div></div>
+<div class="grid g-main mt">
+  <div class="card"><div class="card-head"><h2>در انتظار تصمیم</h2><span class="hint">{{ pending|length|fa }} مورد</span></div>
+    {% for s in pending %}{% include "panel/_suggestion.html" %}{% empty %}<div class="empty">همه‌ی پیشنهادها بررسی شده‌اند.</div>{% endfor %}
+    {% if done %}<h2 style="font-size:14px;margin:20px 0 10px">بررسی‌شده</h2>{% for s in done %}{% include "panel/_suggestion.html" %}{% endfor %}{% endif %}</div>
+  <div class="card"><div class="card-head"><h2>لاگ ممیزی</h2><span class="hint">چه کسی، چه زمانی، چه تصمیمی</span></div>
+    <div class="table-wrap"><table><thead><tr><th>زمان</th><th>تصمیم</th><th>شرح</th></tr></thead><tbody>
+    {% for a in audit %}<tr><td class="small muted">{{ a.e.at|jdate }} · {{ a.e.at|time:"H:i"|fa }}<br>{{ a.e.actor.full_name }}</td><td>{% tag a.label.0 a.label.1 %}</td><td class="small">{{ a.e.summary }}</td></tr>
+    {% empty %}<tr><td colspan="3" class="empty">هنوز تصمیمی ثبت نشده است.</td></tr>{% endfor %}
+    </tbody></table></div></div>
+</div>
+{% endblock %}

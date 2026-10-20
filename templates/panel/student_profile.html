@@ -1,0 +1,24 @@
+{% extends "panel/base.html" %}{% load ui %}
+{% block content %}
+<a class="btn back" href="{% url 'panel:students' %}">→ بازگشت به دانشجویان</a>
+<div class="grid g3">
+  <div class="card span2"><div class="profile-head">{% photo s 110 %}<div style="flex:1;min-width:200px">
+    <h2>{{ name }}</h2><div class="muted">کد {{ s.code|fa }} · {{ course.title }} · {{ course.term }}</div>
+    <div style="margin-top:8px">{% if x.attention %}{% tag 'نیازمند پیگیری' 'orange' %}{% else %}{% tag 'پایدار' 'green' %}{% endif %}</div>
+    <div class="facts"><span><b>{{ x.part|pct }}</b>مشارکت کل</span><span><b>{{ x.recent_part|pct }}</b>سه جلسه‌ی اخیر</span><span><b>{{ x.total.n|fa }}</b>پاسخ ثبت‌شده</span><span><b>{{ x.hard.c.title|default:'—' }}</b>مفهوم دشوار</span></div></div></div>
+    {% if x.reasons %}<div class="alert orange mt"><span class="ic">!</span><div><b>دلیل نیاز به پیگیری</b><p>{{ x.reasons|join:' · ' }}</p></div></div>{% endif %}</div>
+  <div class="card ring-card">{% if enough %}{% ring m 120 %}{% else %}<b class="muted">{{ T.INSUFFICIENT }}</b>{% endif %}<b>تسلط کلی</b><span class="muted small">n={{ x.total.n|fa }} · {{ T.CONF|attr:conf }}</span></div>
+</div>
+<div class="grid g2 mt">
+  <div class="card"><div class="card-head">{% h2 'target' 'blue' 'تسلط مفاهیم' %}</div>
+    {% for p in per %}<div class="opt-bar"><div class="top"><b>{{ p.c.title }}</b><span>{% if p.enough %}{{ p.m|pct }} <span class="muted small">n={{ p.n|fa }}</span>{% else %}<span class="muted small">{{ T.INSUFFICIENT }} (n={{ p.n|fa }})</span>{% endif %}</span></div>{% if p.enough %}{% progress p.m %}{% else %}{% progress 0 %}{% endif %}</div>{% endfor %}</div>
+  <div class="card"><div class="card-head">{% h2 'doc' 'green' 'فعالیت اخیر' %}</div>
+    {% for h in history|slice:":6" %}<div class="act-item"><span class="mk" style="background:{% if h.r.ok %}var(--green){% else %}var(--red){% endif %}" aria-label="{% if h.r.ok %}درست{% else %}نادرست{% endif %}">{% if h.r.ok %}✓{% else %}✕{% endif %}</span><div><bdi>{{ h.q_text }}</bdi><small>پاسخ: <bdi>{{ h.answer }}</bdi> · جلسه‌ی {{ h.r.session|fa }} · {{ h.date }}</small></div></div>
+    {% empty %}<div class="empty">هنوز پاسخی ثبت نشده است.</div>{% endfor %}</div>
+</div>
+<div class="card mt"><div class="card-head">{% h2 'analytics' 'purple' 'روند تسلط هر مفهوم در طول ترم' %}<span class="hint">تجمعی</span></div>{{ chart }}</div>
+<div class="card mt"><div class="card-head">{% h2 'grid' 'orange' 'شواهد کامل (همه‌ی پاسخ‌ها)' %}<div class="end"><a class="btn sm" href="{% url 'panel:student_export' s.pk %}">خروجی داده‌های این دانشجو</a></div></div>
+  <div class="table-wrap"><table><thead><tr><th>تاریخ</th><th>سؤال</th><th>پاسخ داده‌شده</th><th>نتیجه</th></tr></thead><tbody>
+  {% for h in history %}<tr><td class="small">{{ h.date }}</td><td class="small"><bdi>{{ h.q_text }}</bdi></td><td class="small"><bdi>{{ h.answer }}</bdi></td><td>{% if h.r.ok %}{% tag '✓ درست' 'green' %}{% else %}{% tag '✕ نادرست' 'red' %}{% endif %}</td></tr>{% endfor %}
+  </tbody></table></div><div class="note">{{ T.NOT_JUDGEMENT }} حذف داده‌های دانشجو فقط از پنل ادمین ممکن است.</div></div>
+{% endblock %}

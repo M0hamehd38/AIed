@@ -1,0 +1,37 @@
+{% extends "panel/base.html" %}{% load ui %}
+{% block content %}
+{% if not total %}
+<div class="card"><div class="empty">هنوز دانشجویی در این درس ثبت نشده است. از «درس‌ها و جلسات» فهرست دانشجویان را با فایل CSV وارد کنید.</div><div style="text-align:center"><a class="btn primary" href="{% url 'panel:courses' %}">رفتن به درس‌ها و جلسات</a></div></div>
+{% else %}
+<form class="toolbar" method="get">
+  <input type="text" name="q" placeholder="جست‌وجوی نام یا کد…" value="{{ q }}" aria-label="جست‌وجو">
+  <select name="f" aria-label="فیلتر وضعیت" data-autosubmit><option value="all">همه‌ی دانشجویان</option><option value="attention" {% if f == 'attention' %}selected{% endif %}>نیازمند پیگیری</option><option value="stable" {% if f == 'stable' %}selected{% endif %}>پایدار</option></select>
+  <select name="sort" aria-label="مرتب‌سازی" data-autosubmit>{% for v, l in sorts %}<option value="{{ v }}" {% if v == sort %}selected{% endif %}>{{ l }}</option>{% endfor %}</select>
+  <noscript><button class="btn">اعمال</button></noscript>
+  <span class="hint">{{ rows|length|fa }} از {{ total|fa }} دانشجو</span>
+</form>
+<div class="pgrid">{% for r in rows %}<a class="card pcard" href="{% url 'panel:student' r.s.pk %}" style="--st:{% if r.a.attention %}var(--orange){% else %}var(--green){% endif %}" aria-label="نمایه‌ی {{ r.name }}">
+    {% photo r.s 78 %}<b>{{ r.name }}</b><span class="code">کد {{ r.s.code|fa }}</span>
+    {% if r.a.attention %}{% tag 'نیازمند پیگیری' 'orange' %}{% else %}{% tag 'پایدار' 'green' %}{% endif %}
+    <span class="meta"><span>تسلط</span><span>{% if r.enough %}{{ r.mastery|pct }}{% else %}{{ T.INSUFFICIENT }}{% endif %}</span></span>{% if r.enough %}{% progress r.mastery %}{% else %}{% progress 0 %}{% endif %}
+    <span class="meta"><span>مشارکت</span><span>{{ r.a.part|pct }}</span></span></a>
+  {% empty %}<div class="empty">نتیجه‌ای پیدا نشد.</div>{% endfor %}</div>
+{% if not chart %}<div class="note">نمودارهای کلاس پس از ثبت اولین پاسخ‌ها نمایش داده می‌شوند.</div>{% else %}
+<div class="grid g3 mt">
+  <div class="card span2"><div class="card-head">{% h2 'analytics' 'purple' 'وضعیت کلاس در طول ترم' %}<span class="hint">در هر جلسه</span></div>{{ chart }}</div>
+  <div class="card dark-card"><div class="card-head">{% h2 'spark' '' 'برداشت‌ها' %}</div>
+    <div class="item"><span class="lbl">نیازمند پیگیری</span><b>{{ need_count|fa }} دانشجو</b> — بیشتر به‌دلیل {{ need_reason }}</div>
+    {% if weakest %}<div class="item"><span class="lbl">دشوارترین مفهوم برای کلاس</span><b>{{ weakest.c.title }}</b> · {{ weakest|rate|pct }} (n={{ weakest.n|fa }})</div>{% endif %}
+    <div class="item"><span class="lbl">پیشنهاد</span>تمرین بیشتر روی «{{ weakest.c.title|default:'—' }}» می‌تواند به این گروه کمک کند.</div>
+    <div class="actions" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><a class="btn primary" href="{% url 'panel:suggestions' %}">مشاهده‌ی پیشنهادها</a><a class="btn" href="?f=attention">فقط نیازمند پیگیری</a></div>
+  </div>
+</div>
+<div class="grid g2 mt">
+  <div class="card"><div class="card-head">{% h2 'target' 'green' 'توزیع تسلط دانشجویان' %}</div>
+    {% for label, n, color in mastery_bars %}{% include "panel/_bar.html" %}{% endfor %}</div>
+  <div class="card"><div class="card-head">{% h2 'students' 'blue' 'توزیع مشارکت دانشجویان' %}</div>
+    {% for label, n, color in part_bars %}{% include "panel/_bar.html" %}{% endfor %}</div>
+</div>{% endif %}
+<div class="note">{{ T.NOT_JUDGEMENT }} تصویرها نمونه‌ی نمایشی‌اند؛ در محصول، عکس از سامانه‌ی آموزشی دانشگاه خوانده می‌شود.</div>
+{% endif %}
+{% endblock %}

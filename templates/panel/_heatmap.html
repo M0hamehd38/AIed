@@ -1,0 +1,8 @@
+{% load ui %}<div class="table-wrap"><div class="heat" style="grid-template-columns:110px repeat({{ heat.cols }},minmax(46px,1fr));min-width:520px"><div></div>
+{% for s in data.sessions %}<div class="ch">ج{{ s.number|fa }}<br>{{ s.date|jdate }}</div>{% endfor %}
+{% for row in heat.rows %}<div class="rh">{{ row.c.title }}</div>
+  {% for cl in row.cells %}{% if cl.kind == 'na' %}<div class="cell na" aria-label="بدون سؤال">—</div>
+  {% elif cl.kind == 'low' %}<button class="cell low" data-act="evidence" data-ev="{{ cl.ev|evjson }}" aria-label="{{ row.c.title }}، جلسه‌ی {{ cl.s|fa }}: داده کافی نیست">n={{ cl.n|fa }}<small>کم</small></button>
+  {% else %}<button class="cell {{ cl.kind }}" data-act="evidence" data-ev="{{ cl.ev|evjson }}" aria-label="{{ row.c.title }}، جلسه‌ی {{ cl.s|fa }}: {{ cl.m|pct }}">{{ cl.m|pct }}<small>n={{ cl.n|fa }}</small></button>{% endif %}{% endfor %}
+{% endfor %}</div></div>
+<div class="legend"><span><i style="background:var(--green)"></i>≥ {{ th.green|pct }} تسلط مناسب</span><span><i style="background:var(--orange)"></i>{{ th.orange|pct }} تا {{ heat.orange_top|pct }} نیازمند تمرین</span><span><i style="background:var(--red)"></i>&lt; {{ th.orange|pct }} دشوار</span><span><i class="cell low" style="min-height:0;display:inline-block"></i><bdi dir="ltr">n &lt; {{ th.min_class|fa }}</bdi>: داده کافی نیست</span><span>— بدون سؤال</span></div>

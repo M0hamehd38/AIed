@@ -1,0 +1,14 @@
+{% extends "panel/base.html" %}{% load ui %}
+{% block content %}
+<div class="grid g-main">
+  <div class="card"><div class="card-head"><h2>رونوشت زنده</h2>{% tag 'متوقف' 'gray' %}{% tag 'فاز ۳' 'purple' %}<div class="end"><button class="btn primary" disabled>شروع شنود</button></div></div>
+    <div class="transcript"><div class="empty">هنوز رونوشتی ثبت نشده است.</div></div>
+    <div class="note">صدای خام ذخیره نمی‌شود؛ فقط رونوشت متنی، و آن هم پس از {{ cfg.retention_days|fa }} روز به‌طور خودکار حذف می‌شود. گوینده‌ها شناسایی نمی‌شوند. تبدیل گفتار به متن روی سرور دانشگاه (Whisper) در فاز ۳ فعال می‌شود.</div>
+    <div class="card-head mt"><h2>رضایت‌نامه‌ی شنود</h2>{% if consent %}{% tag 'ثبت شده' 'green' %}{% else %}{% tag 'ثبت نشده' 'gray' %}{% endif %}</div>
+    <p class="small">پیش از اولین شنود در هر درس، این متن برای کلاس خوانده می‌شود:</p>
+    <div class="note" style="font-size:13px;color:var(--ink)">«برای بهبود تدریس، گفت‌وگوی کلاس به متن تبدیل می‌شود تا پرسش‌ها و ابهام‌های رایج مشخص شوند. صدا ذخیره نمی‌شود، گوینده‌ها شناسایی نمی‌شوند و متن پس از {{ cfg.retention_days|fa }} روز حذف می‌شود. هر زمان بخواهید می‌توانید درخواست توقف کنید.»</div></div>
+  <div class="card"><div class="card-head"><h2>نشانه‌های گفتاری کلاس</h2></div>
+    {% for label, cls in signals %}<div class="counter"><span>{% tag label cls %}</span><b>{{ 0|fa }}</b></div>{% endfor %}
+    <div class="alert orange mt"><span class="ic">!</span><div><b>این‌ها شاخص قطعی فهم نیستند</b><p>شمارنده‌ها با قواعد ساده‌ی متنی ساخته می‌شوند و فقط برای جلب توجه شما هستند. هیچ تحلیل لحن، احساس یا هویت انجام نمی‌شود.</p></div></div></div>
+</div>
+{% endblock %}

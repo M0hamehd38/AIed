@@ -1,0 +1,28 @@
+{% load static %}
+{% comment %}Sign-in / sign-up dialogs. Errors come back from the server and reopen the same dialog.{% endcomment %}
+<template id="tpl-login">
+  <div class="head"><img src="{% static 'assets/emblem.webp' %}" alt=""><b id="mTitle">ورود به پنل استاد</b><button class="x" aria-label="بستن">×</button></div>
+  <div class="tabs" role="tablist"><button role="tab" aria-selected="true" data-auth="login">ورود</button><button role="tab" aria-selected="false" data-auth="signup">ثبت‌نام</button></div>
+  <form method="post" action="{% url 'accounts:login' %}" novalidate>{% csrf_token %}
+    <div class="field"><label for="lEmail">ایمیل دانشگاهی</label><input id="lEmail" name="email" type="email" autocomplete="email" dir="ltr" placeholder="name@university.ac.ir" value="{{ login_form.email.value|default:'' }}" required {% if login_form.errors %}aria-invalid="true"{% endif %}></div>
+    <div class="field"><label for="lPass">رمز عبور</label><input id="lPass" name="password" type="password" autocomplete="current-password" dir="ltr" required></div>
+    <div class="err" role="alert">{% for e in login_form.non_field_errors %}{{ e }} {% endfor %}{% for f in login_form %}{% for e in f.errors %}{{ e }} {% endfor %}{% endfor %}</div>
+    <button class="submit" type="submit">ورود</button>
+  </form>
+  <p class="note">رمز عبور با الگوریتم Argon2 نگهداری می‌شود و هیچ‌جا به‌صورت خام ذخیره نمی‌شود.</p>
+</template>
+<template id="tpl-signup">
+  <div class="head"><img src="{% static 'assets/emblem.webp' %}" alt=""><b id="mTitle">ساخت حساب استاد</b><button class="x" aria-label="بستن">×</button></div>
+  <div class="tabs" role="tablist"><button role="tab" aria-selected="false" data-auth="login">ورود</button><button role="tab" aria-selected="true" data-auth="signup">ثبت‌نام</button></div>
+  <form method="post" action="{% url 'accounts:signup' %}" novalidate>{% csrf_token %}
+    <div class="field"><label for="sName">نام و نام خانوادگی</label><input id="sName" name="full_name" autocomplete="name" placeholder="مثلاً دکتر شهرام گلزاری هرمزی" value="{{ signup_form.full_name.value|default:'' }}" required {% if signup_form.full_name.errors %}aria-invalid="true"{% endif %}></div>
+    <div class="field"><label for="sEmail">ایمیل دانشگاهی</label><input id="sEmail" name="email" type="email" autocomplete="email" dir="ltr" placeholder="name@university.ac.ir" value="{{ signup_form.email.value|default:'' }}" required {% if signup_form.email.errors %}aria-invalid="true"{% endif %}></div>
+    <div class="field"><label for="sPass">رمز عبور</label><input id="sPass" name="password" type="password" autocomplete="new-password" dir="ltr" required minlength="8" {% if signup_form.password.errors %}aria-invalid="true"{% endif %}></div>
+    <div class="err" role="alert">{% for e in signup_form.non_field_errors %}{{ e }} {% endfor %}{% for f in signup_form %}{% for e in f.errors %}{{ e }} {% endfor %}{% endfor %}</div>
+    <button class="submit" type="submit">ساخت حساب و ورود</button>
+  </form>
+  <p class="note">رمز عبور دست‌کم ۸ کاراکتر، و نه فقط عدد.</p>
+</template>
+<template id="tpl-pricing"><div class="head"><img src="{% static 'assets/emblem.webp' %}" alt=""><b id="mTitle">قیمت‌گذاری</b><button class="x" aria-label="بستن">×</button></div><div class="info"><p>کلاس‌یار در حال حاضر در مرحله‌ی آزمایشی است و استفاده از آن برای اساتید رایگان است.</p></div></template>
+<template id="tpl-about"><div class="head"><img src="{% static 'assets/emblem.webp' %}" alt=""><b id="mTitle">درباره ما</b><button class="x" aria-label="بستن">×</button></div><div class="info"><p>کلاس‌یار دستیار هوشمند استاد است: تسلط دانشجویان روی هر مفهوم را از روی پاسخ‌های کلاس نشان می‌دهد و پیشنهادهای آموزشی مبتنی بر شواهد می‌دهد؛ تصمیم همیشه با استاد است.</p></div></template>
+<template id="tpl-contact"><div class="head"><img src="{% static 'assets/emblem.webp' %}" alt=""><b id="mTitle">تماس با ما</b><button class="x" aria-label="بستن">×</button></div><div class="info"><p>برای همکاری یا ارائه‌ی بازخورد، از طریق ایمیل info@classyar.ir با ما در ارتباط باشید.</p></div></template>

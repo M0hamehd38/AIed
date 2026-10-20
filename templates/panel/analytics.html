@@ -1,0 +1,24 @@
+{% extends "panel/base.html" %}{% load ui %}
+{% block content %}
+<div class="grid g2">
+  <div class="card"><div class="card-head"><h2>مقایسه‌ی تسلط مفاهیم</h2><span class="hint">تجمعی تا جلسه‌ی {{ last|fa }} · خط نازک: بازه‌ی اطمینان ۹۵٪</span></div>
+    {% for x in cm %}<div class="opt-bar"><div class="top"><b>{{ x.c.title }}</b><span>{{ x.m|pct }} · <span class="muted small">n={{ x.n|fa }} · {{ T.CONF|attr:x.conf }}</span></span></div>
+      <div style="position:relative">{% progress x.m %}<div style="position:absolute;top:5px;height:2px;background:var(--ink);opacity:.5;right:{{ x.lo|floatformat:'2u' }}%;width:{{ x.w|floatformat:'2u' }}%"></div></div></div>{% endfor %}
+    {% if weakest %}<div class="legend"><button class="link" data-act="evidence" data-ev='{"type":"concept","c":{{ weakest.c.id }}}'>شواهد دشوارترین مفهوم</button></div>{% endif %}</div>
+  <div class="card"><div class="card-head"><h2>روند ترم</h2><span class="hint">تسلط کلاس در هر جلسه</span></div>{{ chart }}</div>
+</div>
+<div class="card mt"><div class="card-head"><h2>تفسیر آموزشی</h2><span class="hint">به ترتیب اولویت اقدام</span></div>
+  <ol style="margin:0;padding-right:18px">
+    <li><b>«{{ weakest.c.title }}»</b> کمترین تسلط را دارد ({{ weakest.m|pct }}، n={{ weakest.n|fa }}). مرور هدفمند پیش از مفهوم جدید پیشنهاد می‌شود.</li>
+    {% if mis_items %}<li>در {{ mis_items|length|fa }} سؤال یک گزینه‌ی نادرست بیش از ۲۵٪ پاسخ‌ها را جذب کرده؛ احتمالاً بدفهمی مشترک وجود دارد (سؤال‌های {% for it in mis_items %}{{ it.q.id|fa }}{% if not forloop.last %}، {% endif %}{% endfor %}).</li>{% endif %}
+    {% if weak_items %}<li>قدرت تمییز {{ weak_items|length|fa }} سؤال پایین است (سؤال‌های {% for it in weak_items %}{{ it.q.id|fa }}{% if not forloop.last %}، {% endif %}{% endfor %})؛ شاید صورت سؤال نیاز به بازبینی داشته باشد.</li>{% endif %}
+    <li><b>«{{ best.c.title }}»</b> پایدار است ({{ best.m|pct }})؛ می‌توان زمان مرور آن را کم کرد.</li>
+  </ol><div class="note">این تفسیر از قواعد ساده روی پاسخ‌ها ساخته شده و جایگزین قضاوت آموزشی شما نیست.</div></div>
+<div class="card mt"><div class="card-head"><h2>تحلیل سؤال‌ها</h2><span class="hint">دشواری = نسبت پاسخ درست · قدرت تمییز = تفاوت ۲۷٪ بالا و پایین</span></div>
+  <div class="table-wrap"><table><thead><tr><th>#</th><th>سؤال</th><th>مفهوم</th><th>جلسه</th><th>n</th><th>دشواری</th><th>قدرت تمییز</th><th>گزینه‌ی انحرافی پرانتخاب</th></tr></thead><tbody>
+  {% for it in items %}<tr class="clickable" data-act="evidence" data-ev='{"type":"question","q":{{ it.q.id }}}'><td>{{ it.q.id|fa }}</td><td style="max-width:280px"><bdi>{{ data.question_by_number|attr:it.q.id|attr:'text' }}</bdi></td><td>{% for t in it.concept_titles %}{% tag t 'gray' %} {% endfor %}</td><td>{{ it.q.session|fa }}</td>
+    <td>{{ it.n|fa }}{% if not it.enough %} {% tag 'کم' 'gray' %}{% endif %}</td><td>{% if it.n %}{{ it.p|pct }} {% tag it.diff.0 it.diff.1 %}{% else %}—{% endif %}</td>
+    <td>{% if it.enough %}{% if it.D_txt %}{{ it.D_txt }} {% tag it.disc.0 it.disc.1 %}{% else %}—{% endif %}{% else %}<span class="muted small">{{ T.INSUFFICIENT }}</span>{% endif %}</td>
+    <td>{% if it.distractor %}«<bdi>{{ it.distractor_text }}</bdi>» {{ it.distractor.share|pct }}{% else %}—{% endif %}</td></tr>{% endfor %}
+  </tbody></table></div></div>
+{% endblock %}

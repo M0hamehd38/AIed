@@ -1,0 +1,8 @@
+{% load static %}<!doctype html>
+<html lang="fa" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>کلاس‌یار · دانشجو</title>
+<link rel="stylesheet" href="{% static 'css/panel.css' %}"></head>
+<body><main class="view" style="max-width:560px;margin:60px auto">
+<div class="card"><div class="card-head"><img src="{% static 'assets/emblem.webp' %}" alt="" style="width:36px"><h2>سلام {{ user.full_name }}</h2></div>
+<p>صفحه‌ی دانشجو برای پاسخ به آزمونک‌های زنده در فاز بعد فعال می‌شود. در آن صفحه فقط پاسخ‌های خود شما نمایش داده می‌شود.</p>
+<form method="post" action="{% url 'accounts:logout' %}">{% csrf_token %}<button class="btn" type="submit">خروج</button></form></div>
+</main></body></html>

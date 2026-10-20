@@ -1,0 +1,42 @@
+{% extends "panel/base.html" %}{% load ui %}
+{% block content %}
+<div class="toolbar"><h2 style="margin:0;font-size:17px">درس‌های من</h2><span class="hint">{{ cards|length|fa }} درس · {{ course.term }}</span><button class="btn primary" data-act="dialog" data-tpl="tpl-new-course">+ ایجاد درس جدید</button></div>
+<div class="cgrid">{% for k in cards %}
+  <div class="card ccard {% if k.active %}active{% endif %}"><div class="ccard-top"><span class="cc-ic" style="background:{% cycle '#4169f5' '#8c62db' '#0e9fb5' '#c2477f' '#e08a17' '#13a67b' %}" aria-hidden="true">{{ k.c.title|slice:":1" }}</span><div style="min-width:0"><b>{{ k.c.title }}</b><small>{% if k.c.code %}{{ k.c.code }} · {% endif %}{% if k.c.group %}{{ k.c.group }} · {% endif %}{{ k.c.term }}</small></div>{% if k.active %}{% tag 'درس فعال' 'green' %}{% endif %}</div>
+    {% if k.c.schedule %}<div class="small muted">🗓 {{ k.c.schedule }}</div>{% endif %}
+    <div class="cstats"><span><b>{{ k.students|fa }}</b>دانشجو</span><span><b>{{ k.sessions|fa }}</b>جلسه</span><span><b>{{ k.questions|fa }}</b>سؤال</span><span><b>{{ k.mastery|pct }}</b>درست‌پاسخی</span></div>
+    {% if k.mastery is None %}<div class="small muted">هنوز پاسخی ثبت نشده</div>{% else %}{% progress k.mastery %}{% endif %}
+    <div class="ccard-actions"><form method="post" action="{% url 'panel:course_switch' %}">{% csrf_token %}<input type="hidden" name="course" value="{{ k.c.pk }}"><input type="hidden" name="next" value="{% url 'panel:dashboard' %}"><button class="btn sm primary">ورود به درس</button></form>
+      {% if not k.active %}<form method="post" action="{% url 'panel:course_switch' %}">{% csrf_token %}<input type="hidden" name="course" value="{{ k.c.pk }}"><input type="hidden" name="next" value="{% url 'panel:courses' %}"><button class="btn sm">مدیریت</button></form>{% endif %}</div></div>
+{% endfor %}</div>
+
+<div class="toolbar mt" style="margin-top:28px"><h2 style="margin:0;font-size:17px">مدیریت «{{ course.title }}»</h2><span class="hint">استاد: {{ course.teacher.full_name }}</span></div>
+<div class="grid g2">
+  <div class="card"><div class="card-head">{% h2 'target' 'purple' 'مفاهیم درس' %}<span class="hint">پایه‌ی همه‌ی تحلیل‌ها</span></div>
+    <div class="chips">{% for c in data.concepts %}<span class="tag">{{ c.title }} · از ج{{ c.intro_session|fa }}</span>{% empty %}<span class="muted small">هنوز مفهومی تعریف نشده</span>{% endfor %}</div>
+    <form class="inline mt" method="post" action="{% url 'panel:concept_add' %}">{% csrf_token %}<input type="text" name="title" placeholder="مفهوم جدید…" aria-label="نام مفهوم جدید" required maxlength="120"><button class="btn">افزودن</button></form></div>
+  <div class="card"><div class="card-head">{% h2 'students' 'blue' 'ورود دانشجویان' %}<span class="hint">CSV با ستون‌های «کد، نام»</span></div>
+    <p class="small muted" style="margin-top:0">{{ data.students|length|fa }} دانشجو در این درس ثبت‌نام شده‌اند.</p>
+    <form method="post" action="{% url 'panel:students_import' %}" enctype="multipart/form-data" class="inline" style="flex-wrap:wrap">{% csrf_token %}<input type="file" name="csv" accept=".csv,text/csv" aria-label="انتخاب فایل CSV" required><button class="btn primary">افزودن به درس</button></form>
+    <p class="small muted">هر ردیف یک دانشجو: کد دانشجویی، نام. ردیف‌های تکراری نادیده گرفته می‌شوند.</p></div>
+</div>
+<div class="card mt"><div class="card-head">{% h2 'doc' 'green' 'جلسات' %}</div>
+  <div class="table-wrap"><table><thead><tr><th>جلسه</th><th>تاریخ</th><th>موضوع</th><th>سؤال‌ها</th><th>پاسخ‌ها</th></tr></thead><tbody>
+  {% for x in sessions %}<tr><td>{{ x.s.number|fa }}</td><td>{{ x.date }} {{ x.year }}</td><td>{{ x.s.topic }}</td><td>{{ x.questions|fa }}</td><td>{{ x.responses|fa }}</td></tr>
+  {% empty %}<tr><td colspan="5" class="empty">هنوز جلسه‌ای تعریف نشده است.</td></tr>{% endfor %}
+  </tbody></table></div>
+  <form class="inline mt" style="flex-wrap:wrap" method="post" action="{% url 'panel:session_add' %}">{% csrf_token %}<input type="text" name="date" placeholder="تاریخ (مثلاً ۱۴۰۵/۰۷/۳۰)" aria-label="تاریخ جلسه‌ی جدید" required><input type="text" name="topic" placeholder="موضوع جلسه" aria-label="موضوع جلسه‌ی جدید" style="flex:1;min-width:160px" required maxlength="160"><button class="btn">افزودن جلسه</button></form></div>
+<div class="card mt"><div class="card-head">{% h2 'grid' 'orange' 'بانک سؤال' %}<span class="hint">هر سؤال به یک یا چند مفهوم برچسب می‌خورد</span><div class="end"><button class="btn sm primary" data-act="dialog" data-tpl="tpl-new-question" {% if not data.concepts %}disabled{% endif %}>+ سؤال جدید</button></div></div>
+  <div class="table-wrap"><table><thead><tr><th>#</th><th>سؤال</th><th>مفاهیم</th><th>وضعیت</th></tr></thead><tbody>
+  {% for x in questions %}<tr><td class="muted">{{ x.q.number|fa }}</td><td><bdi>{{ x.q.text }}</bdi></td><td>{% for t in x.concepts %}{% tag t 'gray' %} {% endfor %}</td><td>{% if x.q.status == 'draft' %}{% tag 'پیش‌نویس — نیازمند بازبینی' 'orange' %} <form method="post" action="{% url 'panel:question_approve' x.q.pk %}" class="inline-form">{% csrf_token %}<button class="btn sm">تأیید</button></form>{% else %}{% tag 'تأییدشده' 'green' %}{% endif %}</td></tr>
+  {% empty %}<tr><td colspan="4" class="empty">بانک سؤال خالی است.</td></tr>{% endfor %}
+  </tbody></table></div></div>
+{% endblock %}
+{% block templates %}{% include "panel/_course_form.html" %}
+<template id="tpl-new-question" data-title="سؤال جدید"><form method="post" action="{% url 'panel:question_add' %}">{% csrf_token %}
+  <div class="field"><label for="nqText">متن سؤال *</label><textarea id="nqText" name="text" required></textarea></div>
+  <div class="field"><label>گزینه‌ها * <span class="help">گزینه‌ی درست را علامت بزنید</span></label>
+    {% for i in "0123" %}<div class="opt-row"><input type="radio" name="correct" value="{{ i }}" {% if forloop.first %}checked{% endif %} aria-label="گزینه‌ی {{ forloop.counter|fa }} درست است"><input type="text" name="option{{ i }}" placeholder="گزینه‌ی {{ forloop.counter|fa }}" aria-label="گزینه‌ی {{ forloop.counter|fa }}" required maxlength="300"></div>{% endfor %}</div>
+  <div class="field"><label>مفاهیم مرتبط *</label><div class="chips">{% for c in course.concepts.all %}<label class="tag gray" style="cursor:pointer"><input type="checkbox" name="concepts" value="{{ c.pk }}"> {{ c.title }}</label>{% endfor %}</div></div>
+  <div style="display:flex;gap:8px"><button class="btn primary">افزودن به بانک سؤال</button><button class="btn" type="button" data-act="closeModal">انصراف</button></div></form></template>
+{% endblock %}

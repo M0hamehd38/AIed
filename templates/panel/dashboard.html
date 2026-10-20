@@ -1,0 +1,49 @@
+{% extends "panel/base.html" %}{% load ui %}
+{% block content %}
+<div class="grid g4">
+  <a class="card stat" href="{% url 'panel:students' %}"><span class="top"><span><span class="label">دانشجویان فعال</span><span class="value" style="display:block">{{ stats.active|fa }} <span class="muted small">از {{ data.students|length|fa }}</span></span></span><span class="hic sic blue">{% icon 'students' %}</span></span><span class="delta">{% delta stats.active_delta %}</span></a>
+  <a class="card stat" href="{% url 'panel:analytics' %}"><span class="top"><span><span class="label">میانگین تسلط مفهومی</span><span class="value" style="display:block">{{ stats.mastery|pct }}</span></span><span class="hic sic green">{% icon 'analytics' %}</span></span><span class="delta">{% delta stats.mastery_delta '٪' %}</span></a>
+  <a class="card stat" href="{% url 'panel:students' %}?f=attention"><span class="top"><span><span class="label">نیازمند توجه</span><span class="value" style="display:block">{{ stats.attention|fa }}</span></span><span class="hic sic orange">{% icon 'alert' %}</span></span><span class="delta">{% delta stats.attention_delta '' False %}</span></a>
+  <a class="card stat" href="{% url 'panel:suggestions' %}"><span class="top"><span><span class="label">پیشنهادهای در انتظار</span><span class="value" style="display:block">{{ pending|length|fa }}</span></span><span class="hic sic purple">{% icon 'suggestions' %}</span></span><span class="delta">منتظر تصمیم شما</span></a>
+</div>
+<div class="grid g3 mt">
+  <div class="card ai-card span2"><div class="card-head"><h2><span class="ai-badge">AI</span>دستیار هوشمند کلاس</h2><span class="hint">پیش‌نویس — بدون تأیید شما اجرا نمی‌شود</span></div>
+    {% if top %}<div class="ai-inner"><div class="inline" style="flex-wrap:wrap"><span class="flag">پیشنهاد در انتظار تصمیم</span>{% conf_tag top.confidence %}</div>
+      <h3>{{ top.title }}</h3>
+      <p><span class="muted">شواهد:</span> {{ top.evidence }} · <button class="link" data-act="evidence" data-ev="{{ top.evidence_ref|evjson }}">مشاهده</button></p>
+      <p><span class="muted">اقدام پیشنهادی:</span> {{ top.action }}</p>
+      <form method="post" action="{% url 'panel:suggestion_decide' top.pk %}" class="sugg" style="border:0;padding:0">{% csrf_token %}<input type="hidden" name="next" value="{{ request.path }}"><div class="actions"><button class="btn primary" name="decision" value="approved">اعمال پیشنهاد</button><button class="btn" name="decision" value="rejected">رد کردن</button><span style="margin-inline-start:auto"></span><a class="link small" href="{% url 'panel:suggestions' %}">همه‌ی پیشنهادها ({{ pending|length|fa }})</a></div></form></div>
+    {% else %}<div class="ai-inner"><div class="empty">همه‌ی پیشنهادها بررسی شده‌اند.</div></div>{% endif %}
+    <div class="mini">
+      <div><b class="t-green">{% if last_stat.n %}{{ last_stat.rate|pct }}{% else %}—{% endif %}</b>درست‌پاسخی جلسه‌ی {{ last|fa }}<br><span class="small">n={{ last_stat.n|fa }}</span></div>
+      <div><b class="t-orange">{{ 0|fa }}</b>نشانه‌ی ابهام گفتاری<br><span class="small">شنود فعال نشده</span></div>
+      <div><b class="t-red">{% if weakest %}{{ weakest.m|pct }}{% else %}—{% endif %}</b>دشوارترین مفهوم<br><span class="small">{{ weakest.c.title }}</span></div>
+    </div></div>
+  <div class="card dark-card"><div class="card-head">{% h2 'doc' '' 'خلاصه‌ی ترم تا امروز' %}</div>
+    <div class="item"><span class="lbl">مفاهیم پوشش‌داده‌شده</span><b>{{ covered }}</b></div>
+    <div class="item"><span class="lbl">جلسات و پاسخ‌ها</span><b>{{ last|fa }} جلسه · {{ response_count|fa }} پاسخ ثبت‌شده</b></div>
+    <div class="item"><span class="lbl">میانگین نرخ پاسخ</span><b>{{ avg_part|pct }}</b></div>
+    <div class="item"><span class="lbl">وضعیت کلی تسلط کلاس</span><b>{{ overall|pct }}</b> {% level_tag overall %}</div>
+  </div>
+</div>
+<div class="grid g3 mt">
+  <div class="card"><div class="card-head">{% h2 'analytics' 'blue' 'نمودار مشارکت کلاس' %}</div>{{ chart }}</div>
+  <div class="card"><div class="card-head">{% h2 'target' 'purple' 'وضعیت درک مفاهیم' %}<span class="hint">تجمعی</span></div>
+    {% for x in cm %}<button class="crow" data-act="evidence" data-ev='{"type":"concept","c":{{ x.c.id }}}'><div class="top"><b>{{ x.c.title }}</b><span><b class="{% level_class x.m %}">{{ x.m|pct }}</b> <span class="muted small">n={{ x.n|fa }}</span> {% if x.d %}<span class="small {% if x.d > 0 %}t-green{% else %}t-red{% endif %}">{% if x.d > 0 %}▲{% else %}▼{% endif %}{{ x.abs_d|fa }}</span>{% endif %}</span></div>{% progress x.m %}</button>{% endfor %}
+  </div>
+  <div class="card"><div class="card-head">{% h2 'students' 'orange' 'دانشجویان نیازمند توجه' %}<div class="end"><a class="link small" href="{% url 'panel:students' %}?f=attention">مشاهده‌ی همه ({{ need_count|fa }})</a></div></div>
+    {% for s, x in need %}<a class="person" href="{% url 'panel:student' s.pk %}">{% photo s 36 %}<div class="who"><b>{% if cfg.show_names %}{{ s.name }}{% else %}دانشجو {{ s.code|fa }}{% endif %}</b><small>{% if x.hard %}مفهوم دشوار: {{ x.hard.c.title }}{% else %}{{ x.reasons.0 }}{% endif %}</small></div>{% tag 'نیازمند پیگیری' 'orange' %}</a>
+    {% empty %}<div class="empty">موردی نیست.</div>{% endfor %}
+  </div>
+</div>
+<div class="grid g3 mt">
+  <div class="card span2"><div class="card-head">{% h2 'grid' 'green' 'نقشه‌ی تسلط مفاهیم' %}<span class="hint">برای دیدن سؤال‌ها و n روی هر خانه کلیک کنید</span></div>{% include "panel/_heatmap.html" %}</div>
+  <div class="card"><div class="card-head">{% h2 'alert' 'red' 'هشدارهای آموزشی' %}</div>
+    {% for a in alerts %}<div class="alert {{ a.kind }}"><span class="ic" aria-hidden="true">{% alert_ic a.kind %}</span><div><b>{{ a.title }}</b><p>{{ a.text }} · <button class="link" data-act="evidence" data-ev="{{ a.ev|evjson }}">شواهد</button></p></div></div>
+    {% empty %}<div class="empty">هشداری وجود ندارد.</div>{% endfor %}<div class="note">{{ T.NOT_JUDGEMENT }}</div></div>
+</div>
+<div class="card mt"><div class="card-head">{% h2 'suggestions' 'orange' 'پیشنهادهای ادامه‌ی تدریس' %}<span class="hint">به ترتیب اولویت · فقط با تأیید شما</span></div>
+  {% for sg in pending %}<div class="prio"><span class="num" style="background:{% cycle 'var(--red)' 'var(--purple)' 'var(--orange)' 'var(--blue)' %}">{{ forloop.counter|fa }}</span><span class="txt"><b>{{ sg.title }}</b><br><span class="muted small">{{ sg.evidence }}</span></span>{% if forloop.counter <= 2 %}{% tag 'اولویت بالا' 'red' %}{% else %}{% tag 'اولویت متوسط' 'green' %}{% endif %}<a class="btn sm" href="{% url 'panel:suggestions' %}">بررسی</a></div>
+  {% empty %}<div class="empty">پیشنهاد در انتظاری نیست.</div>{% endfor %}
+</div>
+{% endblock %}

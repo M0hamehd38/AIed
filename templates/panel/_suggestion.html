@@ -1,0 +1,15 @@
+{% load ui %}<div class="sugg"><h3>{{ s.title }}</h3>
+  <div class="meta">{% if s.status == 'pending' %}{% tag 'در انتظار تصمیم' 'orange' %}{% elif s.status == 'approved' %}{% tag 'تأییدشده' 'green' %}{% else %}{% tag 'ردشده' 'gray' %}{% endif %}{% conf_tag s.confidence %}{% if s.edited %}{% tag 'ویرایش‌شده' 'purple' %}{% endif %}{% tag 'پیش‌نویس سیستم' 'gray' %}</div>
+  <div class="row"><b>شواهد:</b> {{ s.evidence }} · <button class="link" data-act="evidence" data-ev="{{ s.evidence_ref|evjson }}">مشاهده</button></div>
+  {% if not compact %}<div class="row"><b>محدودیت داده:</b> {{ s.limitations }}</div>{% endif %}
+  <div class="row"><b>اقدام پیشنهادی:</b> {{ s.action }}</div>
+  {% if s.status == 'pending' %}<div class="actions">
+    <form method="post" action="{% url 'panel:suggestion_decide' s.pk %}" class="inline-form">{% csrf_token %}<input type="hidden" name="next" value="{{ request.path }}"><button class="btn ok" name="decision" value="approved">✓ تأیید</button> <button class="btn no" name="decision" value="rejected">✕ رد</button></form>
+    {% if not compact %}<button class="btn" data-act="dialog" data-tpl="tpl-edit-{{ s.pk }}">ویرایش</button>{% endif %}
+  </div>{% endif %}
+  {% if s.status == 'approved' and s.output == 'question' and not compact %}<div class="actions"><form method="post" action="{% url 'panel:suggestion_draft_question' s.pk %}">{% csrf_token %}<button class="btn" {% if s.drafted %}disabled{% endif %}>{% if s.drafted %}پیش‌نویس سؤال ساخته شد{% else %}ساخت پیش‌نویس سؤال مشابه{% endif %}</button></form></div>{% endif %}
+</div>
+{% if s.status == 'pending' and not compact %}<template id="tpl-edit-{{ s.pk }}" data-title="ویرایش پیشنهاد"><form method="post" action="{% url 'panel:suggestion_edit' s.pk %}">{% csrf_token %}
+  <div class="field"><label for="eTitle{{ s.pk }}">عنوان</label><input type="text" id="eTitle{{ s.pk }}" name="title" value="{{ s.title }}" maxlength="200"></div>
+  <div class="field"><label for="eAction{{ s.pk }}">اقدام پیشنهادی</label><textarea id="eAction{{ s.pk }}" name="action">{{ s.action }}</textarea></div>
+  <button class="btn primary">ذخیره</button></form></template>{% endif %}

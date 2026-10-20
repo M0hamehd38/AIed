@@ -1,0 +1,20 @@
+{% extends "panel/base.html" %}{% load ui %}
+{% block content %}
+<form method="post">{% csrf_token %}
+<div class="grid g2">
+  <div class="card"><div class="card-head"><h2>آستانه‌ها</h2><span class="hint">برای درس «{{ course.title }}»</span></div>
+    <div class="field"><label for="sGreen">آستانه‌ی سبز (٪)</label><input type="number" id="sGreen" name="green" min="1" max="100" value="{{ th.green|div:0.01|floatformat:'0u' }}"></div>
+    <div class="field"><label for="sOrange">آستانه‌ی نارنجی (٪)</label><input type="number" id="sOrange" name="orange" min="1" max="99" value="{{ th.orange|div:0.01|floatformat:'0u' }}"><span class="help">زیر این مقدار قرمز نمایش داده می‌شود.</span></div>
+    <div class="field"><label for="sMinC">حداقل پاسخ برای نتیجه‌گیری در سطح کلاس (n)</label><input type="number" id="sMinC" name="min_class" min="1" value="{{ th.min_class }}"></div>
+    <div class="field"><label for="sMinS">حداقل پاسخ برای نتیجه‌گیری در سطح دانشجو (n)</label><input type="number" id="sMinS" name="min_student" min="1" value="{{ th.min_student }}"></div>
+    <div class="field"><label for="sDrop">هشدار افت/رشد (واحد درصد)</label><input type="number" id="sDrop" name="drop_alert" min="1" value="{{ th.drop_alert }}"></div>
+    <button class="btn primary">ذخیره</button></div>
+  <div class="card"><div class="card-head"><h2>حریم خصوصی و نگهداری داده</h2></div>
+    <div class="field"><label class="switch"><input type="checkbox" name="show_names" {% if cfg.show_names %}checked{% endif %}> نمایش نام دانشجو در گزارش‌ها</label><span class="help">در صورت خاموش بودن، فقط کد نمایش داده می‌شود.</span></div>
+    <div class="field"><label for="sRet">حذف خودکار رونوشت‌ها پس از (روز)</label><input type="number" id="sRet" name="retention_days" min="1" max="365" value="{{ cfg.retention_days }}"></div>
+    <div class="field"><label for="sLlm">ارائه‌دهنده‌ی هوش مصنوعی</label><select id="sLlm" disabled><option>مدل داخلی دانشگاه</option></select><span class="help">فقط ادمین می‌تواند تغییر دهد. به مدل فقط داده‌ی تجمیعی و بدون نام فرستاده می‌شود.</span></div>
+    <div class="field"><label for="sStt">تبدیل گفتار به متن</label><select id="sStt" disabled><option>Whisper روی سرور دانشگاه</option></select><span class="help">فقط ادمین.</span></div>
+    <div class="field"><label>رضایت‌نامه‌ی شنود</label><span>{% if consent %}{% tag 'ثبت شده' 'green' %}{% else %}{% tag 'ثبت نشده' 'gray' %}{% endif %}</span></div>
+    <button class="btn primary">ذخیره</button></div>
+</div></form>
+{% endblock %}

@@ -1,0 +1,58 @@
+{% load static %}<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>کلاس‌یار</title>
+<link rel="stylesheet" href="{% static 'css/landing.css' %}">
+</head>
+<body data-open-auth="{{ auth_open|default:'' }}">
+<div id="track"></div>
+<div id="view">
+ <div id="frame">
+  <div id="cls" class="layer"><img src="{% static 'assets/classroom.jpg' %}" alt="" style="position:absolute;left:0;top:0;width:1671px;height:941px"></div>
+  <div id="stage"></div>
+  <div id="scr" class="layer" style="display:none">
+    <div id="board"><div class="glow"></div><div class="txt"><svg class="cap" viewBox="0 0 24 24" fill="none" stroke="#9fe0ff" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M2 9l10-5 10 5-10 5z" fill="rgba(80,170,255,.35)"/><path d="M6 11v5c0 1.5 3 3 6 3s6-1.5 6-3v-5M22 9v6"/></svg>
+      <h2>به کلاس‌یار خوش آمدید</h2><p>دستیار هوشمندی در کنار استاد؛ تصمیم همیشه با شماست.</p></div>
+      <div class="row"><button class="s" data-auth="signup">شروع کنید</button><button class="l" data-auth="login">ورود استاد</button></div></div>
+    <img src="{% static 'assets/teacher.webp' %}" alt="" style="position:absolute;left:1020px;top:380px;width:112px;height:212px">
+  </div>
+  <div id="fgroup" style="position:absolute;inset:0;transform-origin:400px 560px">
+    <div id="desk" class="hl" style="left:-61px;top:476.1px;width:1401.5px;height:249.9px"><img src="{% static 'assets/desk.webp' %}" alt=""></div>
+    <div id="robot" class="hl" style="transform:scale(.9);transform-origin:50% 100%;left:57.5px;top:120.6px;width:466.1px;height:446.4px"><img src="{% static 'assets/bot.webp' %}" alt="بات کلاس‌یار">
+      <div class="fx" id="eyeL" style="left:196.5px;top:125.6px;width:44.6px;height:44.6px;background:radial-gradient(circle,rgba(110,210,255,.5),rgba(110,210,255,0) 70%)"></div>
+      <div class="fx" id="eyeR" style="left:287.6px;top:125.6px;width:44.6px;height:44.6px;background:radial-gradient(circle,rgba(110,210,255,.5),rgba(110,210,255,0) 70%)"></div>
+      <svg id="steam" style="position:absolute;left:208.6px;top:293.7px;width:81px;height:81px;overflow:visible" viewBox="0 0 110 110" aria-hidden="true">
+        <defs><filter id="sb"><feGaussianBlur stdDeviation="3.5"/></filter></defs>
+        <g filter="url(#sb)" stroke="#fff" stroke-width="7" fill="none" stroke-linecap="round"><path d="M40 100 C 26 80, 54 64, 40 44 S 50 14, 42 0"/><path d="M68 100 C 82 80, 54 64, 68 44 S 58 14, 66 0"/></g>
+      </svg>
+    </div>
+  </div>
+  <div id="headline" class="hl" style="left:736.9px;top:103.2px;width:554.6px;height:339.7px"><img src="{% static 'assets/headline.webp' %}" alt="کلاس‌یار — دستیار هوشمند آموزش. با تحلیل لحظه‌ای عملکرد و سطح درک دانشجویان، به اساتید کمک می‌کنیم تا تدریس خود را شخصی‌سازی و اثربخش‌تر کنند."></div>
+  <div class="vig"></div>
+  <div class="stats" id="stats">
+    <div class="col"><svg viewBox="0 0 24 24" fill="#3fa3ff" aria-hidden="true"><circle cx="12" cy="7" r="3.4"/><circle cx="5.5" cy="9" r="2.6"/><circle cx="18.5" cy="9" r="2.6"/><path d="M5 20c0-4 3-6.5 7-6.5s7 2.5 7 6.5z"/><path d="M0.5 19c0-3 2-5 5-5 .8 0 1.5.1 2.1.4C5.8 15.6 4.6 17.4 4.4 19zM23.5 19c0-3-2-5-5-5-.8 0-1.5.1-2.1.4 1.8 1.2 3 3 3.2 4.6z"/></svg><div class="t"><b>۷۹٪</b><small>از اساتید، برنامه‌های کلاس‌یار را<br>برای بهبود کیفیت تدریس مفید می‌دانند.</small></div></div>
+    <div class="col"><svg viewBox="0 0 24 24" fill="none" stroke="#3fa3ff" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M12 6.5V12l3.5 2.5"/></svg><div class="t"><b>۶۶٪</b><small>از کسب‌وکارها انتظار دارند دستیارهای هوشمند،<br>بیش از ۳ ساعت در هفته صرفه‌جویی کنند</small></div></div>
+    <div class="col"><svg viewBox="0 0 24 24" fill="none" stroke="#3fa3ff" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><circle cx="12" cy="12" r="5.5"/><circle cx="12" cy="12" r="1.6" fill="#3fa3ff"/><path d="M12 12l8-8M17 3.5l3.5 3.5"/></svg><div class="t"><b>۷۵٪</b><small>از دانشجویان، آموزش شخصی‌سازی‌شده<br>را مؤثرتر از آموزش سنتی می‌دانند.</small></div></div>
+  </div>
+  <button class="chev" id="chev" data-go="1" aria-label="رفتن به ویژگی‌ها"><svg viewBox="0 0 24 14"><path d="M2 2l10 10 10-10" stroke="#8fb4ff" stroke-width="2.4" fill="none" stroke-linecap="round"/></svg></button>
+ </div>
+</div>
+
+<header class="nav">
+  <a class="logo" href="#" data-go="0" aria-label="کلاس‌یار، بازگشت به ابتدا"><img src="{% static 'assets/emblem.webp' %}" alt=""><b>کلاس‌یار</b></a>
+  <nav class="menu" aria-label="منوی اصلی"><button class="on" data-go="0">خانه</button><button data-go="1">ویژگی‌ها</button><button data-info="pricing">قیمت‌گذاری</button><button data-info="about">درباره ما</button><button data-info="contact">تماس با ما</button></nav>
+  <div class="auth">{% if user.is_authenticated %}<form method="post" action="{% url 'accounts:logout' %}">{% csrf_token %}<button class="l" type="submit">خروج</button></form><a class="s btn-link" href="{% url 'accounts:home' %}">ورود به پنل</a>{% else %}<button class="l" data-auth="login">ورود</button><button class="s" data-auth="signup">ثبت‌نام</button>{% endif %}</div>
+</header>
+<div class="dots" id="dots" aria-label="بخش‌های صفحه"></div>
+
+<div class="modal-bg" id="modalBg">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="mTitle" id="modal"></div>
+</div>
+
+
+{% include "site/_auth_templates.html" %}
+<script src="{% static 'js/landing.js' %}"></script>
+</body>
+</html>

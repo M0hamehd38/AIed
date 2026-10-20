@@ -1,0 +1,7 @@
+{% extends "panel/base.html" %}
+{% block content %}
+<div class="card"><div class="card-head"><h2>هنوز درسی ندارید</h2></div>
+  <p class="muted" style="margin-top:0">برای شروع، اولین درس خود را با مفاهیم آن بسازید. همه‌ی تحلیل‌ها بر پایه‌ی همین مفاهیم ساخته می‌شوند.</p>
+  <button class="btn primary" data-act="dialog" data-tpl="tpl-new-course">+ ایجاد درس جدید</button></div>
+{% endblock %}
+{% block templates %}{% include "panel/_course_form.html" %}{% endblock %}
