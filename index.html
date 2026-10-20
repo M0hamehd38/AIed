@@ -283,6 +283,16 @@ let lastFocus = null;
 const head = title => `<div class="head"><img src="assets/emblem.webp" alt=""><b id="mTitle">${title}</b><button class="x" aria-label="بستن">×</button></div>`;
 function show(html) { lastFocus = document.activeElement; modal.innerHTML = html; bg.classList.add('open'); (modal.querySelector('input') || modal.querySelector('button')).focus(); }
 function closeModal() { if (!bg.classList.contains('open')) return; bg.classList.remove('open'); if (lastFocus) lastFocus.focus(); }
+// prototype accounts: checked in the browser only (no server yet), so this is not real security
+const ACCOUNTS = {'golzari@classyar.ir': {name:'دکتر شهرام گلزاری هرمزی', hash:'wr6zhdf0iv'}};
+function loadAccounts() { try { return JSON.parse(localStorage.getItem('classyar-accounts') || '{}'); } catch (x) { return {}; } }
+function hashPass(email, pass) {
+  const str = `classyar:${email}:${pass}`; let h1 = 0xdeadbeef, h2 = 0x41c6ce57;
+  for (let i = 0; i < str.length; i++) { const ch = str.charCodeAt(i); h1 = Math.imul(h1 ^ ch, 2654435761); h2 = Math.imul(h2 ^ ch, 1597334677); }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+  return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36);
+}
 function openAuth(mode) {
   const signup = mode === 'signup';
   show(`${head('ورود به پنل استاد')}
@@ -302,8 +312,16 @@ function openAuth(mode) {
     if (signup && name.length < 3) return err('نام خود را وارد کنید.');
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return err('ایمیل معتبر وارد کنید.');
     if (pass.length < 6) return err('رمز عبور باید دست‌کم ۶ کاراکتر باشد.');
-    let saved = null; try { saved = JSON.parse(localStorage.getItem('classyar-user') || 'null'); } catch (x) {}
-    const user = {name: name || (saved && saved.email === email && saved.name) || 'استاد گرامی', email};
+    const key = email.toLowerCase(), local = loadAccounts(), acc = ACCOUNTS[key] || local[key];
+    if (signup) {
+      if (acc) return err('این ایمیل قبلاً ثبت شده است؛ از بخش «ورود» وارد شوید.');
+      local[key] = {name, hash:hashPass(key, pass)};
+      try { localStorage.setItem('classyar-accounts', JSON.stringify(local)); } catch (x) {}
+    } else {
+      if (!acc) return err('حسابی با این ایمیل پیدا نشد. اگر حساب ندارید، ثبت‌نام کنید.');
+      if (acc.hash !== hashPass(key, pass)) return err('رمز عبور درست نیست.');
+    }
+    const user = {name:signup ? name : acc.name, email:key};
     try { localStorage.setItem('classyar-user', JSON.stringify(user)); } catch (x) {}
     location.href = 'panel.html';
   });
