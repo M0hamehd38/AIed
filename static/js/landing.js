@@ -66,7 +66,6 @@ function render(D, t, speed) {
   else { hl(els.head, 1350 * pr + 22, -150 * pr + 8, sc * .88); hl(els.fg, -760 * pr, 420 * pr, 1 + .9 * sp); }
   if (pass < 1) {
     const g = (0.5 + 0.5 * Math.sin(t * 1.7)).toFixed(2); set(els.eyeL, 'opacity', g); set(els.eyeR, 'opacity', g);
-    set(els.steam, 'transform', `translateY(${(-(t * 14) % 18).toFixed(1)}px)`); set(els.steam, 'opacity', (0.26 + 0.12 * Math.sin(t * 2.1)).toFixed(2));
   }
   // feature cards: the current one is sharp, the next ones wait deeper in the room
   const appear = clamp((D - 0.55) / 0.3, 0, 1);

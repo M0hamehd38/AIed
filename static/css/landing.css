@@ -54,7 +54,7 @@ html,body{margin:0;background:var(--bg);color:var(--ink);font-family:'Digi Rasti
 .logo{display:flex;align-items:center;gap:8px;text-decoration:none;color:#fff;order:3;margin-inline-start:auto}
 .logo img{width:31px;height:31px;display:block}
 .logo b{font-size:21px;font-weight:700}
-.menu{display:flex;gap:30px;font-size:15px;order:2;margin-inline:auto}
+.menu{display:flex;gap:46px;font-size:15px;position:absolute;left:50%;transform:translateX(-50%)}
 .menu button{background:none;border:0;color:#d7defa;font:inherit;cursor:pointer;padding:6px 0;position:relative}
 .menu button:hover{color:#fff}
 .menu button.on{color:var(--accent)}
@@ -108,3 +108,15 @@ html,body{margin:0;background:var(--bg);color:var(--ink);font-family:'Digi Rasti
 
 /* Digi Rastin Plus has a narrow space (0.14em, Sahel's is 0.27em): open it up so words stay apart */
 body{word-spacing:.1em}
+
+/* cup steam: three wisps rise from the rim in turn and fade; pure CSS, no per-frame script */
+#steam{position:absolute;left:199px;top:196px;width:100px;height:150px;overflow:visible;pointer-events:none;filter:drop-shadow(0 0 5px rgba(36,64,140,.55))}
+#steam path{fill:none;stroke:url(#stg);stroke-width:9;stroke-linecap:round}
+#steam .w{opacity:0;transform-box:fill-box;transform-origin:50% 100%;animation:steam 3.6s ease-out infinite}
+#steam .w2{animation-delay:1.2s}#steam .w3{animation-delay:2.4s}
+@keyframes steam{0%{opacity:0;transform:translateY(14px) scale(.85,.55)}25%{opacity:1}70%{opacity:.55}100%{opacity:0;transform:translateY(-46px) scale(1.4,1.15)}}
+@media (prefers-reduced-motion:reduce){#steam .w{animation:none;opacity:.45}#steam .w2,#steam .w3{opacity:0}}
+
+/* the centred menu has no neighbours to push against: tighten it, then hide it, before it can reach the logo or the buttons */
+@media (max-width:1040px){.menu{gap:24px}}
+@media (max-width:880px){.menu{display:none}}
