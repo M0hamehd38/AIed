@@ -69,3 +69,31 @@ def test_students_cannot_open_teacher_panel(seeded):
 def test_logout_needs_post(teacher_client):
     assert teacher_client.get('/accounts/logout/').status_code == 405
     assert teacher_client.post('/accounts/logout/').status_code == 302
+
+
+def test_signed_in_teacher_opening_home_goes_to_panel(teacher_client):
+    r = teacher_client.get('/')
+    assert r.status_code == 302 and r['Location'] == '/t/'
+    assert teacher_client.get('/t/').status_code == 200  # a refresh of the panel keeps the session
+
+
+def test_session_expires_after_two_idle_hours_and_use_renews_it(seeded, settings):
+    import time
+    from importlib import import_module
+    assert settings.SESSION_COOKIE_AGE == 2 * 60 * 60
+    c = client()
+    c.force_login(seeded)
+    r = c.get('/t/')
+    assert r.status_code == 200
+    # use renews the stored session's expiry (at most every 5 minutes)
+    store = import_module(settings.SESSION_ENGINE).SessionStore
+    key = c.cookies[settings.SESSION_COOKIE_NAME].value
+    s = store(session_key=key)
+    s['seen'] = int(time.time()) - 10 * 60
+    s.save()
+    c.get('/t/')
+    assert store(session_key=key)['seen'] > int(time.time()) - 60
+    from django.contrib.sessions.models import Session
+    from django.utils import timezone
+    left = (Session.objects.get(session_key=key).expire_date - timezone.now()).total_seconds()
+    assert 2 * 60 * 60 - 60 < left <= 2 * 60 * 60  # two hours from the last use

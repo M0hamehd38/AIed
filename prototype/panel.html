@@ -6,7 +6,9 @@
 <title>کلاس‌یار</title>
 <script>
 // only signed-in teachers reach the panel (prototype: the session lives in this browser)
-try { if (!localStorage.getItem('classyar-user')) location.replace('index.html?login=1'); } catch (e) {}
+// the session lasts until « خروج », or until 2 hours without use
+var IDLE_MS = 7200000;
+try { var u0 = JSON.parse(localStorage.getItem('classyar-user') || 'null'); if (!u0 || !u0.name) location.replace('index.html?login=1'); else if (Date.now() - (u0.at || Date.now()) > IDLE_MS) { localStorage.removeItem('classyar-user'); location.replace('index.html?login=1&expired=1'); } } catch (e) {}
 // night/day mode: saved choice, else the system setting
 (function () { var t; try { t = localStorage.getItem('classyar-theme'); } catch (e) {} if (t !== 'dark' && t !== 'light') t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'; document.documentElement.dataset.theme = t; })();
 </script>
@@ -1184,7 +1186,7 @@ function paintThemeBtn() {
   b.setAttribute('aria-label', dark ? 'حالت روز' : 'حالت شب'); b.title = dark ? 'حالت روز' : 'حالت شب';
 }
 const ACT = {
-  logout: () => { try { localStorage.removeItem('classyar-user'); } catch (e) {} location.href = 'index.html'; },
+  logout: expired => { try { localStorage.removeItem('classyar-user'); localStorage.removeItem('classyar-view'); } catch (e) {} location.href = expired === true ? 'index.html?login=1&expired=1' : 'index.html'; },
   toggleTheme: () => {
     const t = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
     document.documentElement.dataset.theme = t;
@@ -1348,6 +1350,8 @@ function render() {
   $('#listenPill').classList.toggle('on', audio.listening);
   renderNav();
   $('#view').innerHTML = V[state.view]();
+  // remember where the teacher was, so a refresh reopens the same page
+  try { localStorage.setItem('classyar-view', state.view === 'students' && state.studentId != null ? 'student-' + state.studentId : state.view); } catch (e) {}
   document.querySelectorAll('tr[data-act]').forEach(tr => tr.tabIndex = 0);
   if (state.view === 'audio') { const el = $('#transcript'); el.scrollTop = el.scrollHeight; if (!audio.raf) drawWave(); }
 }
@@ -1356,8 +1360,18 @@ window.addEventListener('hashchange', () => { if (readHash()) render(); });
 setInterval(() => { if (!live.running) return; const t = Math.floor((Date.now() - live.startedAt) / 1000); $('#timer').textContent = [t / 3600, t / 60 % 60, t % 60].map(x => String(Math.floor(x)).padStart(2, '0')).join(':'); }, 1000);
 document.addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('.person[data-act]')) { e.preventDefault(); ACT.student(e.target); } });
 buildSuggestions();
-readHash();
+if (!readHash()) { try { const v = localStorage.getItem('classyar-view'); if (v) { history.replaceState(null, '', '#' + v); readHash(); } } catch (e) {} }
 render();
+// activity keeps the session alive; after 2 idle hours the panel signs out by itself
+(function () {
+  const read = () => { try { return JSON.parse(localStorage.getItem('classyar-user')); } catch (e) { return null; } };
+  const touch = force => { const u = read(); if (u && (force || Date.now() - (u.at || 0) > 30000)) { u.at = Date.now(); try { localStorage.setItem('classyar-user', JSON.stringify(u)); } catch (e) {} } };
+  const check = () => { const u = read(); if (!u || Date.now() - (u.at || 0) > IDLE_MS) ACT.logout(true); };
+  touch(true);
+  ['pointerdown', 'keydown', 'wheel', 'touchstart'].forEach(ev => addEventListener(ev, () => touch(false), {passive:true}));
+  setInterval(check, 60000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) check(); });
+})();
 paintThemeBtn();
 </script>
 </body>

@@ -41,6 +41,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'apps.accounts.middleware.IdleTimeoutMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -103,6 +104,8 @@ STORAGES = {
 }
 
 SESSION_COOKIE_HTTPONLY = True
+# signed in until « خروج », or until 2 hours without use (see apps.accounts.middleware)
+SESSION_COOKIE_AGE = 2 * 60 * 60
 # https-only cookies in production; DJANGO_SSL_REDIRECT=0 is for trying the image over plain http locally
 HTTPS = not DEBUG and env_bool('DJANGO_SSL_REDIRECT', True)
 SESSION_COOKIE_SECURE = CSRF_COOKIE_SECURE = HTTPS
