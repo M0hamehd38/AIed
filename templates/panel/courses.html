@@ -26,17 +26,19 @@
   {% empty %}<tr><td colspan="5" class="empty">هنوز جلسه‌ای تعریف نشده است.</td></tr>{% endfor %}
   </tbody></table></div>
   <form class="inline mt" style="flex-wrap:wrap" method="post" action="{% url 'panel:session_add' %}">{% csrf_token %}<input type="text" name="date" placeholder="تاریخ (مثلاً ۱۴۰۵/۰۷/۳۰)" aria-label="تاریخ جلسه‌ی جدید" required><input type="text" name="topic" placeholder="موضوع جلسه" aria-label="موضوع جلسه‌ی جدید" style="flex:1;min-width:160px" required maxlength="160"><button class="btn">افزودن جلسه</button></form></div>
-<div class="card mt"><div class="card-head">{% h2 'grid' 'orange' 'بانک سؤال' %}<span class="hint">هر سؤال به یک یا چند مفهوم برچسب می‌خورد</span><div class="end"><button class="btn sm primary" data-act="dialog" data-tpl="tpl-new-question" {% if not data.concepts %}disabled{% endif %}>+ سؤال جدید</button></div></div>
+<div class="card mt" id="bank"><div class="card-head">{% h2 'grid' 'orange' 'بانک سؤال' %}<span class="hint">{{ bank.total|fa }} سؤال · ابتدا مبحث را انتخاب کنید</span><div class="end"><button class="btn sm primary" data-act="dialog" data-tpl="tpl-new-question" {% if not data.concepts %}disabled{% endif %}>+ سؤال جدید{% if bank.topic %} در «{{ bank.topic.c.title }}»{% endif %}</button></div></div>
+  {% include "panel/_topics.html" %}
+  {% if bank.topic %}<h3 class="bank-title">سؤال‌های «{{ bank.topic.c.title }}»</h3>
   <div class="table-wrap"><table><thead><tr><th>#</th><th>سؤال</th><th>مفاهیم</th><th>وضعیت</th></tr></thead><tbody>
-  {% for x in questions %}<tr><td class="muted">{{ x.q.number|fa }}</td><td><bdi>{{ x.q.text }}</bdi></td><td>{% for t in x.concepts %}{% tag t 'gray' %} {% endfor %}</td><td>{% if x.q.status == 'draft' %}{% tag 'پیش‌نویس — نیازمند بازبینی' 'orange' %} <form method="post" action="{% url 'panel:question_approve' x.q.pk %}" class="inline-form">{% csrf_token %}<button class="btn sm">تأیید</button></form>{% else %}{% tag 'تأییدشده' 'green' %}{% endif %}</td></tr>
-  {% empty %}<tr><td colspan="4" class="empty">بانک سؤال خالی است.</td></tr>{% endfor %}
-  </tbody></table></div></div>
+  {% for x in bank.rows %}<tr><td class="muted">{{ x.q.number|fa }}</td><td><bdi>{{ x.q.text }}</bdi></td><td>{% for t in x.concepts %}{% tag t 'gray' %} {% endfor %}</td><td>{% if x.q.status == 'draft' %}{% tag 'پیش‌نویس — نیازمند بازبینی' 'orange' %} <form method="post" action="{% url 'panel:question_approve' x.q.pk %}" class="inline-form">{% csrf_token %}<button class="btn sm">تأیید</button></form>{% else %}{% tag 'تأییدشده' 'green' %}{% endif %}</td></tr>
+  {% empty %}<tr><td colspan="4" class="empty">این مبحث هنوز سؤالی ندارد.</td></tr>{% endfor %}
+  </tbody></table></div>{% endif %}</div>
 {% endblock %}
 {% block templates %}{% include "panel/_course_form.html" %}
 <template id="tpl-new-question" data-title="سؤال جدید"><form method="post" action="{% url 'panel:question_add' %}">{% csrf_token %}
   <div class="field"><label for="nqText">متن سؤال *</label><textarea id="nqText" name="text" required></textarea></div>
   <div class="field"><label>گزینه‌ها * <span class="help">گزینه‌ی درست را علامت بزنید</span></label>
     {% for i in "0123" %}<div class="opt-row"><input type="radio" name="correct" value="{{ i }}" {% if forloop.first %}checked{% endif %} aria-label="گزینه‌ی {{ forloop.counter|fa }} درست است"><input type="text" name="option{{ i }}" placeholder="گزینه‌ی {{ forloop.counter|fa }}" aria-label="گزینه‌ی {{ forloop.counter|fa }}" required maxlength="300"></div>{% endfor %}</div>
-  <div class="field"><label>مفاهیم مرتبط *</label><div class="chips">{% for c in course.concepts.all %}<label class="tag gray" style="cursor:pointer"><input type="checkbox" name="concepts" value="{{ c.pk }}"> {{ c.title }}</label>{% endfor %}</div></div>
+  <div class="field"><label>مفاهیم مرتبط *</label><div class="chips">{% for c in course.concepts.all %}<label class="tag gray" style="cursor:pointer"><input type="checkbox" name="concepts" value="{{ c.pk }}" {% if bank.topic and bank.topic.c.pk == c.pk %}checked{% endif %}> {{ c.title }}</label>{% endfor %}</div></div>
   <div style="display:flex;gap:8px"><button class="btn primary">افزودن به بانک سؤال</button><button class="btn" type="button" data-act="closeModal">انصراف</button></div></form></template>
 {% endblock %}

@@ -129,3 +129,32 @@ def test_student_export_is_json(teacher_client, cs101):
     teacher_client.post('/t/courses/switch/', {'course': cs101.pk})
     data = json.loads(teacher_client.get(f'/t/students/{e.pk}/export/').content)
     assert data['code'] == e.code and data['responses']
+
+
+def test_action_boxes_live_in_analytics_not_dashboard(teacher_client):
+    dashboard = teacher_client.get('/t/').content.decode()
+    analytics = teacher_client.get('/t/analytics/').content.decode()
+    for title in ['هشدارهای آموزشی', 'پیشنهادهای ادامه‌ی تدریس', 'وضعیت درک مفاهیم']:
+        assert title not in dashboard
+        assert title in analytics
+    assert 'نقشه‌ی تسلط مفاهیم' in dashboard
+
+
+@pytest.mark.parametrize('url', ['/t/courses/', '/t/live/'])
+def test_question_bank_shows_questions_only_for_the_chosen_topic(teacher_client, cs101, url):
+    teacher_client.post('/t/courses/switch/', {'course': cs101.pk})
+    body = teacher_client.get(url).content.decode()
+    assert 'ابتدا یک مبحث را انتخاب کنید' in body
+    assert 'خروجی type(3.0) چیست؟' not in body  # no question before a topic is chosen
+    loops = cs101.concepts.get(title='حلقه‌ها')
+    body = teacher_client.get(f'{url}?topic={loops.pk}').content.decode()
+    assert 'for i in range(3) چند بار اجرا می‌شود؟' in body       # a loops question
+    assert 'خروجی type(3.0) چیست؟' not in body                    # a variables question
+
+
+def test_live_page_marks_the_picked_question(teacher_client, cs101):
+    teacher_client.post('/t/courses/switch/', {'course': cs101.pk})
+    loops = cs101.concepts.get(title='حلقه‌ها')
+    q = loops.questions.first()
+    body = teacher_client.get(f'/t/live/?topic={loops.pk}&q={q.pk}').content.decode()
+    assert f'سؤال انتخاب‌شده' in body and '✓ انتخاب شد' in body

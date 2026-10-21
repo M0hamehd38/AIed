@@ -1,6 +1,18 @@
 {% extends "panel/base.html" %}{% load ui %}
 {% block content %}
 <div class="grid g2">
+  <div class="card"><div class="card-head">{% h2 'target' 'purple' 'وضعیت درک مفاهیم' %}<span class="hint">تجمعی</span></div>
+    {% for x in trend %}<button class="crow" data-act="evidence" data-ev='{"type":"concept","c":{{ x.c.id }}}'><div class="top"><b>{{ x.c.title }}</b><span><b class="{% level_class x.m %}">{{ x.m|pct }}</b> <span class="muted small">n={{ x.n|fa }}</span> {% if x.d %}<span class="small {% if x.d > 0 %}t-green{% else %}t-red{% endif %}">{% if x.d > 0 %}▲{% else %}▼{% endif %}{{ x.abs_d|fa }}</span>{% endif %}</span></div>{% progress x.m %}</button>{% endfor %}
+  </div>
+  <div class="card"><div class="card-head">{% h2 'alert' 'red' 'هشدارهای آموزشی' %}</div>
+    {% for a in alerts %}<div class="alert {{ a.kind }}"><span class="ic" aria-hidden="true">{% alert_ic a.kind %}</span><div><b>{{ a.title }}</b><p>{{ a.text }} · <button class="link" data-act="evidence" data-ev="{{ a.ev|evjson }}">شواهد</button></p></div></div>
+    {% empty %}<div class="empty">هشداری وجود ندارد.</div>{% endfor %}<div class="note">{{ T.NOT_JUDGEMENT }}</div></div>
+</div>
+<div class="card mt"><div class="card-head">{% h2 'suggestions' 'orange' 'پیشنهادهای ادامه‌ی تدریس' %}<span class="hint">به ترتیب اولویت · فقط با تأیید شما</span></div>
+  {% for sg in pending %}<div class="prio"><span class="num" style="background:{% cycle 'var(--red)' 'var(--purple)' 'var(--orange)' 'var(--blue)' %}">{{ forloop.counter|fa }}</span><span class="txt"><b>{{ sg.title }}</b><br><span class="muted small">{{ sg.evidence }}</span></span>{% if forloop.counter <= 2 %}{% tag 'اولویت بالا' 'red' %}{% else %}{% tag 'اولویت متوسط' 'green' %}{% endif %}<a class="btn sm" href="{% url 'panel:suggestions' %}">بررسی</a></div>
+  {% empty %}<div class="empty">پیشنهاد در انتظاری نیست.</div>{% endfor %}
+</div>
+<div class="grid g2 mt">
   <div class="card"><div class="card-head"><h2>مقایسه‌ی تسلط مفاهیم</h2><span class="hint">تجمعی تا جلسه‌ی {{ last|fa }} · خط نازک: بازه‌ی اطمینان ۹۵٪</span></div>
     {% for x in cm %}<div class="opt-bar"><div class="top"><b>{{ x.c.title }}</b><span>{{ x.m|pct }} · <span class="muted small">n={{ x.n|fa }} · {{ T.CONF|attr:x.conf }}</span></span></div>
       <div style="position:relative">{% progress x.m %}<div style="position:absolute;top:5px;height:2px;background:var(--ink);opacity:.5;right:{{ x.lo|floatformat:'2u' }}%;width:{{ x.w|floatformat:'2u' }}%"></div></div></div>{% endfor %}

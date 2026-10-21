@@ -132,19 +132,13 @@ def dashboard(request, data):
     need = [(s, a.student(s.index)) for s in data.students]
     need = [(s, x) for s, x in need if x['attention']]
     last_stat = session_stat(data, last)
-    cm = []
-    for c in a.d.concepts:
-        cur, before = a.up_to(c.id, last), a.up_to(c.id, prev)
-        if cur.n:
-            m = cur.ok / cur.n
-            d = js_round((m - before.ok / before.n) * 100) if before.n else 0
-            cm.append({'c': c, 'm': m, 'n': cur.n, 'd': d, 'abs_d': abs(d)})
+    cm = concept_trend(data)
     weakest = min(cm, key=lambda x: x['m']) if cm else None
     ps = [p for p in a.participation_by_session() if p is not None]
     chart = line_chart([
         {'name': 'نرخ پاسخ', 'color': '#4169f5', 'points': participation_series(data)},
         {'name': 'درست‌پاسخی', 'color': '#13a67b', 'points': [point(session_stat(data, s.number), th.min_class) for s in data.sessions]},
-    ], data.sessions, th, h=300, w=380, area=True, threshold=False, label='نمودار مشارکت و درست‌پاسخی', hollow_note=False)
+    ], data.sessions, th, h=260, w=560, area=True, threshold=False, label='نمودار مشارکت و درست‌پاسخی', hollow_note=False)
     overall = avg_mastery(last)
     ctx = panel_context(
         request, 'dashboard', data, **greeting(request, data),
@@ -154,12 +148,26 @@ def dashboard(request, data):
             'attention': attention(last), 'attention_delta': attention(last) - attention(prev),
         },
         pending=pending, top=pending[0] if pending else None, need=need[:5], need_count=len(need),
-        alerts=a.alerts(), last=last, last_stat=last_stat, cm=cm, weakest=weakest,
+        last=last, last_stat=last_stat, weakest=weakest,
         covered='، '.join(x['c'].title for x in cm), response_count=len(data.responses),
         avg_part=sum(ps) / len(ps) if ps else 0, overall=overall, chart=chart,
-        heat=heatmap(data), prio_colors=['var(--red)', 'var(--purple)', 'var(--orange)', 'var(--blue)'],
+        heat=heatmap(data),
     )
     return render(request, 'panel/dashboard.html', ctx)
+
+
+def concept_trend(data):
+    """Cumulative mastery per concept up to the last session, with the change since the session before."""
+    a = data.a
+    last = a.last_session()
+    out = []
+    for c in a.d.concepts:
+        cur, before = a.up_to(c.id, last), a.up_to(c.id, last - 1)
+        if cur.n:
+            m = cur.ok / cur.n
+            d = js_round((m - before.ok / before.n) * 100) if before.n else 0
+            out.append({'c': c, 'm': m, 'n': cur.n, 'd': d, 'abs_d': abs(d)})
+    return out
 
 
 def greeting(request, data):
@@ -324,8 +332,10 @@ def analytics(request, data):
     series = [{'name': c.title, 'color': c.color,
                'points': [point(stat_of(a.cell(i, s.number)), th.min_class) for s in data.sessions]}
               for i, c in enumerate(data.concepts)]
+    services.sync_suggestions(data)
     ctx = panel_context(
-        request, 'analytics', data, cm=cm, last=last, weakest=ordered[0] if ordered else None, best=ordered[-1] if ordered else None,
+        request, 'analytics', data, cm=cm, trend=concept_trend(data), alerts=a.alerts(),
+        pending=list(Suggestion.objects.filter(course=data.course, status=Suggestion.Status.PENDING)), last=last, weakest=ordered[0] if ordered else None, best=ordered[-1] if ordered else None,
         items=items, chart=line_chart(series, data.sessions, th),
         mis_items=[it for it in items if it['enough'] and it['distractor'] and it['distractor']['share'] >= 0.25],
         weak_items=[it for it in items if it['enough'] and it['D'] is not None and it['D'] < 0.2],
@@ -449,12 +459,30 @@ def evidence(request, data):
 
 
 # ---------------------------------------------------------------- live & audio (phase 2 and 3)
+def question_bank(request, data, approved_only=False):
+    """The bank by topic: one entry per concept with its counts, and the questions of the chosen concept only."""
+    questions = [q for q in data.questions if not approved_only or q.status == Question.Status.APPROVED]
+    topics = []
+    for i, c in enumerate(data.concepts):
+        qs = [q for q in questions if i in data.qrefs[q.number].concepts]
+        topics.append({'c': c, 'index': i, 'qs': qs, 'count': len(qs),
+                       'unasked': sum(1 for q in qs if not data.qrefs[q.number].asked),
+                       'drafts': sum(1 for q in qs if q.status == Question.Status.DRAFT)})
+    chosen = next((t for t in topics if str(t['c'].pk) == request.GET.get('topic')), None)
+    rows = []
+    if chosen:
+        for q in chosen['qs']:
+            ref = data.qrefs[q.number]
+            rows.append({'q': q, 'ref': ref, 'asked_label': f'پرسیده‌شده ج{fa(ref.session)}',
+                         'concepts': [data.concepts[i].title for i in ref.concepts]})
+    return {'topics': topics, 'topic': chosen, 'rows': rows, 'total': len(questions)}
+
+
 @with_course
 def live(request, data):
-    bank = [q for q in data.questions if q.status == Question.Status.APPROVED]
-    rows = [{'q': q, 'ref': data.qrefs[q.number], 'asked_label': f'پرسیده‌شده ج{fa(data.qrefs[q.number].session)}',
-             'concepts': [data.concepts[i].title for i in data.qrefs[q.number].concepts]} for q in bank]
-    return render(request, 'panel/live.html', panel_context(request, 'live', data, bank=rows))
+    bank = question_bank(request, data, True)
+    picked = next((r['q'] for r in bank['rows'] if str(r['q'].pk) == request.GET.get('q')), None)
+    return render(request, 'panel/live.html', panel_context(request, 'live', data, bank=bank, picked=picked))
 
 
 @with_course
@@ -488,9 +516,8 @@ def courses(request, data):
         sessions.append({'s': se, 'date': jdate_label(se.date), 'year': fa(jdatetime.date.fromgregorian(date=se.date).year) if se.date else '',
                          'questions': sum(1 for q in a.d.questions if q.asked and q.session == se.number),
                          'responses': len(a.in_session(se.number))})
-    questions = [{'q': q, 'concepts': [data.concepts[i].title for i in data.qrefs[q.number].concepts]} for q in data.questions]
     ctx = panel_context(request, 'courses', data, cards=course_cards(request, data.course), sessions=sessions,
-                        questions=questions, colors=['#4169f5', '#8c62db', '#0e9fb5', '#c2477f', '#e08a17', '#13a67b'])
+                        bank=question_bank(request, data), colors=['#4169f5', '#8c62db', '#0e9fb5', '#c2477f', '#e08a17', '#13a67b'])
     return render(request, 'panel/courses.html', ctx)
 
 

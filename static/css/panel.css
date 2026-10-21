@@ -357,3 +357,12 @@ form.inline-form{display:inline}
 .field input[type=email],.field input[type=password],.field input[type=file]{width:100%}
 .phase-note{display:flex;gap:10px;align-items:flex-start}
 .stat{color:inherit;text-decoration:none}
+
+/* ===== question bank by topic ===== */
+.topics{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px}
+.topic{display:flex;flex-direction:column;gap:2px;padding:11px 14px;border:1px solid var(--line);border-inline-start:4px solid var(--tc,var(--blue));border-radius:12px;background:var(--card);color:inherit;text-decoration:none;cursor:pointer;text-align:right;font:inherit}
+.topic b{font-size:14px}.topic span{font-size:12px;color:var(--muted)}
+.topic:hover{border-color:var(--tc,var(--blue))}
+.topic.on{background:var(--pale);border-color:var(--tc,var(--blue));box-shadow:0 0 0 1px var(--tc,var(--blue))}
+.bank-title{font-size:14px;margin:18px 0 6px}
+tr.picked{background:var(--green-bg)}

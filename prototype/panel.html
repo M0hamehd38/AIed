@@ -358,6 +358,14 @@ body{transition:background-color .25s,color .25s}
 .opt-row input[type=text]{flex:1}
 @media (max-width:720px){.form-grid{grid-template-columns:1fr}.course-sel{max-width:150px;padding-left:4px}}
 @media (max-width:480px){.teacher{display:none}}
+
+/* ===== question bank by topic ===== */
+.topics{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px}
+.topic{display:flex;flex-direction:column;gap:2px;padding:11px 14px;border:1px solid var(--line);border-inline-start:4px solid var(--tc,var(--blue));border-radius:12px;background:var(--card);color:inherit;text-decoration:none;cursor:pointer;text-align:right;font:inherit}
+.topic b{font-size:14px}.topic span{font-size:12px;color:var(--muted)}
+.topic:hover{border-color:var(--tc,var(--blue))}
+.topic.on{background:var(--pale);border-color:var(--tc,var(--blue));box-shadow:0 0 0 1px var(--tc,var(--blue))}
+.bank-title{font-size:14px;margin:18px 0 6px}
 </style>
 </head>
 <body>
@@ -630,7 +638,7 @@ function buildSuggestions() {
 }
 
 /* ================= state ================= */
-const state = {view:'dashboard', studentId:null, stFilter:'all', stQuery:'', stSort:{k:'mastery', dir:1}};
+const state = {view:'dashboard', bankTopic:null, studentId:null, stFilter:'all', stQuery:'', stSort:{k:'mastery', dir:1}};
 const live = {running:false, code:null, qid:null, qState:null, answers:[], timer:null, pending:[], previewSel:null};
 const audio = {listening:false, lines:[], counts:{question:0, confusion:0, repeat:0, example:0, topic:0}, timer:null, raf:null, idx:0};
 const studentName = s => settings.showNames ? s.name : `دانشجو ${s.code}`;
@@ -794,20 +802,10 @@ V.dashboard = () => {
       <div class="item"><span class="lbl">وضعیت کلی تسلط کلاس</span><b>${pct(overall)}</b> ${C.levelTag(overall)}</div>
     </div>
   </div>
-  <div class="grid g3 mt">
-    <div class="card"><div class="card-head">${C.h2('analytics', 'blue', 'نمودار مشارکت کلاس')}</div>${C.lineChart(partSeries, {h:300, w:380, area:true, threshold:false, label:'نمودار مشارکت و درست‌پاسخی', hollowNote:false})}</div>
-    <div class="card"><div class="card-head">${C.h2('target', 'purple', 'وضعیت درک مفاهیم')}<span class="hint">تجمعی</span></div>
-      ${cm.map(x => { const m = x.ok / x.n, d = x.prev.n ? Math.round((m - x.prev.ok / x.prev.n) * 100) : 0;
-        return `<button class="crow" data-act="evidence" data-ev='{"type":"concept","c":${x.c.id}}'><div class="top"><b>${x.c.t}</b><span><b class="${{g:'t-green', o:'t-orange', r:'t-red'}[A.level(m)]}">${pct(m)}</b> <span class="muted small">n=${fa(x.n)}</span> ${d ? `<span class="small ${d > 0 ? 't-green' : 't-red'}">${d > 0 ? '▲' : '▼'}${fa(Math.abs(d))}</span>` : ''}</span></div>${C.progress(m)}</button>`; }).join('')}
-    </div>
+  <div class="grid g2 mt">
+    <div class="card"><div class="card-head">${C.h2('analytics', 'blue', 'نمودار مشارکت کلاس')}</div>${C.lineChart(partSeries, {h:260, w:560, area:true, threshold:false, label:'نمودار مشارکت و درست‌پاسخی', hollowNote:false})}</div>
     <div class="card"><div class="card-head">${C.h2('students', 'orange', 'دانشجویان نیازمند توجه')}<div class="end"><button class="link small" data-act="filterAttention">مشاهده‌ی همه (${fa(need.length)})</button></div></div>
       ${need.slice(0, 5).map(({s, a}) => `<div class="person" data-act="student" data-id="${s.id}" tabindex="0" role="button">${C.avatar(s)}<div class="who"><b>${esc(studentName(s))}</b><small>${a.hard ? `مفهوم دشوار: ${a.hard.c.t}` : a.reasons[0]}</small></div>${C.tag('نیازمند پیگیری', 'orange')}</div>`).join('') || '<div class="empty">موردی نیست.</div>'}
-    </div>
-  </div>
-  <div class="grid g3 mt">
-    <div class="card"><div class="card-head">${C.h2('alert', 'red', 'هشدارهای آموزشی')}</div>${alerts.length ? alerts.map(C.alert).join('') : '<div class="empty">هشداری وجود ندارد.</div>'}<div class="note">${T.notJudgement}</div></div>
-    <div class="card span2"><div class="card-head">${C.h2('suggestions', 'orange', 'پیشنهادهای ادامه‌ی تدریس')}<span class="hint">به ترتیب اولویت · فقط با تأیید شما</span></div>
-    ${pending.map((sg, i) => `<div class="prio"><span class="num" style="background:${['var(--red)', 'var(--purple)', 'var(--orange)', 'var(--blue)'][i % 4]}">${fa(i + 1)}</span><span class="txt"><b>${esc(sg.title)}</b><br><span class="muted small">${sg.evidence}</span></span>${i < 2 ? C.tag('اولویت بالا', 'red') : C.tag('اولویت متوسط', 'green')}<button class="btn sm" data-act="go" data-v="suggestions">بررسی</button></div>`).join('') || '<div class="empty">پیشنهاد در انتظاری نیست.</div>'}
     </div>
   </div>`;
 };
@@ -895,6 +893,9 @@ V.analytics = () => {
   const last = A.lastSession();
   const cm = concepts.map(c => ({c, ...A.upTo(c.id, last)}));
   const items = A.items();
+  // moved here from the overview: concept trend, alerts and the pending teaching suggestions
+  const trend = concepts.map(c => ({c, ...A.upTo(c.id, last), prev:A.upTo(c.id, last - 1)})).filter(x => x.n);
+  const alerts = A.alerts(), pending = suggestions.filter(s => s.status === 'pending');
   const series = concepts.map(c => ({name:c.t, color:c.color, points:sessions.map(s => { const cl = A.cell(c.id, s.n); return cl.n ? {v:cl.ok / cl.n, n:cl.n, ok:cl.n >= settings.minClass} : null; })}));
   const sorted = cm.filter(x => x.n).sort((a, b) => a.ok/a.n - b.ok/b.n);
   const weakItems = items.filter(it => it.n >= settings.minClass && it.D != null && it.D < 0.2);
@@ -902,6 +903,16 @@ V.analytics = () => {
   const diffLabel = p => p >= 0.8 ? C.tag('آسان', 'green') : p >= 0.4 ? C.tag('متوسط', 'blue') : C.tag('دشوار', 'red');
   const dLabel = D => D == null ? '—' : `${fa(D.toFixed(2))} ${D >= 0.3 ? C.tag('خوب', 'green') : D >= 0.2 ? C.tag('قابل قبول', 'blue') : C.tag('ضعیف', 'orange')}`;
   return `<div class="grid g2">
+    <div class="card"><div class="card-head">${C.h2('target', 'purple', 'وضعیت درک مفاهیم')}<span class="hint">تجمعی</span></div>
+      ${trend.map(x => { const m = x.ok / x.n, d = x.prev.n ? Math.round((m - x.prev.ok / x.prev.n) * 100) : 0;
+        return `<button class="crow" data-act="evidence" data-ev='{"type":"concept","c":${x.c.id}}'><div class="top"><b>${x.c.t}</b><span><b class="${{g:'t-green', o:'t-orange', r:'t-red'}[A.level(m)]}">${pct(m)}</b> <span class="muted small">n=${fa(x.n)}</span> ${d ? `<span class="small ${d > 0 ? 't-green' : 't-red'}">${d > 0 ? '▲' : '▼'}${fa(Math.abs(d))}</span>` : ''}</span></div>${C.progress(m)}</button>`; }).join('')}
+    </div>
+    <div class="card"><div class="card-head">${C.h2('alert', 'red', 'هشدارهای آموزشی')}</div>${alerts.length ? alerts.map(C.alert).join('') : '<div class="empty">هشداری وجود ندارد.</div>'}<div class="note">${T.notJudgement}</div></div>
+  </div>
+  <div class="card mt"><div class="card-head">${C.h2('suggestions', 'orange', 'پیشنهادهای ادامه‌ی تدریس')}<span class="hint">به ترتیب اولویت · فقط با تأیید شما</span></div>
+    ${pending.map((sg, i) => `<div class="prio"><span class="num" style="background:${['var(--red)', 'var(--purple)', 'var(--orange)', 'var(--blue)'][i % 4]}">${fa(i + 1)}</span><span class="txt"><b>${esc(sg.title)}</b><br><span class="muted small">${sg.evidence}</span></span>${i < 2 ? C.tag('اولویت بالا', 'red') : C.tag('اولویت متوسط', 'green')}<button class="btn sm" data-act="go" data-v="suggestions">بررسی</button></div>`).join('') || '<div class="empty">پیشنهاد در انتظاری نیست.</div>'}
+    </div>
+  <div class="grid g2 mt">
     <div class="card"><div class="card-head"><h2>مقایسه‌ی تسلط مفاهیم</h2><span class="hint">تجمعی تا جلسه‌ی ${fa(last)} · خط نازک: بازه‌ی اطمینان ۹۵٪</span></div>
       ${cm.map(x => { const m = x.ok / x.n, [lo, hi] = A.wilson(x.ok, x.n); return `<div class="opt-bar"><div class="top"><b>${x.c.t}</b><span>${pct(m)} · <span class="muted small">n=${fa(x.n)} · ${T.conf[A.confidence(x.ok, x.n, settings.minClass)]}</span></span></div>
         <div style="position:relative">${C.progress(m)}<div style="position:absolute;top:5px;height:2px;background:var(--ink);opacity:.5;right:${lo*100}%;width:${(hi-lo)*100}%"></div></div></div>`; }).join('')}
@@ -942,7 +953,7 @@ V.live = () => {
   if (!live.running) return `<div class="grid g2"><div class="card"><div class="card-head"><h2>شروع جلسه‌ی زنده</h2></div>
       ${curSession() ? `<p>جلسه‌ی ${fa(curSession().n)} · ${curSession().date} · ${curSession().topic}</p>` : '<p>برای این درس هنوز جلسه‌ای تعریف نشده است.</p>'}<p class="muted">با شروع جلسه یک کد ۶ رقمی و QR ساخته می‌شود تا دانشجوها از گوشی وارد شوند. کد پس از پایان جلسه باطل می‌شود.</p>
       ${curSession() ? '<button class="btn primary" data-act="liveStart">شروع جلسه</button>' : '<button class="btn primary" data-act="go" data-v="courses">تعریف جلسه</button>'}</div>
-    <div class="card"><div class="card-head"><h2>بانک سؤال این درس</h2><span class="hint">${fa(bank.length)} سؤال تأییدشده</span></div>${bankList(bank)}</div></div>`;
+    <div class="card"><div class="card-head"><h2>بانک سؤال این درس</h2><span class="hint">${fa(bank.length)} سؤال تأییدشده · ابتدا مبحث را انتخاب کنید</span></div>${bankList(bank)}</div></div>`;
   const n = live.answers.length, counts = q ? q.options.map((_, i) => live.answers.filter(a => a.opt === i).length) : [];
   const okN = q ? counts[q.correct] : 0;
   let insight = '';
@@ -967,7 +978,7 @@ V.live = () => {
       ${q && live.qState !== 'closed' ? '<button class="btn" data-act="liveClose">بستن سؤال</button>' : ''}${q && live.qState === 'closed' ? '<button class="btn primary" data-act="liveNext">سؤال بعدی</button>' : ''}</div></div>
       ${q ? `<p style="font-weight:600;margin-top:0">${esc(q.text)}</p>
         <div class="kpis"><div><b>${fa(n)}</b>پاسخ</div><div><b>${n ? pct(okN / n) : '—'}</b>درست‌پاسخی</div><div><b>${fa(students.length - n)}</b>بدون پاسخ</div></div>
-        ${q.options.map((o, i) => `<div class="opt-bar"><div class="top"><span>${i === q.correct ? '✓ ' : ''}${esc(o)}${i === q.correct ? ' <span class="muted small">(گزینه‌ی درست)</span>' : ''}</span><span>${n ? pct(counts[i] / n) : '۰٪'} · ${fa(counts[i])}</span></div>${C.progress(n ? counts[i] / n : 0, i === q.correct ? 'var(--green)' : 'var(--blue)')}</div>`).join('')}
+        ${q.options.map((o, i) => `<div class="opt-bar"><div class="top"><span>${i === q.correct ? '✓ ' : ''}${esc(o)}${i === q.correct ? ' <span class="muted small">(گزینه‌ی درست)</span>' : ''}</span><span>${n ? pct(counts[i] / n) : '۰٪'} (${fa(counts[i])} نفر)</span></div>${C.progress(n ? counts[i] / n : 0, i === q.correct ? 'var(--green)' : 'var(--blue)')}</div>`).join('')}
         <div class="mt">${insight}</div>`
       : bankList(bank.slice().sort((x, y) => x.asked - y.asked), true)}
     </div></div>
@@ -977,8 +988,16 @@ V.live = () => {
         : '<div class="empty">منتظر سؤال استاد…</div>'}</div></div>
     <div class="card"><div class="card-head"><h2>نکته</h2></div><p class="muted">پاسخ‌ها با بستن سؤال در جلسه‌ی ${fa(curSession().n)} ذخیره می‌شوند و نقشه‌ی تسلط و تحلیل‌ها بلافاصله به‌روز می‌شوند.</p><p class="muted">نتیجه‌ی فردی هیچ دانشجویی روی صفحه‌ی کلاس نمایش داده نمی‌شود.</p></div></div>`;
 };
+function topicPicker(qs) {
+  if (!concepts.length) return '<p class="muted small">هنوز مبحثی برای این درس تعریف نشده است.</p>';
+  return `<div class="topics" role="list" aria-label="مباحث درس">${concepts.map(c => { const mine = qs.filter(q => q.concepts.includes(c.id)), un = mine.filter(q => !q.asked).length, dr = mine.filter(q => q.status === 'draft').length, on = state.bankTopic === c.id;
+    return `<button role="listitem" class="topic ${on ? 'on' : ''}" style="--tc:${c.color}" data-act="bankTopic" data-id="${c.id}" ${on ? 'aria-current="true"' : ''}><b>${esc(c.t)}</b><span>${fa(mine.length)} سؤال${un ? `، ${fa(un)} پرسیده‌نشده` : ''}${dr ? `، ${fa(dr)} پیش‌نویس` : ''}</span></button>`; }).join('')}</div>`
+    + (state.bankTopic == null ? '<p class="empty">ابتدا یک مبحث را انتخاب کنید تا سؤال‌های آن نمایش داده شود.</p>' : `<h3 class="bank-title">سؤال‌های «${esc(concepts[state.bankTopic].t)}»</h3>`);
+}
+const inTopic = qs => state.bankTopic == null ? [] : qs.filter(q => q.concepts.includes(state.bankTopic));
 function bankList(bank, pick = false) {
-  return `<div class="table-wrap"><table><tbody>${bank.map(q => `<tr><td class="muted">${fa(q.id)}</td><td>${esc(q.text)}<div class="chips">${q.concepts.map(c => C.tag(concepts[c].t, 'gray')).join('')}${q.asked ? C.tag(`پرسیده‌شده ج${fa(q.session)}`, 'gray') : C.tag('پرسیده‌نشده', 'blue')}</div></td>${pick ? `<td><button class="btn sm primary" data-act="liveAsk" data-id="${q.id}">پرسیدن</button></td>` : ''}</tr>`).join('')}</tbody></table></div>`;
+  const rows = inTopic(bank);
+  return topicPicker(bank) + (state.bankTopic == null ? '' : rows.length ? `<div class="table-wrap"><table><tbody>${rows.map(q => `<tr><td class="muted">${fa(q.id)}</td><td>${esc(q.text)}<div class="chips">${q.concepts.map(c => C.tag(concepts[c].t, 'gray')).join('')}${q.asked ? C.tag(`پرسیده‌شده ج${fa(q.session)}`, 'gray') : C.tag('پرسیده‌نشده', 'blue')}</div></td>${pick ? `<td><button class="btn sm primary" data-act="liveAsk" data-id="${q.id}">پرسیدن</button></td>` : ''}</tr>`).join('')}</tbody></table></div>` : '<p class="empty">این مبحث هنوز سؤال تأییدشده‌ای ندارد.</p>');
 }
 function qrSvg(code) {
   // visual placeholder for the QR code; the product uses a real QR encoder
@@ -1063,10 +1082,10 @@ V.courses = () => {
     ${sessions.map(se => `<tr><td>${fa(se.n)}</td><td>${esc(se.date)} ۱۴۰۵</td><td>${esc(se.topic)}</td><td>${fa(questions.filter(q => q.session === se.n && q.asked).length)}</td><td>${fa(responses.filter(r => r.session === se.n).length)}</td></tr>`).join('') || '<tr><td colspan="5" class="empty">هنوز جلسه‌ای تعریف نشده است.</td></tr>'}
     </tbody></table></div>
     <div class="inline mt" style="flex-wrap:wrap"><input type="text" id="newSessDate" placeholder="تاریخ (مثلاً ۳۰ مهر)" aria-label="تاریخ جلسه‌ی جدید"><input type="text" id="newSessTopic" placeholder="موضوع جلسه" aria-label="موضوع جلسه‌ی جدید" style="flex:1;min-width:160px"><button class="btn" data-act="addSession">افزودن جلسه</button></div></div>
-  <div class="card mt"><div class="card-head">${C.h2('grid', 'orange', 'بانک سؤال')}<span class="hint">هر سؤال به یک یا چند مفهوم برچسب می‌خورد</span><div class="end"><button class="btn sm primary" data-act="newQuestion" ${concepts.length ? '' : 'disabled'}>+ سؤال جدید</button></div></div>
-    <div class="table-wrap"><table><thead><tr><th>#</th><th>سؤال</th><th>مفاهیم</th><th>وضعیت</th></tr></thead><tbody>
-    ${questions.map(q => `<tr><td class="muted">${fa(q.id)}</td><td><bdi>${esc(q.text)}</bdi></td><td>${q.concepts.map(c => C.tag(esc(concepts[c].t), 'gray')).join(' ')}</td><td>${q.status === 'draft' ? `${C.tag('پیش‌نویس — نیازمند بازبینی', 'orange')} <button class="btn sm" data-act="approveQ" data-id="${q.id}">تأیید</button>` : C.tag('تأییدشده', 'green')}</td></tr>`).join('') || '<tr><td colspan="4" class="empty">بانک سؤال خالی است.</td></tr>'}
-    </tbody></table></div></div>`;
+  <div class="card mt"><div class="card-head">${C.h2('grid', 'orange', 'بانک سؤال')}<span class="hint">${fa(questions.length)} سؤال · ابتدا مبحث را انتخاب کنید</span><div class="end"><button class="btn sm primary" data-act="newQuestion" ${concepts.length ? '' : 'disabled'}>+ سؤال جدید</button></div></div>
+    ${topicPicker(questions)}${state.bankTopic == null ? '' : `<div class="table-wrap"><table><thead><tr><th>#</th><th>سؤال</th><th>مفاهیم</th><th>وضعیت</th></tr></thead><tbody>
+    ${inTopic(questions).map(q => `<tr><td class="muted">${fa(q.id)}</td><td><bdi>${esc(q.text)}</bdi></td><td>${q.concepts.map(c => C.tag(esc(concepts[c].t), 'gray')).join(' ')}</td><td>${q.status === 'draft' ? `${C.tag('پیش‌نویس — نیازمند بازبینی', 'orange')} <button class="btn sm" data-act="approveQ" data-id="${q.id}">تأیید</button>` : C.tag('تأییدشده', 'green')}</td></tr>`).join('') || '<tr><td colspan="4" class="empty">این مبحث هنوز سؤالی ندارد.</td></tr>'}
+    </tbody></table></div>`}</div>`;
 };
 
 V.settings = () => `<div class="grid g2">
@@ -1100,7 +1119,7 @@ function questionEvidence(qid, session) {
   const q = A.qById(qid), rs = responses.filter(r => r.qid === qid && (session == null || r.session === session)), n = rs.length;
   return `<div class="sugg"><h3>سؤال ${fa(q.id)} · جلسه‌ی ${fa(q.session)}</h3><p style="margin:4px 0">${esc(q.text)}</p>
     <div class="meta">${q.concepts.map(c => C.tag(concepts[c].t, 'gray')).join('')}${C.tag(`n=${fa(n)}`, n < settings.minClass ? 'gray' : '')}${n ? C.confTag(A.confidence(rs.filter(r => r.ok).length, n, settings.minClass)) : ''}</div>
-    ${q.options.map((o, i) => { const c = rs.filter(r => r.opt === i).length; return `<div class="opt-bar"><div class="top"><span>${i === q.correct ? '✓ ' : ''}${esc(o)}</span><span>${n ? pct(c / n) : '—'} · ${fa(c)}</span></div>${C.progress(n ? c / n : 0, i === q.correct ? 'var(--green)' : 'var(--blue)')}</div>`; }).join('')}</div>`;
+    ${q.options.map((o, i) => { const c = rs.filter(r => r.opt === i).length; return `<div class="opt-bar"><div class="top"><span>${i === q.correct ? '✓ ' : ''}${esc(o)}</span><span>${n ? pct(c / n) : '—'} (${fa(c)} نفر)</span></div>${C.progress(n ? c / n : 0, i === q.correct ? 'var(--green)' : 'var(--blue)')}</div>`; }).join('')}</div>`;
 }
 function showEvidence(ev) {
   if (ev.type === 'cell') {
@@ -1208,6 +1227,7 @@ const ACT = {
     audit.unshift({who:course.teacher, when:'امروز · ' + nowTime(), action:'ساخت پیش‌نویس', target:`سؤال ${fa(nq.id)} برای بازبینی`});
     toast('پیش‌نویس به بانک سؤال اضافه شد و تا تأیید شما استفاده نمی‌شود.'); render();
   },
+  bankTopic: el => { state.bankTopic = +el.dataset.id; render(); },
   approveQ: el => { A.qById(+el.dataset.id).status = 'approved'; toast('سؤال تأیید شد و به بانک اضافه شد.'); render(); },
   liveStart: () => { live.running = true; live.startedAt = Date.now(); live.code = String(100000 + Math.floor(Math.random() * 900000)); render(); },
   liveEnd: () => { if (live.qState && live.qState !== 'closed') ACT.liveClose(); clearInterval(live.timer); Object.assign(live, {running:false, code:null, qid:null, qState:null, answers:[]}); toast('جلسه پایان یافت و کد ورود باطل شد.'); render(); },
@@ -1249,7 +1269,7 @@ const ACT = {
     <div class="field"><label for="nqText">متن سؤال *</label><textarea id="nqText"></textarea></div>
     <div class="field"><label>گزینه‌ها * <span class="help">گزینه‌ی درست را علامت بزنید</span></label>
       ${[0, 1, 2, 3].map(i => `<div class="opt-row"><input type="radio" name="nqCorrect" id="nqC${i}" value="${i}" ${i === 0 ? 'checked' : ''} aria-label="گزینه‌ی ${fa(i + 1)} درست است"><input type="text" id="nqO${i}" placeholder="گزینه‌ی ${fa(i + 1)}" aria-label="گزینه‌ی ${fa(i + 1)}"></div>`).join('')}</div>
-    <div class="field"><label>مفاهیم مرتبط *</label><div class="chips">${concepts.map(c => `<label class="tag gray" style="cursor:pointer"><input type="checkbox" name="nqConcept" value="${c.id}"> ${esc(c.t)}</label>`).join('')}</div></div>
+    <div class="field"><label>مفاهیم مرتبط *</label><div class="chips">${concepts.map(c => `<label class="tag gray" style="cursor:pointer"><input type="checkbox" name="nqConcept" value="${c.id}" ${state.bankTopic === c.id ? 'checked' : ''}> ${esc(c.t)}</label>`).join('')}</div></div>
     <p class="small" id="nqError" style="color:var(--red);min-height:1em"></p><div style="display:flex;gap:8px"><button class="btn primary" type="submit">افزودن به بانک سؤال</button><button class="btn" type="button" data-act="closeModal">انصراف</button></div></form>`),
   addConcept: () => { const v = $('#newConcept').value.trim(); if (!v) return; concepts.push({id:concepts.length, t:v, from:(curSession() ? curSession().n : 0) + 1, color:CONCEPT_COLORS[concepts.length % CONCEPT_COLORS.length]}); students.forEach(st => st.ability.push(1)); toast('مفهوم اضافه شد.'); render(); },
   confirmCsv: () => { const rows = window.__csv || []; rows.forEach(([code, name]) => students.push({id:students.length, code:fa(code), name, ability:concepts.map(() => 0.9), part:0.9, decl:false})); toast(`${fa(rows.length)} دانشجو اضافه شد.`); window.__csv = null; render(); },
@@ -1275,7 +1295,7 @@ function switchCourse(id) {
   if (audio.listening) ACT.audioStop();
   Object.assign(audio, {lines:[], idx:0, counts:{question:0, confusion:0, repeat:0, example:0, topic:0}});
   useCourse(id); buildSuggestions();
-  Object.assign(state, {studentId:null, stQuery:'', stFilter:'all'});
+  Object.assign(state, {studentId:null, stQuery:'', stFilter:'all', bankTopic:null});
   toast(`درس فعال: ${course.title}`);
 }
 document.addEventListener('submit', e => {

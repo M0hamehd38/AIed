@@ -1,0 +1,8 @@
+{% load ui %}{% comment %}Step 1 of the question bank: pick a topic. Links keep the page and jump back to the bank.{% endcomment %}
+<div class="topics" role="list" aria-label="مباحث درس">
+{% for t in bank.topics %}<a role="listitem" class="topic {% if bank.topic and bank.topic.c.pk == t.c.pk %}on{% endif %}" href="?topic={{ t.c.pk }}#bank" style="--tc:{{ t.c.color }}" {% if bank.topic and bank.topic.c.pk == t.c.pk %}aria-current="true"{% endif %}>
+  <b>{{ t.c.title }}</b>
+  <span>{{ t.count|fa }} سؤال{% if t.unasked %}، {{ t.unasked|fa }} پرسیده‌نشده{% endif %}{% if t.drafts %}، {{ t.drafts|fa }} پیش‌نویس{% endif %}</span>
+</a>{% empty %}<p class="muted small">هنوز مبحثی برای این درس تعریف نشده است.</p>{% endfor %}
+</div>
+{% if not bank.topic and bank.topics %}<p class="empty">ابتدا یک مبحث را انتخاب کنید تا سؤال‌های آن نمایش داده شود.</p>{% endif %}

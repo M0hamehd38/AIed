@@ -5,9 +5,13 @@
     {% if cur_session %}<p>جلسه‌ی {{ cur_session.number|fa }} · {{ cur_session.date|jdate }} · {{ cur_session.topic }}</p>{% else %}<p>برای این درس هنوز جلسه‌ای تعریف نشده است.</p>{% endif %}
     <p class="muted">با شروع جلسه یک کد ۶ رقمی و QR ساخته می‌شود تا دانشجوها از گوشی وارد شوند. کد پس از پایان جلسه باطل می‌شود. پاسخ‌ها با WebSocket لحظه‌ای می‌رسند و نتیجه‌ی فردی هیچ دانشجویی روی صفحه‌ی کلاس نمایش داده نمی‌شود.</p>
     <div class="alert"><span class="ic" style="background:var(--purple)">i</span><div><b>در فاز بعد فعال می‌شود</b><p>زیرساخت جلسه‌ی زنده (کد ورود، باز و بستن سؤال، پاسخ دانشجو) در فاز ۲ پیاده‌سازی می‌شود. داده‌های این صفحه از همین حالا از پایگاه‌داده خوانده می‌شوند.</p></div></div>
+    {% if picked %}<div class="alert green mt"><span class="ic">✓</span><div><b>سؤال انتخاب‌شده: سؤال {{ picked.number|fa }}</b><p><bdi>{{ picked.text }}</bdi></p></div></div>{% else %}<p class="small muted mt">از بانک سؤال، مبحث و سپس سؤالی را که می‌خواهید بپرسید انتخاب کنید.</p>{% endif %}
     <button class="btn primary mt" disabled>شروع جلسه</button></div>
-  <div class="card"><div class="card-head"><h2>بانک سؤال این درس</h2><span class="hint">{{ bank|length|fa }} سؤال تأییدشده</span></div>
-    <div class="table-wrap"><table><tbody>{% for b in bank %}<tr><td class="muted">{{ b.q.number|fa }}</td><td><bdi>{{ b.q.text }}</bdi><div class="chips">{% for t in b.concepts %}{% tag t 'gray' %}{% endfor %}{% if b.ref.asked %}{% tag b.asked_label 'gray' %}{% else %}{% tag 'پرسیده‌نشده' 'blue' %}{% endif %}</div></td></tr>
-    {% empty %}<tr><td class="empty">بانک سؤال خالی است.</td></tr>{% endfor %}</tbody></table></div></div>
+  <div class="card" id="bank"><div class="card-head"><h2>بانک سؤال این درس</h2><span class="hint">{{ bank.total|fa }} سؤال تأییدشده · ابتدا مبحث را انتخاب کنید</span></div>
+    {% include "panel/_topics.html" %}
+    {% if bank.topic %}<h3 class="bank-title">سؤال‌های «{{ bank.topic.c.title }}»</h3>
+    <div class="table-wrap"><table><tbody>{% for b in bank.rows %}<tr class="{% if picked and picked.pk == b.q.pk %}picked{% endif %}"><td class="muted">{{ b.q.number|fa }}</td><td><bdi>{{ b.q.text }}</bdi><div class="chips">{% for t in b.concepts %}{% tag t 'gray' %}{% endfor %}{% if b.ref.asked %}{% tag b.asked_label 'gray' %}{% else %}{% tag 'پرسیده‌نشده' 'blue' %}{% endif %}</div></td>
+      <td>{% if picked and picked.pk == b.q.pk %}{% tag '✓ انتخاب شد' 'green' %}{% else %}<a class="btn sm" href="?topic={{ bank.topic.c.pk }}&amp;q={{ b.q.pk }}#bank">انتخاب</a>{% endif %}</td></tr>
+    {% empty %}<tr><td class="empty">این مبحث هنوز سؤال تأییدشده‌ای ندارد.</td></tr>{% endfor %}</tbody></table></div>{% endif %}</div>
 </div>
 {% endblock %}

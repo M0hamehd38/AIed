@@ -10,5 +10,5 @@
 {% else %}<div class="mt">
 {% for b in blocks %}<div class="sugg"><h3>سؤال {{ b.q.id|fa }} · جلسه‌ی {{ b.q.session|fa }}</h3><p style="margin:4px 0"><bdi>{{ b.text }}</bdi></p>
   <div class="meta">{% for t in b.concept_titles %}{% tag t 'gray' %}{% endfor %}{% if b.n < th.min_class %}{% tag b.n_label 'gray' %}{% else %}{% tag b.n_label %}{% endif %}{% if b.conf %}{% conf_tag b.conf %}{% endif %}</div>
-  {% for o in b.opts %}<div class="opt-bar"><div class="top"><span>{% if o.correct %}✓ {% endif %}<bdi>{{ o.text }}</bdi></span><span>{% if b.n %}{{ o.share|pct }}{% else %}—{% endif %} · {{ o.c|fa }}</span></div>{% if o.correct %}{% progress o.share 'var(--green)' %}{% else %}{% progress o.share 'var(--blue)' %}{% endif %}</div>{% endfor %}
+  {% for o in b.opts %}<div class="opt-bar"><div class="top"><span>{% if o.correct %}✓ {% endif %}<bdi>{{ o.text }}</bdi></span><span>{% if b.n %}{{ o.share|pct }}{% else %}—{% endif %} ({{ o.c|fa }} نفر)</span></div>{% if o.correct %}{% progress o.share 'var(--green)' %}{% else %}{% progress o.share 'var(--blue)' %}{% endif %}</div>{% endfor %}
 </div>{% empty %}<div class="empty">پاسخی ثبت نشده است.</div>{% endfor %}</div>{% endif %}
