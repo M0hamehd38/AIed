@@ -12,6 +12,8 @@ try { if (!localStorage.getItem('classyar-user')) location.replace('index.html?l
 </script>
 <style>
 /* Sahel by Saber Rastikerdar — SIL OFL 1.1 (fonts/LICENSE-Sahel) */
+/* Digi Rastin Plus (DigiFonts) — commercial font, not in the public repo; Sahel is the fallback */
+@font-face{font-family:'Digi Rastin Plus';src:url('fonts/DigiRastinPlus-Circle.woff2') format('woff2');font-weight:100 900;font-display:swap}
 @font-face{font-family:'Sahel';src:url('fonts/Sahel.woff') format('woff');font-weight:400;font-display:swap}
 @font-face{font-family:'Sahel';src:url('fonts/Sahel-Bold.woff') format('woff');font-weight:700;font-display:swap}
 :root{
@@ -22,7 +24,7 @@ try { if (!localStorage.getItem('classyar-user')) location.replace('index.html?l
 }
 *{box-sizing:border-box}
 html,body{margin:0}
-body{background:var(--bg);color:var(--ink);font-family:Sahel,Tahoma,"Segoe UI",sans-serif;font-size:14px;line-height:1.8}
+body{background:var(--bg);color:var(--ink);font-family:'Digi Rastin Plus',Sahel,Tahoma,"Segoe UI",sans-serif;font-size:14px;line-height:1.8}
 button,input,select,textarea{font:inherit;color:inherit}
 button{cursor:pointer}
 :focus-visible{outline:2px solid var(--blue);outline-offset:2px}
@@ -366,6 +368,9 @@ body{transition:background-color .25s,color .25s}
 .topic:hover{border-color:var(--tc,var(--blue))}
 .topic.on{background:var(--pale);border-color:var(--tc,var(--blue));box-shadow:0 0 0 1px var(--tc,var(--blue))}
 .bank-title{font-size:14px;margin:18px 0 6px}
+
+/* Digi Rastin Plus has a narrow space (0.14em, Sahel's is 0.27em): open it up so words stay apart */
+body{word-spacing:.1em}
 </style>
 </head>
 <body>
