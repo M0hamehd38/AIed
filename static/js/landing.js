@@ -114,11 +114,22 @@ function fit() {
   PORT = vw / vh < 0.9; [FW, FH] = PORT ? [720, 1280] : [1280, 720];
   frame.style.width = FW + 'px'; frame.style.height = FH + 'px';
   const L = LAYOUT[PORT ? 'port' : 'land'];
-  // on windows narrower than the stage, its sides are cropped: keep the headline clear of the right edge
-  const crop = PORT ? 0 : Math.max(0, (FW - vw / Math.max(vw / FW, vh / FH)) / 2);
-  for (const id of ['headline', 'robot', 'desk']) { const [l, t, w, h] = L[id], e = $('#' + id); Object.assign(e.style, {left:l - (id === 'headline' ? crop : 0) + 'px', top:t + 'px', width:w + 'px', height:h + 'px'}); }
+  // the stage is scaled to cover the window, so on narrower windows its sides are cropped by this much
+  const crop = Math.max(0, (FW - vw / Math.max(vw / FW, vh / FH)) / 2), visW = FW - 2 * crop, M = 20;
+  for (const id of ['robot', 'desk']) { const [l, t, w, h] = L[id], e = $('#' + id); Object.assign(e.style, {left:l + 'px', top:t + 'px', width:w + 'px', height:h + 'px'}); }
   els.fg.style.transformOrigin = L.origin;
-  els.head.style.fontSize = (L.headline[2] / 554.6 * 16).toFixed(2) + 'px';
+  // headline: phones get a centred stack (emblem above the text) across the visible width
+  const [hl, ht, hw, hh] = L.headline, head = els.head, txt = head.querySelector('.ht');
+  head.classList.toggle('hl-port', PORT);
+  const box = PORT ? {left:crop + M, width:visW - 2 * M} : {left:hl - crop, width:hw};
+  Object.assign(head.style, {left:box.left + 'px', top:ht + 'px', width:box.width + 'px', height:PORT ? 'auto' : hh + 'px'});
+  // then shrink the type, if needed, until every line fits inside the visible part of the stage
+  let fs = hw / 554.6 * 16;
+  head.style.fontSize = fs + 'px';
+  const perEm = txt.scrollWidth / fs;   // the text block's natural width, in em
+  const room = PORT ? box.width : box.left + box.width - (crop + M) - 10.5 * fs;   // landscape: the emblem takes 10.5em on the right
+  if (txt.scrollWidth > room) fs = PORT ? room / perEm : (box.left + box.width - crop - M) / (10.5 + perEm);
+  head.style.fontSize = fs.toFixed(2) + 'px';
   document.querySelectorAll('#stage .o').forEach(o => { o.style.left = FW / 2 + 'px'; o.style.top = FH * .48 + 'px'; });
   els.stats.style.display = PORT ? 'none' : '';
   frame.style.setProperty('--cs', PORT ? .72 : .8);

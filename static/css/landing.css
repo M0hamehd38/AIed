@@ -120,3 +120,8 @@ body{word-spacing:.1em}
 /* the centred menu has no neighbours to push against: tighten it, then hide it, before it can reach the logo or the buttons */
 @media (max-width:1040px){.menu{gap:24px}}
 @media (max-width:880px){.menu{display:none}}
+
+/* phones: the emblem sits centred above a centred text block */
+.hl-text.hl-port .ht{position:relative;right:auto;top:auto;text-align:center;width:max-content;max-width:none;margin:0 auto}
+.hl-text.hl-port{display:flex;flex-direction:column;align-items:center}
+.hl-text.hl-port>img.cube{position:relative;display:block;order:-1;right:auto;top:auto;width:5.6em;margin:0 0 .5em}
