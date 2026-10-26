@@ -173,3 +173,28 @@ function openInfo(k) { show(tpl('tpl-' + k)); }
 const opened = document.body.dataset.openAuth;
 if (opened === 'login' || opened === 'signup') openAuth(opened);
 
+// phones: dragging the finger down moves the camera forward (the reverse of normal page scrolling),
+// with a short glide after the finger lifts. The mouse wheel keeps its normal direction.
+(function () {
+  let lastY = null, lastT = 0, v = 0, raf = 0;
+  const dialogOpen = () => document.getElementById('modalBg').classList.contains('open');
+  addEventListener('touchstart', e => {
+    cancelAnimationFrame(raf);
+    if (e.touches.length !== 1 || dialogOpen()) { lastY = null; return; }
+    lastY = e.touches[0].clientY; lastT = performance.now(); v = 0;
+  }, {passive: true});
+  addEventListener('touchmove', e => {
+    if (lastY == null) return;
+    e.preventDefault();
+    const y = e.touches[0].clientY, now = performance.now(), dy = y - lastY;
+    scrollBy(0, dy);
+    v = dy / Math.max(1, now - lastT); lastY = y; lastT = now;
+  }, {passive: false});
+  addEventListener('touchend', () => {
+    if (lastY == null) return;
+    lastY = null;
+    let vel = v * 16;
+    const glide = () => { vel *= 0.94; if (Math.abs(vel) < 0.5) return; scrollBy(0, vel); raf = requestAnimationFrame(glide); };
+    if (!reduce) raf = requestAnimationFrame(glide);
+  }, {passive: true});
+})();
