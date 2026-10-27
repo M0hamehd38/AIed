@@ -63,6 +63,11 @@ TEMPLATES = [{
 WSGI_APPLICATION = 'config.wsgi.application'
 ASGI_APPLICATION = 'config.asgi.application'
 
+# speech-to-text service (stt/): listening is off until both are set
+STT_URL = os.environ.get('STT_URL', '')
+STT_TOKEN = os.environ.get('STT_TOKEN', '')
+STT_TIMEOUT = int(os.environ.get('STT_TIMEOUT', '30'))
+
 # live sessions: Redis when there is more than one server process, otherwise in memory
 REDIS_URL = os.environ.get('REDIS_URL')
 CHANNEL_LAYERS = {'default': {'BACKEND': 'channels_redis.core.RedisChannelLayer', 'CONFIG': {'hosts': [REDIS_URL]}}

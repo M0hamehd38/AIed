@@ -1,0 +1,5 @@
+faster-whisper>=1.2,<2
+# faster-whisper 1.2.x calls av.open(metadata_errors=...), which PyAV 17+ no longer accepts
+av>=11,<17
+fastapi>=0.110
+uvicorn>=0.30

@@ -18,7 +18,7 @@
     {% else %}<div class="ai-inner"><div class="empty">همه‌ی پیشنهادها بررسی شده‌اند.</div></div>{% endif %}
     <div class="mini">
       <div><b class="t-green">{% if last_stat.n %}{{ last_stat.rate|pct }}{% else %}—{% endif %}</b>درست‌پاسخی جلسه‌ی {{ last|fa }}<br><span class="small">n={{ last_stat.n|fa }}</span></div>
-      <div><b class="t-orange">{{ 0|fa }}</b>نشانه‌ی ابهام گفتاری<br><span class="small">شنود فعال نشده</span></div>
+      <div><b class="t-orange">{% if speech %}{{ speech.confusion|fa }}{% else %}—{% endif %}</b>نشانه‌ی ابهام گفتاری<br><span class="small">{% if speech %}از رونوشت جلسه‌ی {{ speech.session|fa }}{% else %}شنودی ثبت نشده{% endif %}</span></div>
       <div><b class="t-red">{% if weakest %}{{ weakest.m|pct }}{% else %}—{% endif %}</b>دشوارترین مفهوم<br><span class="small">{{ weakest.c.title }}</span></div>
     </div></div>
   <div class="card dark-card"><div class="card-head">{% h2 'doc' '' 'خلاصه‌ی ترم تا امروز' %}</div>

@@ -373,3 +373,6 @@ tr.picked{background:var(--green-bg)}
 body{word-spacing:.1em}
 
 a.live-chip{text-decoration:none;color:inherit}
+
+/* the hidden attribute must win over display rules like .btn{display:inline-flex} */
+[hidden]{display:none!important}

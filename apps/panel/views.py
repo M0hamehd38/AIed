@@ -20,6 +20,10 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
 from apps.accounts.models import User
+from apps.audio import services as audio_service
+from apps.audio import stt
+from apps.audio import strings as AS
+from apps.audio.models import Transcript, TranscriptSignal
 from apps.audit.models import AuditLog, record
 from apps.courses.models import (Concept, Course, Enrollment, Option, Question, QuestionConcept, Response, Session,
                                  SessionQuestion)
@@ -158,9 +162,18 @@ def dashboard(request, data):
         last=last, last_stat=last_stat, weakest=weakest,
         covered='، '.join(x['c'].title for x in cm), response_count=len(data.responses),
         avg_part=sum(ps) / len(ps) if ps else 0, overall=overall, chart=chart,
-        heat=heatmap(data),
+        heat=heatmap(data), speech=speech_summary(data.course, last),
     )
     return render(request, 'panel/dashboard.html', ctx)
+
+
+def speech_summary(course, session_number):
+    """Confusion cues heard in a session (from its transcript), or None when nothing was transcribed."""
+    lines = Transcript.objects.filter(session__course=course, session__number=session_number)
+    if not lines.exists():
+        return None
+    return {'session': session_number,
+            'confusion': TranscriptSignal.objects.filter(transcript__in=lines, kind='confusion').count()}
 
 
 def concept_trend(data):
@@ -569,10 +582,63 @@ def live_qr(request):
 
 @with_course
 def audio(request, data):
-    return render(request, 'panel/audio.html', panel_context(request, 'audio', data,
-                                                             consent=data.course.consents.exists(),
-                                                             signals=[('پرسش', 'blue'), ('ابهام', 'orange'), ('درخواست تکرار', 'purple'),
-                                                                      ('درخواست مثال', 'purple'), ('تغییر موضوع', 'gray')]))
+    audio_service.purge_expired()  # retention is enforced on every visit too, not only by the hourly job
+    course = data.course
+    session = audio_service.target_session(course)
+    lines = []
+    if session:
+        rows = Transcript.objects.filter(session=session).prefetch_related('signals').order_by('-created_at')[:200]
+        lines = [audio_service.line_json(t, [x.kind for x in t.signals.all()]) for t in reversed(rows)]
+    ctx = panel_context(request, 'audio', data, consent=audio_service.consent_given(course), target=session,
+                        lines=lines, counts=audio_service.counts(session) if session else {},
+                        signals=AS.SIGNALS, stt_ready=stt.configured(),
+                        signals_json=json.dumps({k: [label, cls] for k, label, cls in AS.SIGNALS}, ensure_ascii=False),
+                        consent_text=AS.CONSENT_TEXT.format(days=fa(data.settings['retention_days'])))
+    return render(request, 'panel/audio.html', ctx)
+
+
+@with_course
+@require_POST
+def audio_consent(request, data):
+    if request.POST.get('announced') != 'on':
+        messages.error(request, AS.MSG['consent_announce'])
+    else:
+        audio_service.give_consent(data.course, request.user)
+        messages.success(request, AS.MSG['consent_saved'])
+    return redirect('panel:audio')
+
+
+AUDIO_TYPES = ('audio/webm', 'audio/ogg', 'audio/mp4', 'audio/mpeg', 'audio/wav', 'audio/x-wav')
+MAX_CHUNK = 2 * 1024 * 1024
+
+
+@with_course
+@require_POST
+def audio_chunk(request, data):
+    """One short recording from the teacher's browser. It is read into memory, sent to the speech-to-text
+    service and dropped: no audio is ever written to disk or the database."""
+    course = data.course
+    if not audio_service.consent_given(course):
+        return JsonResponse({'error': AS.MSG['consent_needed']}, status=403)
+    session = audio_service.target_session(course)
+    if session is None:
+        return JsonResponse({'error': AS.MSG['no_session']}, status=409)
+    content_type = request.content_type or ''
+    if not content_type.startswith(AUDIO_TYPES):
+        return JsonResponse({'error': AS.MSG['bad_audio']}, status=415)
+    if int(request.META.get('CONTENT_LENGTH') or 0) > MAX_CHUNK:
+        return JsonResponse({'error': AS.MSG['bad_audio']}, status=413)
+    audio_bytes = request.body
+    try:
+        text = stt.transcribe(audio_bytes, content_type)
+    except stt.STTUnavailable:
+        return JsonResponse({'error': AS.MSG['stt_down']}, status=503)
+    finally:
+        del audio_bytes
+    if not text:
+        return JsonResponse({'line': None, 'counts': audio_service.counts(session)})
+    line, kinds = audio_service.add_line(session, text, data.settings['retention_days'])
+    return JsonResponse({'line': audio_service.line_json(line, kinds), 'counts': audio_service.counts(session)})
 
 
 # ---------------------------------------------------------------- courses
@@ -768,4 +834,4 @@ def settings_view(request, data):
         services.sync_suggestions(services.CourseData(data.course))
         messages.success(request, S.MSG['settings_saved'])
         return redirect('panel:settings')
-    return render(request, 'panel/settings.html', panel_context(request, 'settings', data, consent=data.course.consents.exists()))
+    return render(request, 'panel/settings.html', panel_context(request, 'settings', data, consent=audio_service.consent_given(data.course)))

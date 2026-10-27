@@ -1,3 +1,6 @@
 -r requirements.txt
 pytest>=8.0
 pytest-django>=4.9
+# to test against the real stt/app.py (with a stand-in model)
+fastapi>=0.110
+uvicorn>=0.30
