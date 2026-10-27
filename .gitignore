@@ -7,3 +7,5 @@ staticfiles/
 
 # commercial font (DigiFonts): licensed for the owner only, never published
 static/fonts/DigiRastinPlus-*
+db.sqlite3-wal
+db.sqlite3-shm

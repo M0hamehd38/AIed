@@ -51,6 +51,10 @@ class Session(models.Model):
     date = models.DateField('تاریخ', null=True, blank=True)
     topic = models.CharField('موضوع', max_length=160)
     status = models.CharField(max_length=10, choices=Status.choices, default=Status.CLOSED)
+    # live sessions only: students join with this code; it is cleared when the session ends
+    join_code = models.CharField('کد ورود', max_length=6, null=True, blank=True, unique=True)
+    started_at = models.DateTimeField(null=True, blank=True)
+    ended_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         ordering = ['number']
@@ -130,6 +134,7 @@ class SessionQuestion(models.Model):
     # asked at the very end of class: kept out of participation rates
     late = models.BooleanField(default=False)
     opened_at = models.DateTimeField(null=True, blank=True)
+    closed_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         unique_together = [('session', 'question')]
@@ -139,7 +144,7 @@ class Response(models.Model):
     session_question = models.ForeignKey(SessionQuestion, on_delete=models.CASCADE, related_name='responses')
     student = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='responses')
     option = models.ForeignKey(Option, on_delete=models.CASCADE)
-    answered_at = models.DateTimeField(auto_now_add=True)
+    answered_at = models.DateTimeField(auto_now=True)  # a student may change the answer until the question closes
 
     class Meta:
         unique_together = [('session_question', 'student')]

@@ -371,3 +371,5 @@ tr.picked{background:var(--green-bg)}
 
 /* Digi Rastin Plus has a narrow space (0.14em, Sahel's is 0.27em): open it up so words stay apart */
 body{word-spacing:.1em}
+
+a.live-chip{text-decoration:none;color:inherit}

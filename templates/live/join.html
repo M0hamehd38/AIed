@@ -1,0 +1,17 @@
+{% load static %}<!doctype html>
+<html lang="fa" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ورود به جلسه · کلاس‌یار</title><link rel="stylesheet" href="{% static 'css/live.css' %}"></head>
+<body><main class="wrap">
+  <div class="brand"><img src="{% static 'assets/emblem.webp' %}" alt="">کلاس‌یار<small>جلسه‌ی زنده</small></div>
+  <form class="card" method="post" novalidate>{% csrf_token %}
+    <h1>ورود به جلسه</h1>
+    <p class="muted small">کد ۶ رقمی روی صفحه‌ی کلاس و شماره‌ی دانشجویی خود را وارد کنید.</p>
+    <label for="code">کد جلسه</label>
+    <input id="code" name="code" inputmode="numeric" autocomplete="off" maxlength="6" dir="ltr" value="{{ code }}" required {% if not code %}autofocus{% endif %}>
+    <label for="number">شماره‌ی دانشجویی</label>
+    <input id="number" name="number" inputmode="numeric" autocomplete="off" maxlength="20" dir="ltr" value="{{ number|default:'' }}" required {% if code %}autofocus{% endif %}>
+    <div class="err" role="alert">{{ error|default:'' }}</div>
+    <button class="btn">ورود</button>
+  </form>
+  <p class="note">فقط پاسخ‌های خودتان را می‌بینید. نتیجه‌ی فردی شما روی صفحه‌ی کلاس نمایش داده نمی‌شود.</p>
+</main></body></html>

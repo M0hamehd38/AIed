@@ -1,0 +1,13 @@
+{% load static ui %}<!doctype html>
+<html lang="fa" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>جلسه‌ی زنده · کلاس‌یار</title><link rel="stylesheet" href="{% static 'css/live.css' %}"></head>
+<body><main class="wrap" id="app" data-state-url="{% url 'live:state' %}" data-answer-url="{% url 'live:answer' %}" data-ws="/ws/live/student/">{% csrf_token %}
+  <div class="brand"><img src="{% static 'assets/emblem.webp' %}" alt="">کلاس‌یار<small>{{ session.course.title }} · جلسه‌ی {{ session.number|fa }}</small></div>
+  <div class="status" aria-live="polite"><span class="dot" id="conn"></span><span id="connText">در حال اتصال…</span><span style="margin-inline-start:auto">دانشجو {{ enrollment.code|fa }}</span></div>
+  <section class="card" id="qBox" aria-live="polite"></section>
+  <form method="post" action="{% url 'live:leave' %}" style="text-align:center">{% csrf_token %}<button class="link">خروج از جلسه</button></form>
+  <p class="note">پاسخ را تا وقتی سؤال باز است می‌توانید تغییر دهید.</p>
+</main>
+{{ initial|json_script:"initial" }}
+<script src="{% static 'js/live_student.js' %}"></script>
+</body></html>

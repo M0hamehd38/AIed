@@ -15,7 +15,8 @@ class IdleTimeoutMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
-        if request.user.is_authenticated:
+        # teachers, and students inside a live session (a class can run past two hours)
+        if request.user.is_authenticated or 'live' in request.session:
             now = int(time.time())
             if now - request.session.get('seen', 0) > RENEW_EVERY:
                 request.session['seen'] = now

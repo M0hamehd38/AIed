@@ -6,21 +6,27 @@ import re
 from functools import wraps
 
 import jdatetime
+import qrcode
+import qrcode.image.svg
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
 from django.db.models import F, Func, IntegerField, Max, OuterRef, Subquery
-from django.http import Http404, HttpResponseBadRequest, JsonResponse
+from django.http import Http404, HttpResponse, HttpResponseBadRequest, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
 from apps.accounts.models import User
 from apps.audit.models import AuditLog, record
-from apps.courses.models import Concept, Course, Enrollment, Option, Question, QuestionConcept, Response, Session
+from apps.courses.models import (Concept, Course, Enrollment, Option, Question, QuestionConcept, Response, Session,
+                                 SessionQuestion)
 from apps.insights import services
 from apps.insights.models import Suggestion
+from apps.live import services as live_service
+from apps.live import strings as LS
 from lib.analytics import Stat, confidence, stat, wilson
 from lib.analytics.fmt import fa, js_round, pct
 
@@ -65,6 +71,7 @@ def panel_context(request, view, data=None, **extra):
         'cur_session': sessions[-1] if sessions else None, 'T': S,
         'page_title': S.NAV.get(view, ''), 'page_sub': S.SUB.get(view, ''),
         'initial': request.user.full_name.replace('دکتر', '').strip()[:1],
+        'live_now': Session.objects.filter(course=course, status=Session.Status.LIVE).first() if course else None,
     }
     ctx.update(extra)
     return ctx
@@ -481,8 +488,83 @@ def question_bank(request, data, approved_only=False):
 @with_course
 def live(request, data):
     bank = question_bank(request, data, True)
-    picked = next((r['q'] for r in bank['rows'] if str(r['q'].pk) == request.GET.get('q')), None)
-    return render(request, 'panel/live.html', panel_context(request, 'live', data, bank=bank, picked=picked))
+    session = live_service.live_session(data.course)
+    ctx = panel_context(request, 'live', data, bank=bank, live=session,
+                        state=live_service.teacher_view(session) if session else None,
+                        join_url=request.build_absolute_uri(reverse('live:join')))
+    return render(request, 'panel/live.html', ctx)
+
+
+def my_live_session(request):
+    course = active_course(request)
+    session = live_service.live_session(course) if course else None
+    if session is None:
+        raise Http404
+    return session
+
+
+@with_course
+@require_POST
+def live_start(request, data):
+    try:
+        session = live_service.start(data.course, request.user)
+    except live_service.LiveError as e:
+        messages.error(request, str(e))
+        return redirect('panel:live')
+    messages.success(request, LS.MSG['started'].format(n=fa(session.number), code=session.join_code))
+    return redirect('panel:live')
+
+
+@teacher_required
+@require_POST
+def live_end(request):
+    session = my_live_session(request)
+    n = live_service.end(session, request.user)
+    messages.success(request, LS.MSG['ended'].format(n=fa(n)))
+    return redirect('panel:live')
+
+
+@teacher_required
+@require_POST
+def live_ask(request):
+    session = my_live_session(request)
+    question = get_object_or_404(Question, pk=request.POST.get('question'), course=session.course, status=Question.Status.APPROVED)
+    live_service.ask(session, question, late=request.POST.get('late') == '1')
+    live_service.broadcast(session)
+    return JsonResponse(live_service.teacher_view(session))
+
+
+@teacher_required
+@require_POST
+def live_control(request):
+    session = my_live_session(request)
+    state = request.POST.get('state')
+    if state not in (SessionQuestion.State.OPEN, SessionQuestion.State.PAUSED, SessionQuestion.State.CLOSED):
+        return HttpResponseBadRequest()
+    try:
+        live_service.set_state(session, state)
+    except live_service.LiveError as e:
+        return JsonResponse({'error': str(e)}, status=409)
+    live_service.broadcast(session)
+    return JsonResponse(live_service.teacher_view(session))
+
+
+@teacher_required
+def live_state(request):
+    """Polling fallback for when the WebSocket is down."""
+    return JsonResponse(live_service.teacher_view(my_live_session(request)))
+
+
+@teacher_required
+def live_qr(request):
+    session = my_live_session(request)
+    url = request.build_absolute_uri(reverse('live:join')) + f'?c={session.join_code}'
+    img = qrcode.make(url, image_factory=qrcode.image.svg.SvgPathImage, box_size=10, border=2)
+    buf = io.BytesIO()
+    img.save(buf)
+    resp = HttpResponse(buf.getvalue(), content_type='image/svg+xml')
+    resp['Cache-Control'] = 'no-store'
+    return resp
 
 
 @with_course

@@ -1,17 +1,40 @@
 {% extends "panel/base.html" %}{% load ui %}
 {% block content %}
+{% if not live %}
 <div class="grid g2">
-  <div class="card"><div class="card-head"><h2>شروع جلسه‌ی زنده</h2>{% tag 'فاز ۲' 'purple' %}</div>
-    {% if cur_session %}<p>جلسه‌ی {{ cur_session.number|fa }} · {{ cur_session.date|jdate }} · {{ cur_session.topic }}</p>{% else %}<p>برای این درس هنوز جلسه‌ای تعریف نشده است.</p>{% endif %}
-    <p class="muted">با شروع جلسه یک کد ۶ رقمی و QR ساخته می‌شود تا دانشجوها از گوشی وارد شوند. کد پس از پایان جلسه باطل می‌شود. پاسخ‌ها با WebSocket لحظه‌ای می‌رسند و نتیجه‌ی فردی هیچ دانشجویی روی صفحه‌ی کلاس نمایش داده نمی‌شود.</p>
-    <div class="alert"><span class="ic" style="background:var(--purple)">i</span><div><b>در فاز بعد فعال می‌شود</b><p>زیرساخت جلسه‌ی زنده (کد ورود، باز و بستن سؤال، پاسخ دانشجو) در فاز ۲ پیاده‌سازی می‌شود. داده‌های این صفحه از همین حالا از پایگاه‌داده خوانده می‌شوند.</p></div></div>
-    {% if picked %}<div class="alert green mt"><span class="ic">✓</span><div><b>سؤال انتخاب‌شده: سؤال {{ picked.number|fa }}</b><p><bdi>{{ picked.text }}</bdi></p></div></div>{% else %}<p class="small muted mt">از بانک سؤال، مبحث و سپس سؤالی را که می‌خواهید بپرسید انتخاب کنید.</p>{% endif %}
-    <button class="btn primary mt" disabled>شروع جلسه</button></div>
-  <div class="card" id="bank"><div class="card-head"><h2>بانک سؤال این درس</h2><span class="hint">{{ bank.total|fa }} سؤال تأییدشده · ابتدا مبحث را انتخاب کنید</span></div>
+  <div class="card"><div class="card-head"><h2>شروع جلسه‌ی زنده</h2></div>
+    <p class="muted" style="margin-top:0">با شروع جلسه یک کد ۶ رقمی و QR ساخته می‌شود. دانشجوها با گوشی وارد <bdi dir="ltr">{{ join_url }}</bdi> می‌شوند، کد و شماره‌ی دانشجویی خود را می‌زنند و به سؤال‌ها پاسخ می‌دهند. کد پس از پایان جلسه باطل می‌شود.</p>
+    <ul class="small muted" style="margin:0 0 12px;padding-right:18px">
+      <li>جلسه‌ی بعدیِ برنامه‌ریزی‌شده شروع می‌شود؛ اگر نباشد، یک جلسه‌ی تازه با تاریخ امروز ساخته می‌شود.</li>
+      <li>نتیجه‌ی فردی هیچ دانشجویی روی صفحه‌ی کلاس نمایش داده نمی‌شود.</li>
+    </ul>
+    <form method="post" action="{% url 'panel:live_start' %}">{% csrf_token %}<button class="btn primary">شروع جلسه</button></form></div>
+  <div class="card" id="bank"><div class="card-head"><h2>بانک سؤال این درس</h2><span class="hint">{{ bank.total|fa }} سؤال تأییدشده · پیش‌نمایش</span></div>
     {% include "panel/_topics.html" %}
     {% if bank.topic %}<h3 class="bank-title">سؤال‌های «{{ bank.topic.c.title }}»</h3>
-    <div class="table-wrap"><table><tbody>{% for b in bank.rows %}<tr class="{% if picked and picked.pk == b.q.pk %}picked{% endif %}"><td class="muted">{{ b.q.number|fa }}</td><td><bdi>{{ b.q.text }}</bdi><div class="chips">{% for t in b.concepts %}{% tag t 'gray' %}{% endfor %}{% if b.ref.asked %}{% tag b.asked_label 'gray' %}{% else %}{% tag 'پرسیده‌نشده' 'blue' %}{% endif %}</div></td>
-      <td>{% if picked and picked.pk == b.q.pk %}{% tag '✓ انتخاب شد' 'green' %}{% else %}<a class="btn sm" href="?topic={{ bank.topic.c.pk }}&amp;q={{ b.q.pk }}#bank">انتخاب</a>{% endif %}</td></tr>
+    <div class="table-wrap"><table><tbody>{% for b in bank.rows %}<tr><td class="muted">{{ b.q.number|fa }}</td><td><bdi>{{ b.q.text }}</bdi><div class="chips">{% if b.ref.asked %}{% tag b.asked_label 'gray' %}{% else %}{% tag 'پرسیده‌نشده' 'blue' %}{% endif %}</div></td></tr>
     {% empty %}<tr><td class="empty">این مبحث هنوز سؤال تأییدشده‌ای ندارد.</td></tr>{% endfor %}</tbody></table></div>{% endif %}</div>
 </div>
+{% else %}
+<div class="grid g3" id="live" data-state-url="{% url 'panel:live_state' %}" data-ask-url="{% url 'panel:live_ask' %}" data-control-url="{% url 'panel:live_control' %}" data-ws="/ws/live/teacher/{{ live.pk }}/">
+  <div class="card"><div class="card-head"><h2>ورود دانشجوها</h2>{% tag 'جلسه فعال' 'green' %}<span class="tag gray" id="wsState">اتصال…</span></div>
+    <div class="code" aria-label="کد ورود"><bdi dir="ltr">{{ live.join_code }}</bdi></div>
+    <img class="qr" src="{% url 'panel:live_qr' %}" width="180" height="180" alt="کد QR برای ورود دانشجوها">
+    <p class="small muted" style="text-align:center;margin:0"><bdi dir="ltr">{{ join_url }}</bdi></p>
+    <div class="kpis" style="justify-content:center"><div><b id="kClass">{{ state.class_size|fa }}</b>دانشجوی این درس</div><div><b id="kTotal">{{ state.answered_total|fa }}</b>پاسخ در این جلسه</div></div>
+    <form method="post" action="{% url 'panel:live_end' %}" onsubmit="return confirm('جلسه پایان یابد؟ کد ورود باطل می‌شود و سؤال باز بسته می‌شود.')">{% csrf_token %}<button class="btn danger" style="width:100%;justify-content:center">پایان جلسه</button></form>
+    <p class="small muted">جلسه‌ی {{ live.number|fa }} · {{ live.topic }}</p></div>
+  <div class="card span2" id="qCard" aria-live="polite"></div>
+</div>
+<div class="card mt" id="bank"><div class="card-head"><h2>انتخاب سؤال</h2><span class="hint">ابتدا مبحث، سپس سؤال</span>
+    <label class="end small" style="gap:6px"><input type="checkbox" id="lateFlag"> سؤال پایان کلاس (در نرخ مشارکت حساب نمی‌شود)</label></div>
+  {% include "panel/_topics.html" %}
+  {% if bank.topic %}<h3 class="bank-title">سؤال‌های «{{ bank.topic.c.title }}»</h3>
+  <div class="table-wrap"><table><tbody>{% for b in bank.rows %}<tr><td class="muted">{{ b.q.number|fa }}</td><td><bdi>{{ b.q.text }}</bdi><div class="chips">{% for t in b.concepts %}{% tag t 'gray' %}{% endfor %}{% if b.ref.asked %}{% tag b.asked_label 'gray' %}{% else %}{% tag 'پرسیده‌نشده' 'blue' %}{% endif %}</div></td>
+    <td><button class="btn sm primary" data-ask="{{ b.q.pk }}">پرسیدن</button></td></tr>
+  {% empty %}<tr><td class="empty">این مبحث هنوز سؤال تأییدشده‌ای ندارد.</td></tr>{% endfor %}</tbody></table></div>{% endif %}</div>
+<div class="note">پاسخ‌ها همان لحظه ذخیره می‌شوند و با بستن سؤال در نقشه‌ی تسلط و تحلیل‌ها دیده می‌شوند. نتیجه‌ی فردی هیچ دانشجویی روی این صفحه نمایش داده نمی‌شود.</div>
+{{ state|json_script:"liveState" }}
+{% endif %}
 {% endblock %}
+{% block scripts %}{% if live %}{% load static %}<script src="{% static 'js/live_teacher.js' %}"></script>{% endif %}{% endblock %}

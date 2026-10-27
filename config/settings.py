@@ -18,6 +18,7 @@ ALLOWED_HOSTS = [h for h in os.environ.get('DJANGO_ALLOWED_HOSTS', 'localhost,12
 CSRF_TRUSTED_ORIGINS = [o for o in os.environ.get('DJANGO_CSRF_TRUSTED_ORIGINS', '').split(',') if o]
 
 INSTALLED_APPS = [
+    'daphne',  # ASGI server: runserver then serves WebSockets too
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -31,6 +32,8 @@ INSTALLED_APPS = [
     'apps.audio',
     'apps.panel',
     'apps.site',
+    'apps.live',
+    'channels',
 ]
 
 MIDDLEWARE = [
@@ -58,11 +61,21 @@ TEMPLATES = [{
     ]},
 }]
 WSGI_APPLICATION = 'config.wsgi.application'
+ASGI_APPLICATION = 'config.asgi.application'
+
+# live sessions: Redis when there is more than one server process, otherwise in memory
+REDIS_URL = os.environ.get('REDIS_URL')
+CHANNEL_LAYERS = {'default': {'BACKEND': 'channels_redis.core.RedisChannelLayer', 'CONFIG': {'hosts': [REDIS_URL]}}
+                  if REDIS_URL else {'BACKEND': 'channels.layers.InMemoryChannelLayer'}}
 
 
 def database_from_url(url):
     if not url:
-        return {'ENGINE': 'django.db.backends.sqlite3', 'NAME': BASE_DIR / 'db.sqlite3'}
+        # development only. Live sessions write in bursts (a class answering at once): wait for the lock
+        # instead of failing, and let readers and the writer work side by side (WAL)
+        return {'ENGINE': 'django.db.backends.sqlite3', 'NAME': BASE_DIR / 'db.sqlite3',
+                'OPTIONS': {'timeout': 20, 'transaction_mode': 'IMMEDIATE',
+                            'init_command': 'PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL;'}}
     u = urlparse(url)
     return {'ENGINE': 'django.db.backends.postgresql', 'NAME': u.path.lstrip('/'), 'USER': u.username or '',
             'PASSWORD': u.password or '', 'HOST': u.hostname or '', 'PORT': str(u.port or 5432),

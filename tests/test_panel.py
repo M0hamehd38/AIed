@@ -151,10 +151,3 @@ def test_question_bank_shows_questions_only_for_the_chosen_topic(teacher_client,
     assert 'for i in range(3) چند بار اجرا می‌شود؟' in body       # a loops question
     assert 'خروجی type(3.0) چیست؟' not in body                    # a variables question
 
-
-def test_live_page_marks_the_picked_question(teacher_client, cs101):
-    teacher_client.post('/t/courses/switch/', {'course': cs101.pk})
-    loops = cs101.concepts.get(title='حلقه‌ها')
-    q = loops.questions.first()
-    body = teacher_client.get(f'/t/live/?topic={loops.pk}&q={q.pk}').content.decode()
-    assert f'سؤال انتخاب‌شده' in body and '✓ انتخاب شد' in body
