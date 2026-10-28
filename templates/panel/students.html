@@ -7,15 +7,19 @@
   <input type="text" name="q" placeholder="جست‌وجوی نام یا کد…" value="{{ q }}" aria-label="جست‌وجو">
   <select name="f" aria-label="فیلتر وضعیت" data-autosubmit><option value="all">همه‌ی دانشجویان</option><option value="attention" {% if f == 'attention' %}selected{% endif %}>نیازمند پیگیری</option><option value="stable" {% if f == 'stable' %}selected{% endif %}>پایدار</option></select>
   <select name="sort" aria-label="مرتب‌سازی" data-autosubmit>{% for v, l in sorts %}<option value="{{ v }}" {% if v == sort %}selected{% endif %}>{{ l }}</option>{% endfor %}</select>
+  {% if concept %}<input type="hidden" name="c" value="{{ ci }}">{% endif %}
   <noscript><button class="btn">اعمال</button></noscript>
   <span class="hint">{{ rows|length|fa }} از {{ total|fa }} دانشجو</span>
 </form>
+{% if concept %}<div class="filter-note" role="status">فقط دانشجویانی که در «{{ concept.title }}» دست‌کم {{ th.min_student|fa }} پاسخ دارند و تسلطشان زیر {{ th.green|pct }} است، از کم به زیاد. <a class="link" href="?">نمایش همه</a></div>
+{% if not rows %}<div class="card mt"><div class="empty">در این مفهوم دانشجویی با داده‌ی کافی زیر سطح مناسب نیست.</div></div>{% endif %}{% endif %}
 <div class="pgrid">{% for r in rows %}<a class="card pcard" href="{% url 'panel:student' r.s.pk %}" style="--st:{% if r.a.attention %}var(--orange){% else %}var(--green){% endif %}" aria-label="نمایه‌ی {{ r.name }}">
     {% photo r.s 78 %}<b>{{ r.name }}</b><span class="code">کد {{ r.s.code|fa }}</span>
     {% if r.a.attention %}{% tag 'نیازمند پیگیری' 'orange' %}{% else %}{% tag 'پایدار' 'green' %}{% endif %}
     <span class="meta"><span>تسلط</span><span>{% if r.enough %}{{ r.mastery|pct }}{% else %}{{ T.INSUFFICIENT }}{% endif %}</span></span>{% if r.enough %}{% progress r.mastery %}{% else %}{% progress 0 %}{% endif %}
+    {% if concept %}<span class="meta"><span>در «{{ concept.title }}»</span><span>{{ r.cm|pct }}</span></span>{% endif %}
     <span class="meta"><span>مشارکت</span><span>{{ r.a.part|pct }}</span></span></a>
-  {% empty %}<div class="empty">نتیجه‌ای پیدا نشد.</div>{% endfor %}</div>
+  {% empty %}{% if not concept %}<div class="empty">نتیجه‌ای پیدا نشد.</div>{% endif %}{% endfor %}</div>
 {% if not chart %}<div class="note">نمودارهای کلاس پس از ثبت اولین پاسخ‌ها نمایش داده می‌شوند.</div>{% else %}
 <div class="grid g3 mt">
   <div class="card span2"><div class="card-head">{% h2 'analytics' 'purple' 'وضعیت کلاس در طول ترم' %}<span class="hint">در هر جلسه</span></div>{{ chart }}</div>

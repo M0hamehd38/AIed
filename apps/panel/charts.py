@@ -10,7 +10,7 @@ _ids = count(1)
 
 
 def line_chart(series, sessions, th, h=220, w=640, y_min=0.0, area=False, threshold=True,
-               label='نمودار روند تسلط', hollow_note=True):
+               label='نمودار روند تسلط', hollow_note=True, table=False):
     """series: [{'name', 'color', 'points': [None | {'v', 'n', 'ok'}] per session}]"""
     n = len(sessions)
     if n < 2:
@@ -52,5 +52,17 @@ def line_chart(series, sessions, th, h=220, w=640, y_min=0.0, area=False, thresh
     legend = ''.join(f'<span><i style="background:{s["color"]}"></i>{escape(s["name"])}</span>' for s in series)
     if hollow_note:
         legend += '<span><i style="background:var(--card);border:2px solid var(--muted)"></i>نقطه‌ی توخالی: داده کافی نیست</span>'
+    if threshold:
+        legend += f'<span><i style="background:none;border-top:2px dashed var(--green);height:0;border-radius:0"></i>آستانه‌ی تسلط مناسب ({pct(th.green)})</span>'
+    data_table = ''
+    if table:
+        # the same numbers as text, for screen readers and for anyone who wants exact values
+        head = ''.join(f'<th scope="col">{escape(s["name"])}</th>' for s in series)
+        body = ''.join(
+            f'<tr><th scope="row">جلسه‌ی {fa(se.number)}</th>' + ''.join(
+                f'<td class="num">{pct(sr["points"][i]["v"]) + ("" if sr["points"][i]["ok"] else " (داده کم)") if sr["points"][i] else "—"}</td>'
+                for sr in series) + '</tr>' for i, se in enumerate(sessions))
+        data_table = (f'<details class="chart-data"><summary>نمایش اعداد نمودار</summary><div class="table-wrap"><table>'
+                      f'<thead><tr><th scope="col">جلسه</th>{head}</tr></thead><tbody>{body}</tbody></table></div></details>')
     return mark_safe(f'<svg viewBox="0 0 {W} {H}" width="100%" role="img" aria-label="{escape(label)}"><defs>{"".join(defs)}</defs>'
-                     f'{"".join(g)}</svg><div class="legend">{legend}</div>')
+                     f'{"".join(g)}</svg><div class="legend">{legend}</div>{data_table}')

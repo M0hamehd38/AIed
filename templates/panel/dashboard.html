@@ -1,38 +1,88 @@
 {% extends "panel/base.html" %}{% load ui %}
+{% block page_head %}{% with st=d.status %}
+<h1>سلام {{ user.full_name }}</h1>
+<div class="class-status">
+  <b>{{ st.course.title }}</b>{% if st.course.group %}<span class="sep" aria-hidden="true"></span><span>{{ st.course.group }}</span>{% endif %}
+  {% if st.session %}<span class="sep" aria-hidden="true"></span><span>جلسه‌ی {{ st.session.number|fa }}{% if st.session.date %}، {{ st.session.date|jdate }}{% endif %}</span>{% endif %}
+  <span class="state {{ st.state.cls }}">{{ st.state.label }}</span>
+  {% if st.demo %}<span class="tag demo" title="این درس با داده‌ی نمونه ساخته شده تا سامانه را ببینید">داده‌ی نمایشی</span><span class="small muted">اعداد این درس نمونه‌اند، نه آمار واقعی یک کلاس.</span>{% endif %}
+</div>{% endwith %}{% endblock %}
+
 {% block content %}
-<div class="grid g4">
-  <a class="card stat" href="{% url 'panel:students' %}"><span class="top"><span><span class="label">دانشجویان فعال</span><span class="value" style="display:block">{{ stats.active|fa }} <span class="muted small">از {{ data.students|length|fa }}</span></span></span><span class="hic sic blue">{% icon 'students' %}</span></span><span class="delta">{% delta stats.active_delta %}</span></a>
-  <a class="card stat" href="{% url 'panel:analytics' %}"><span class="top"><span><span class="label">میانگین تسلط مفهومی</span><span class="value" style="display:block">{{ stats.mastery|pct }}</span></span><span class="hic sic green">{% icon 'analytics' %}</span></span><span class="delta">{% delta stats.mastery_delta '٪' %}</span></a>
-  <a class="card stat" href="{% url 'panel:students' %}?f=attention"><span class="top"><span><span class="label">نیازمند توجه</span><span class="value" style="display:block">{{ stats.attention|fa }}</span></span><span class="hic sic orange">{% icon 'alert' %}</span></span><span class="delta">{% delta stats.attention_delta '' False %}</span></a>
-  <a class="card stat" href="{% url 'panel:suggestions' %}"><span class="top"><span><span class="label">پیشنهادهای در انتظار</span><span class="value" style="display:block">{{ pending|length|fa }}</span></span><span class="hic sic purple">{% icon 'suggestions' %}</span></span><span class="delta">منتظر تصمیم شما</span></a>
-</div>
-<div class="card mt"><div class="card-head">{% h2 'grid' 'green' 'نقشه‌ی تسلط مفاهیم' %}<span class="hint">برای دیدن سؤال‌ها و n روی هر خانه کلیک کنید</span></div>{% include "panel/_heatmap.html" %}</div>
+{# 1. headline figures #}
+<section class="grid g4 stats" aria-label="آمار کلیدی">
+  {% for s in d.stats %}{% include "panel/components/stat_card.html" %}{% endfor %}
+</section>
+
+{# 2. the mastery map: the main analytical view #}
+<section class="card mt" aria-labelledby="heatTitle">
+  <div class="card-head"><h2 id="heatTitle"><span class="hic green">{% icon 'grid' %}</span>نقشه‌ی تسلط مفاهیم</h2><span class="hint">درصد پاسخ درست هر مفهوم در هر جلسه؛ برای جزئیات و دانشجویان مرتبط، روی خانه بزنید</span></div>
+  {% include "panel/_heatmap.html" with heat=d.heat %}
+</section>
 
 <div class="grid g3 mt">
-  <div class="card ai-card span2"><div class="card-head"><h2><span class="ai-badge">AI</span>دستیار هوشمند کلاس</h2><span class="hint">پیش‌نویس — بدون تأیید شما اجرا نمی‌شود</span></div>
-    {% if top %}<div class="ai-inner"><div class="inline" style="flex-wrap:wrap"><span class="flag">پیشنهاد در انتظار تصمیم</span>{% conf_tag top.confidence %}</div>
-      <h3>{{ top.title }}</h3>
-      <p><span class="muted">شواهد:</span> {{ top.evidence }} · <button class="link" data-act="evidence" data-ev="{{ top.evidence_ref|evjson }}">مشاهده</button></p>
-      <p><span class="muted">اقدام پیشنهادی:</span> {{ top.action }}</p>
-      <form method="post" action="{% url 'panel:suggestion_decide' top.pk %}" class="sugg" style="border:0;padding:0">{% csrf_token %}<input type="hidden" name="next" value="{{ request.path }}"><div class="actions"><button class="btn primary" name="decision" value="approved">اعمال پیشنهاد</button><button class="btn" name="decision" value="rejected">رد کردن</button><span style="margin-inline-start:auto"></span><a class="link small" href="{% url 'panel:suggestions' %}">همه‌ی پیشنهادها ({{ pending|length|fa }})</a></div></form></div>
-    {% else %}<div class="ai-inner"><div class="empty">همه‌ی پیشنهادها بررسی شده‌اند.</div></div>{% endif %}
-    <div class="mini">
-      <div><b class="t-green">{% if last_stat.n %}{{ last_stat.rate|pct }}{% else %}—{% endif %}</b>درست‌پاسخی جلسه‌ی {{ last|fa }}<br><span class="small">n={{ last_stat.n|fa }}</span></div>
-      <div><b class="t-orange">{% if speech %}{{ speech.confusion|fa }}{% else %}—{% endif %}</b>نشانه‌ی ابهام گفتاری<br><span class="small">{% if speech %}از رونوشت جلسه‌ی {{ speech.session|fa }}{% else %}شنودی ثبت نشده{% endif %}</span></div>
-      <div><b class="t-red">{% if weakest %}{{ weakest.m|pct }}{% else %}—{% endif %}</b>دشوارترین مفهوم<br><span class="small">{{ weakest.c.title }}</span></div>
-    </div></div>
-  <div class="card dark-card"><div class="card-head">{% h2 'doc' '' 'خلاصه‌ی ترم تا امروز' %}</div>
-    <div class="item"><span class="lbl">مفاهیم پوشش‌داده‌شده</span><b>{{ covered }}</b></div>
-    <div class="item"><span class="lbl">جلسات و پاسخ‌ها</span><b>{{ last|fa }} جلسه · {{ response_count|fa }} پاسخ ثبت‌شده</b></div>
-    <div class="item"><span class="lbl">میانگین نرخ پاسخ</span><b>{{ avg_part|pct }}</b></div>
-    <div class="item"><span class="lbl">وضعیت کلی تسلط کلاس</span><b>{{ overall|pct }}</b> {% level_tag overall %}</div>
-  </div>
+  {# 3. the assistant: one suggestion up front, the rest folded #}
+  <section class="card assistant span2" aria-labelledby="aiTitle">{% with a=d.assistant %}
+    <div class="card-head"><h2 id="aiTitle"><span class="ai-mark">{% icon 'ai' %}</span>دستیار هوشمند کلاس</h2>
+      <span class="hint">تصمیم با شماست؛ تا تأیید نکنید چیزی اجرا نمی‌شود</span></div>
+    {% if a.primary %}
+      <article class="ai-primary" aria-label="پیشنهاد اصلی">{% include "panel/components/ai_suggestion.html" with s=a.primary primary=True %}</article>
+      {% if a.others %}<details class="ai-more"><summary>{{ a.others|length|fa }} پیشنهاد دیگر {% icon 'chevron' %}</summary>
+        {% for s in a.others %}<details class="ai-item"><summary><b>{{ s.title }}</b>{% conf_tag s.confidence %}</summary><div class="ai-body">{% include "panel/components/ai_suggestion.html" with s=s primary=False %}</div></details>{% endfor %}
+      </details>{% endif %}
+    {% else %}<div class="empty">پیشنهاد در انتظاری نیست{% if a.decided %}؛ {{ a.decided|fa }} پیشنهاد بررسی شده است{% endif %}.</div>{% endif %}
+    <div class="ai-actions" style="margin-top:12px"><a class="link small" href="{% url 'panel:suggestions' %}">همه‌ی پیشنهادها و لاگ تصمیم‌ها</a></div>
+  {% endwith %}</section>
+
+  {# 4. the term so far: figures the stat cards do not already show #}
+  <section class="card" aria-labelledby="termTitle">{% with t=d.summary %}
+    <div class="card-head"><h2 id="termTitle"><span class="hic blue">{% icon 'calendar' %}</span>خلاصه‌ی ترم تا امروز</h2></div>
+    <dl class="facts-list">
+      <div><dt>جلسات برگزارشده</dt><dd>{{ t.held|fa }} از {{ t.planned|fa }}</dd></div>
+      <div><dt>پاسخ‌های ثبت‌شده</dt><dd>{{ t.responses|fa }}</dd></div>
+      <div><dt>میانگین نرخ پاسخ</dt><dd>{% if t.response_rate is not None %}{{ t.response_rate|pct }}{% else %}—{% endif %}</dd></div>
+      <div><dt>روند کلی <span class="small">(سه جلسه‌ی اخیر)</span></dt><dd>{% if t.trend %}<span class="delta {% if t.trend.good %}good{% else %}bad{% endif %}" title="{{ t.trend.detail }}">{{ t.trend.text }}</span>{% else %}<span class="muted">داده‌ی کافی نیست</span>{% endif %}</dd></div>
+      <div style="flex-wrap:wrap"><dt>مفاهیم نیازمند مرور</dt><dd class="review-list">{% for r in t.review %}<span class="tag orange">{{ r.title }}، {{ r.m|pct }}</span>{% empty %}<span class="muted">موردی نیست</span>{% endfor %}</dd></div>
+    </dl>
+    <div class="ai-actions" style="margin-top:8px"><a class="link small" href="{% url 'panel:analytics' %}">جزئیات در تحلیل یادگیری</a></div>
+  {% endwith %}</section>
 </div>
-<div class="grid g2 mt">
-  <div class="card"><div class="card-head">{% h2 'analytics' 'blue' 'نمودار مشارکت کلاس' %}</div>{{ chart }}</div>
-  <div class="card"><div class="card-head">{% h2 'students' 'orange' 'دانشجویان نیازمند توجه' %}<div class="end"><a class="link small" href="{% url 'panel:students' %}?f=attention">مشاهده‌ی همه ({{ need_count|fa }})</a></div></div>
-    {% for s, x in need %}<a class="person" href="{% url 'panel:student' s.pk %}">{% photo s 36 %}<div class="who"><b>{% if cfg.show_names %}{{ s.name }}{% else %}دانشجو {{ s.code|fa }}{% endif %}</b><small>{% if x.hard %}مفهوم دشوار: {{ x.hard.c.title }}{% else %}{{ x.reasons.0 }}{% endif %}</small></div>{% tag 'نیازمند پیگیری' 'orange' %}</a>
+
+<div class="grid g3 mt">
+  {# 5. learning trend #}
+  <section class="card span2" aria-labelledby="trendTitle">
+    <div class="card-head"><h2 id="trendTitle"><span class="hic blue">{% icon 'trend' %}</span>روند یادگیری کلاس</h2>{% if d.chart %}<span class="hint">{{ d.chart.range }}، در هر جلسه</span>{% endif %}</div>
+    {% if d.chart %}{{ d.chart.svg }}{% else %}<div class="empty">برای رسم روند دست‌کم دو جلسه لازم است.</div>{% endif %}
+  </section>
+
+  {# 6. who needs a follow-up #}
+  <section class="card" aria-labelledby="needTitle">{% with n=d.attention %}
+    <div class="card-head"><h2 id="needTitle"><span class="hic orange">{% icon 'students' %}</span>نیازمند توجه</h2>{% if n.count %}<div class="end"><a class="link small" href="{% url 'panel:students' %}?f=attention">همه ({{ n.count|fa }})</a></div>{% endif %}</div>
+    {% for r in n.rows %}<a class="person" href="{% url 'panel:student' r.s.pk %}">{% photo r.s 32 %}<div class="who"><b>{{ r.name }}</b><small>{{ r.why }}</small></div></a>
     {% empty %}<div class="empty">موردی نیست.</div>{% endfor %}
-  </div>
+    <p class="note">{{ T.NOT_JUDGEMENT }}</p>
+  {% endwith %}</section>
 </div>
+
+{# 7. what is happening in class right now #}
+<div class="grid g2 mt">{% with o=d.ops %}
+  <section class="card" aria-labelledby="liveTitle">
+    <div class="card-head"><h2 id="liveTitle"><span class="hic green">{% icon 'live' %}</span>جلسه‌ی زنده</h2></div>
+    <div class="status-row">
+      {% if o.live %}<span class="state on">در حال برگزاری</span>
+        <div class="txt"><b>کد ورود <bdi dir="ltr">{{ o.live.code }}</bdi></b><small>{% if o.live.question %}سؤال {{ o.live.question.number|fa }}، {{ o.live.question.n|fa }} پاسخ{% else %}هنوز سؤالی پرسیده نشده{% endif %}؛ {{ o.live.answered|fa }} پاسخ در این جلسه</small></div>
+        <a class="btn primary sm" href="{% url 'panel:live' %}">رفتن به جلسه</a>
+      {% else %}<span class="state">غیرفعال</span>
+        <div class="txt"><b>جلسه‌ی زنده‌ای در جریان نیست</b><small>با شروع جلسه، کد و QR ورود دانشجوها ساخته می‌شود.</small></div>
+        <a class="btn sm" href="{% url 'panel:live' %}">شروع جلسه</a>{% endif %}
+    </div>
+  </section>
+  <section class="card" aria-labelledby="listenTitle">
+    <div class="card-head"><h2 id="listenTitle"><span class="hic purple">{% icon 'audio' %}</span>شنود و تحلیل صوت</h2></div>
+    <div class="status-row"><span class="state {{ o.listen.state }}">{{ o.listen.label }}</span>
+      <div class="txt"><b>{{ o.listen.text }}</b>{% if o.listen.last %}<small>آخرین رونوشت، جلسه‌ی {{ o.listen.last.session|fa }}: {{ o.listen.last.lines|fa }} خط، {{ o.listen.last.confusion|fa }} نشانه‌ی ابهام</small>{% endif %}</div>
+      <a class="btn sm" href="{% url 'panel:audio' %}">صفحه‌ی شنود</a></div>
+    <p class="note">پیشنهاد لحظه‌ای از گفتار هنوز به دستیار هوشمند وصل نیست؛ فعلاً فقط نشانه‌های متنی (پرسش، ابهام و…) شمرده می‌شوند.</p>
+  </section>
+{% endwith %}</div>
 {% endblock %}

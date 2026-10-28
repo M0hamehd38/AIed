@@ -10,12 +10,21 @@
   <p class="small muted mt">ثبت رضایت‌نامه با نام شما و زمان آن در لاگ ممیزی ذخیره می‌شود.</p></div>
 {% else %}
 <div class="grid g-main" id="audioApp" data-chunk-url="{% url 'panel:audio_chunk' %}" data-ready="{{ stt_ready|yesno:'1,0' }}">
-  <div class="card"><div class="card-head"><h2>رونوشت زنده</h2><span class="tag gray" id="recState">متوقف</span>
-      <div class="end"><button class="btn primary" id="recStart" {% if not stt_ready or not target %}disabled{% endif %}>شروع شنود</button><button class="btn danger" id="recStop" hidden>توقف شنود</button></div></div>
-    {% if not stt_ready %}<div class="alert orange"><span class="ic">!</span><div><b>سرویس تبدیل گفتار تنظیم نشده است</b><p>مدیر سامانه باید سرویس Whisper را روی سرور دانشگاه راه‌اندازی و نشانی آن را تنظیم کند (STT_URL و STT_TOKEN).</p></div></div>{% endif %}
+  <div class="card"><div class="card-head"><h2>رونوشت زنده</h2>
+      <div class="end"><button class="btn primary" id="recStart" {% if not stt_ready or not target %}disabled{% endif %}>{% icon 'audio' %}شروع شنود</button><button class="btn danger" id="recStop" hidden>توقف شنود</button></div></div>
+    <div class="status-row rec-status">
+      {% if not stt_ready %}<span class="state err" id="recState">خطا</span>{% else %}<span class="state" id="recState">غیرفعال</span>{% endif %}
+      <div class="txt"><b id="recText">{% if not stt_ready %}سرویس تبدیل گفتار در دسترس نیست{% elif not target %}جلسه‌ای برای ذخیره‌ی رونوشت نیست{% else %}میکروفون خاموش است؛ چیزی شنیده یا فرستاده نمی‌شود{% endif %}</b>
+        <small id="micPerm">{% if stt_ready and target %}با «شروع شنود»، مرورگر اجازه‌ی میکروفون را می‌پرسد.{% endif %}</small></div>
+    </div>
+    <div class="alert red" id="recMsg" role="alert" hidden><span class="ic">!</span><div><b id="recMsgTitle"></b><p id="recMsgText"></p></div></div>
+    <ol class="state-legend" aria-label="وضعیت‌های شنود">
+      <li><span class="state">غیرفعال</span>میکروفون خاموش</li><li><span class="state rec">در حال شنود</span>صدا هر چند ثانیه فرستاده می‌شود</li>
+      <li><span class="state busy">در حال پردازش</span>آخرین تکه در حال تبدیل به متن</li><li><span class="state err">خطا</span>شنود متوقف شد؛ علت نوشته می‌شود</li></ol>
+    {% if not stt_ready %}<div class="alert orange"><span class="ic">!</span><div><b>سرویس تبدیل گفتار تنظیم نشده است</b><p>مدیر سامانه باید سرویس Whisper را روی سرور دانشگاه راه‌اندازی و نشانی آن را تنظیم کند (STT_URL و STT_TOKEN). تا آن زمان شنود کار نمی‌کند.</p></div></div>{% endif %}
     {% if not target %}<div class="alert orange"><span class="ic">!</span><div><b>جلسه‌ای تعریف نشده</b><p>از «درس‌ها و جلسات» یک جلسه اضافه کنید یا جلسه‌ی زنده را شروع کنید.</p></div></div>{% else %}
-    <p class="small muted" style="margin-top:0">رونوشت در جلسه‌ی {{ target.number|fa }}{% if target.status == 'live' %} (جلسه‌ی زنده‌ی جاری){% endif %} ذخیره می‌شود.</p>{% endif %}
-    <canvas class="wave" id="wave" width="600" height="60" aria-label="سطح صدا"></canvas>
+    <p class="small muted">رونوشت در جلسه‌ی {{ target.number|fa }}{% if target.status == 'live' %} (جلسه‌ی زنده‌ی جاری){% endif %} ذخیره می‌شود.</p>{% endif %}
+    <canvas class="wave" id="wave" width="600" height="60" aria-hidden="true"></canvas>
     <div class="transcript mt" id="transcript" aria-live="polite">{% for l in lines %}<div class="tline"><time>{{ l.time|fa }}</time><bdi>{{ l.text }}</bdi> {% for k in l.signals %}<span class="tag sig-{{ k }}" data-sig="{{ k }}"></span>{% endfor %}</div>{% empty %}<div class="empty" id="tEmpty">هنوز رونوشتی ثبت نشده است.</div>{% endfor %}</div>
     <div class="note">صدای خام هیچ‌جا ذخیره نمی‌شود: هر چند ثانیه صدا به سرویس تبدیل گفتار روی سرور دانشگاه فرستاده و پس از تبدیل دور ریخته می‌شود. فقط متن می‌ماند و پس از {{ cfg.retention_days|fa }} روز به‌طور خودکار حذف می‌شود. گوینده‌ها شناسایی نمی‌شوند.</div></div>
   <div class="card"><div class="card-head"><h2>نشانه‌های گفتاری کلاس</h2><span class="hint">همین جلسه</span></div>

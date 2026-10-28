@@ -11,6 +11,8 @@ class Course(models.Model):
     group = models.CharField('گروه', max_length=40, blank=True)
     term = models.CharField('ترم', max_length=40, default='پاییز ۱۴۰۵')
     schedule = models.CharField('زمان کلاس', max_length=80, blank=True)
+    # loaded by seed_demo: the panel labels its numbers as sample data, never as real statistics
+    is_demo = models.BooleanField('داده‌ی نمایشی', default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

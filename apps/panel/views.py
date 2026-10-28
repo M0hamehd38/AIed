@@ -23,7 +23,7 @@ from apps.accounts.models import User
 from apps.audio import services as audio_service
 from apps.audio import stt
 from apps.audio import strings as AS
-from apps.audio.models import Transcript, TranscriptSignal
+from apps.audio.models import Transcript
 from apps.audit.models import AuditLog, record
 from apps.courses.models import (Concept, Course, Enrollment, Option, Question, QuestionConcept, Response, Session,
                                  SessionQuestion)
@@ -34,6 +34,7 @@ from apps.live import strings as LS
 from lib.analytics import Stat, confidence, stat, wilson
 from lib.analytics.fmt import fa, js_round, pct
 
+from . import dashboard as dashboard_view
 from . import strings as S
 from .charts import line_chart
 
@@ -121,59 +122,11 @@ def participation_series(data):
 # ---------------------------------------------------------------- dashboard
 @with_course
 def dashboard(request, data):
-    a, th = data.a, data.th
     if not data.responses:
         return render(request, 'panel/empty_course.html', panel_context(request, 'dashboard', data, **greeting(request, data)))
     services.sync_suggestions(data)
-    last = a.last_session()
-    prev = last - 1
-
-    def active(s):
-        return len({r.sid for r in a.in_session(s)})
-
-    def avg_mastery(s):
-        xs = [a.up_to(c.id, s) for c in a.d.concepts]
-        xs = [x for x in xs if x.n]
-        return sum(x.ok / x.n for x in xs) / len(xs) if xs else 0
-
-    def attention(s):
-        return sum(1 for st in data.students if a.student(st.index, s)['attention'])
-
-    pending = list(Suggestion.objects.filter(course=data.course, status=Suggestion.Status.PENDING))
-    need = [(s, a.student(s.index)) for s in data.students]
-    need = [(s, x) for s, x in need if x['attention']]
-    last_stat = session_stat(data, last)
-    cm = concept_trend(data)
-    weakest = min(cm, key=lambda x: x['m']) if cm else None
-    ps = [p for p in a.participation_by_session() if p is not None]
-    chart = line_chart([
-        {'name': 'نرخ پاسخ', 'color': '#4169f5', 'points': participation_series(data)},
-        {'name': 'درست‌پاسخی', 'color': '#13a67b', 'points': [point(session_stat(data, s.number), th.min_class) for s in data.sessions]},
-    ], data.sessions, th, h=260, w=560, area=True, threshold=False, label='نمودار مشارکت و درست‌پاسخی', hollow_note=False)
-    overall = avg_mastery(last)
-    ctx = panel_context(
-        request, 'dashboard', data, **greeting(request, data),
-        stats={
-            'active': active(last), 'active_delta': active(last) - active(prev),
-            'mastery': overall, 'mastery_delta': js_round((overall - avg_mastery(prev)) * 100),
-            'attention': attention(last), 'attention_delta': attention(last) - attention(prev),
-        },
-        pending=pending, top=pending[0] if pending else None, need=need[:5], need_count=len(need),
-        last=last, last_stat=last_stat, weakest=weakest,
-        covered='، '.join(x['c'].title for x in cm), response_count=len(data.responses),
-        avg_part=sum(ps) / len(ps) if ps else 0, overall=overall, chart=chart,
-        heat=heatmap(data), speech=speech_summary(data.course, last),
-    )
+    ctx = panel_context(request, 'dashboard', data, **greeting(request, data), d=dashboard_view.build(data))
     return render(request, 'panel/dashboard.html', ctx)
-
-
-def speech_summary(course, session_number):
-    """Confusion cues heard in a session (from its transcript), or None when nothing was transcribed."""
-    lines = Transcript.objects.filter(session__course=course, session__number=session_number)
-    if not lines.exists():
-        return None
-    return {'session': session_number,
-            'confusion': TranscriptSignal.objects.filter(transcript__in=lines, kind='confusion').count()}
 
 
 def concept_trend(data):
@@ -203,25 +156,6 @@ def jdate_label(d):
     return f'{fa(j.day)} {jdatetime.date.j_months_fa[j.month - 1]}'
 
 
-def heatmap(data):
-    a, th = data.a, data.th
-    rows = []
-    for c in a.d.concepts:
-        cells = []
-        for s in data.sessions:
-            cl = a.cell(c.id, s.number)
-            ev = {'type': 'cell', 'c': c.id, 's': s.number}
-            if not cl['n']:
-                cells.append({'kind': 'na'})
-            elif cl['n'] < th.min_class:
-                cells.append({'kind': 'low', 'n': cl['n'], 'ev': ev, 's': s.number})
-            else:
-                m = cl['ok'] / cl['n']
-                cells.append({'kind': a.level(m), 'm': m, 'n': cl['n'], 'ev': ev, 's': s.number})
-        rows.append({'c': c, 'cells': cells})
-    return {'rows': rows, 'cols': len(data.sessions), 'orange_top': th.green - 0.01}
-
-
 # ---------------------------------------------------------------- students
 STUDENT_SORTS = [('mastery:1', 'کمترین تسلط'), ('mastery:-1', 'بیشترین تسلط'), ('part:1', 'کمترین مشارکت'), ('name:1', 'نام (الفبایی)')]
 
@@ -246,11 +180,27 @@ def students(request, data):
         shown = [r for r in shown if r['a']['attention']]
     elif f == 'stable':
         shown = [r for r in shown if not r['a']['attention']]
+    concept = None
+    try:
+        ci = int(request.GET.get('c', ''))
+    except ValueError:
+        ci = None
+    if ci is not None and 0 <= ci < len(data.concepts):
+        # students with enough answers on this concept and mastery below green, weakest first
+        concept = data.concepts[ci]
+
+        def on_concept(r):
+            p = r['a']['per'][ci]
+            return p['n'] >= th.min_student and p['ok'] / p['n'] < th.green
+        shown = [dict(r, cm=r['a']['per'][ci]['ok'] / r['a']['per'][ci]['n']) for r in shown if on_concept(r)]
     key, _, direction = sort.partition(':')
     keyf = {'name': lambda r: r['name'], 'mastery': lambda r: r['mastery'], 'part': lambda r: r['a']['part']}.get(key, lambda r: r['mastery'])
     shown = sorted(shown, key=keyf, reverse=direction == '-1')
+    if concept:
+        shown.sort(key=lambda r: r['cm'])
 
-    ctx = panel_context(request, 'students', data, rows=shown, total=len(rows), q=q, f=f, sort=sort, sorts=STUDENT_SORTS)
+    ctx = panel_context(request, 'students', data, rows=shown, total=len(rows), q=q, f=f, sort=sort, sorts=STUDENT_SORTS,
+                        concept=concept, ci=ci if concept else None)
     if data.responses and rows:
         n = len(rows)
         lvl = {'g': 0, 'o': 0, 'r': 0, 'na': 0}
@@ -457,8 +407,15 @@ def evidence(request, data):
             raise Http404
         cl = a.cell(c, s)
         lo, hi = wilson(cl['ok'], cl['n'])
+        # the same concept across every session, so one cell is read in context
+        trend = [point(stat_of(a.cell(c, x.number)), th.min_class) for x in data.sessions]
         ctx.update(title=f'شواهد: {data.concepts[c].title} · جلسه‌ی {fa(s)}', cell=cl, enough=cl['n'] >= th.min_class,
-                   m=cl['ok'] / cl['n'] if cl['n'] else 0, lo=lo, hi=hi, blocks=[question_block(q, s) for q in cl['qs']])
+                   m=cl['ok'] / cl['n'] if cl['n'] else 0, lo=lo, hi=hi, blocks=[question_block(q, s) for q in cl['qs']],
+                   ci=c, concept=data.concepts[c],
+                   trend=line_chart([{'name': f'تسلط کلاس در «{data.concepts[c].title}»', 'color': 'var(--green)', 'points': trend}],
+                                    data.sessions, th, h=170, w=560, area=False, threshold=True,
+                                    label=f'روند تسلط کلاس در مفهوم {data.concepts[c].title} در جلسات', table=True)
+                   if sum(1 for t in trend if t) >= 2 else None)
     elif kind == 'concept':
         c = int(ev.get('c', -1))
         if not 0 <= c < n_concepts:

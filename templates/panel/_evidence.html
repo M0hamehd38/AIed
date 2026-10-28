@@ -1,6 +1,8 @@
 {% load ui %}<div data-title="{{ title }}"></div>
 {% if kind == 'cell' %}
 <div class="kpis"><div><b>{% if enough %}{{ m|pct }}{% else %}—{% endif %}</b>تسلط کلاس</div><div><b>{{ cell.n|fa }}</b>تعداد پاسخ</div><div><b>{{ cell.qs|length|fa }}</b>سؤال</div><div><b>{% if enough %}{{ lo|pct }}–{{ hi|pct }}{% else %}—{% endif %}</b>بازه‌ی اطمینان ۹۵٪</div></div>
+{% if trend %}<h3 class="ev-h">روند این مفهوم در جلسات</h3>{{ trend }}{% endif %}
+<div class="ev-links"><a class="btn sm" href="{% url 'panel:students' %}?c={{ ci }}">{% icon 'students' %}دانشجویان زیر سطح مناسب در «{{ concept.title }}»</a><a class="btn ghost sm" href="{% url 'panel:analytics' %}">تحلیل یادگیری</a></div>
 {% if not enough %}<div class="alert"><span class="ic" style="background:var(--muted)">…</span><div><b>{{ T.INSUFFICIENT }}</b><p>کمتر از {{ th.min_class|fa }} پاسخ ثبت شده؛ از این خانه نتیجه‌گیری نکنید.</p></div></div>{% endif %}
 {% endif %}
 {% if kind == 'participation' %}

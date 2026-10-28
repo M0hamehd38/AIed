@@ -1,0 +1,6 @@
+{% load ui %}{# one headline figure: short label, big number, a quiet line under it, and a change badge only when there is something valid to compare with #}
+<a class="card stat" href="{% url s.href %}{{ s.query|default:'' }}">
+  <span class="top"><span class="label">{{ s.label }}</span><span class="hic sic {{ s.tone }}">{% icon s.icon %}</span></span>
+  <span class="value">{{ s.value }}</span>
+  <span class="foot">{% if s.delta %}<span class="delta {% if s.delta.good %}good{% else %}bad{% endif %}" title="{{ s.delta.title }}" aria-label="{{ s.delta.title }}: {{ s.delta.text }}">{{ s.delta.text }}</span>{% endif %}<span>{{ s.foot }}</span></span>
+</a>

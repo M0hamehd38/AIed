@@ -1,0 +1,13 @@
+{% load ui %}{# one suggestion: why, what to do, how sure, and the teacher's three choices. Nothing runs before «تأیید». #}
+<div class="chips">{% conf_tag s.confidence %}<span class="tag gray">پیش‌نویس دستیار</span></div>
+{% if primary %}<h3>{{ s.title }}</h3>{% endif %}
+<dl class="ai-facts">
+  <div><dt>دلیل</dt><dd>{{ s.reason }}</dd></div>
+  <div><dt>اقدام پیشنهادی</dt><dd>{{ s.action }}</dd></div>
+</dl>
+{% if s.limits %}<p class="ai-limit">محدودیت تحلیل: {{ s.limits }}</p>{% endif %}
+<form class="ai-actions" method="post" action="{% url 'panel:suggestion_decide' s.pk %}">{% csrf_token %}<input type="hidden" name="next" value="{{ request.path }}">
+  <button class="btn {% if primary %}primary{% else %}sm{% endif %}" name="decision" value="approved">{% icon 'check' %}تأیید پیشنهاد</button>
+  <button class="btn {% if not primary %}sm{% endif %}" type="button" data-act="evidence" data-ev="{{ s.ev|evjson }}">{% icon 'eye' %}مشاهده شواهد</button>
+  <button class="btn ghost {% if not primary %}sm{% endif %}" name="decision" value="rejected">{% icon 'x' %}رد کردن</button>
+</form>

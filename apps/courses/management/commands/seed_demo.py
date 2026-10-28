@@ -74,7 +74,7 @@ class Command(BaseCommand):
 
     def load_course(self, teacher, c):
         course = Course.objects.create(teacher=teacher, title=c['title'], code=c['code'], group=c['group'],
-                                       term=c['term'], schedule=c['schedule'])
+                                       term=c['term'], schedule=c['schedule'], is_demo=True)
         concepts = [Concept.objects.create(course=course, title=x['title'], order=i, intro_session=x['from_session'])
                     for i, x in enumerate(c['concepts'])]
         sessions = {s['number']: Session.objects.create(course=course, number=s['number'], date=jalali(s['date']),

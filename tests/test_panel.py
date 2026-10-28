@@ -28,7 +28,7 @@ def test_pages_render(teacher_client, url):
 def test_dashboard_shows_greeting_and_attention_count(teacher_client):
     body = teacher_client.get('/t/').content.decode()
     assert 'سلام دکتر شهرام گلزاری هرمزی' in body
-    assert 'مشاهده‌ی همه (۱۲)' in body
+    assert 'همه (۱۲)' in body
 
 
 @pytest.mark.parametrize('ev', [{'type': 'cell', 'c': 0, 's': 1}, {'type': 'concept', 'c': 2}, {'type': 'question', 'q': 12},
@@ -42,6 +42,38 @@ def test_low_n_cell_says_insufficient(teacher_client):
     # concept 3 (توابع) in session 6 has n=8 < 10
     body = teacher_client.get('/t/evidence/?ev=' + quote('{"type":"cell","c":3,"s":6}')).content.decode()
     assert 'داده کافی نیست' in body
+
+
+def test_dashboard_labels_demo_data_and_keeps_four_stats(teacher_client):
+    body = teacher_client.get('/t/').content.decode()
+    assert 'داده‌ی نمایشی' in body and 'نه آمار واقعی' in body
+    assert body.count('class="card stat') == 4
+    # each heatmap cell carries its n and a symbol, not colour alone
+    assert 'n=۵۴' in body and 'class="sym"' in body
+
+
+def test_real_course_has_no_demo_label(teacher_client, cs101):
+    Course.objects.filter(pk=cs101.pk).update(is_demo=False)
+    assert 'داده‌ی نمایشی' not in teacher_client.get('/t/').content.decode()
+
+
+def test_stat_delta_only_against_a_session_with_answers():
+    from apps.panel.dashboard import _delta
+    assert _delta(5, None) is None and _delta(5, 5) is None
+    assert _delta(25, 24)['good'] and not _delta(13, 12, good_when_up=False)['good']
+
+
+def test_cell_evidence_shows_concept_trend_and_students_link(teacher_client):
+    body = teacher_client.get('/t/evidence/?ev=' + quote('{"type":"cell","c":2,"s":5}')).content.decode()
+    assert 'روند این مفهوم در جلسات' in body and '/t/students/?c=2' in body
+
+
+def test_students_concept_filter(teacher_client):
+    body = teacher_client.get('/t/students/?c=2').content.decode()
+    assert 'فقط دانشجویانی که در «حلقه‌ها»' in body
+    every = teacher_client.get('/t/students/').content.decode()
+    assert body.count('class="card pcard"') < every.count('class="card pcard"')
+    assert teacher_client.get('/t/students/?c=99').status_code == 200
 
 
 def test_other_teachers_course_is_not_visible(teacher_client, cs101):

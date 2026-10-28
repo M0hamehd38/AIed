@@ -8,39 +8,41 @@
 // night/day mode: saved choice, else the system setting
 (function () { var t; try { t = localStorage.getItem('classyar-theme'); } catch (e) {} if (t !== 'dark' && t !== 'light') t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'; document.documentElement.dataset.theme = t; })();
 </script>
+<link rel="preload" href="{% static 'fonts/Vazirmatn-Regular.woff2' %}" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="{% static 'css/panel.css' %}">
 </head>
 <body data-evidence-url="{% url 'panel:evidence' %}">
+<a class="sr-only" href="#content">رفتن به محتوای اصلی</a>
 <div class="layout">
   <aside class="sidebar" id="sidebar" aria-label="منوی اصلی">
-    <div class="brand"><img src="{% static 'assets/emblem.webp' %}" alt="" style="width:40px;height:40px;flex:none"><div><b>کلاس‌یار</b><small>دستیار هوشمند استاد</small></div></div>
-    <nav id="nav">
-      {% for key, label in nav %}<a class="nav-btn" href="{% url 'panel:'|add:key %}" {% if view == key %}aria-current="page"{% endif %}>{% icon key %}{{ label }}{% if key == 'suggestions' and pending_count %}<span class="badge" aria-label="{{ pending_count|fa }} پیشنهاد در انتظار">{{ pending_count|fa }}</span>{% endif %}</a>{% endfor %}
+    <div class="brand"><img src="{% static 'assets/emblem.webp' %}" alt=""><div><b>کلاس‌یار</b><small>دستیار هوشمند آموزش</small></div></div>
+    <nav id="nav" aria-label="بخش‌ها">
+      {% for key, label in nav %}<a class="nav-btn" href="{% url 'panel:'|add:key %}" {% if view == key %}aria-current="page"{% endif %}>{% icon key %}<span>{{ label }}</span>{% if key == 'suggestions' and pending_count %}<span class="badge" aria-label="{{ pending_count|fa }} پیشنهاد در انتظار">{{ pending_count|fa }}</span>{% endif %}</a>{% endfor %}
     </nav>
-    <div class="ai-widget"><div class="bot" aria-hidden="true">AI</div><b>دستیار آماده است</b><br>{{ pending_count|fa }} پیشنهاد منتظر تصمیم شما.<div class="eq" aria-hidden="true">{% for i in "0123456012345601234560" %}<i></i>{% endfor %}</div></div>
+    <a class="ai-widget" href="{% url 'panel:suggestions' %}"><span class="ai-dot">{% icon 'ai' %}</span><span>{% if pending_count %}<b>{{ pending_count|fa }} پیشنهاد منتظر تصمیم شما</b>بدون تأیید شما اجرا نمی‌شود{% else %}<b>پیشنهاد در انتظاری نیست</b>همه بررسی شده‌اند{% endif %}</span></a>
   </aside>
   <div class="backdrop" id="backdrop" data-act="closeMenu"></div>
   <main>
     <header class="topbar">
-      <button class="menu-btn" data-act="openMenu" aria-label="باز کردن منو">☰</button>
+      <button class="icon-btn menu-btn" data-act="openMenu" aria-label="باز کردن منو" aria-controls="sidebar">{% icon 'menu' %}</button>
       {% if course %}
-      <div class="lesson"><span class="lesson-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5"/></svg></span>
+      <div class="lesson">
         <form method="post" action="{% url 'panel:course_switch' %}" id="courseForm">{% csrf_token %}<input type="hidden" name="next" value="{{ request.path }}">
           <label for="courseSel" class="sr-only">درس فعال</label>
-          <select id="courseSel" name="course" class="course-sel" data-autosubmit>{% for c in courses %}<option value="{{ c.pk }}" {% if c.pk == course.pk %}selected{% endif %}>{{ c.title }}{% if c.group %} · {{ c.group }}{% endif %}</option>{% endfor %}</select>
+          <select id="courseSel" name="course" class="course-sel" data-autosubmit title="تغییر درس">{% for c in courses %}<option value="{{ c.pk }}" {% if c.pk == course.pk %}selected{% endif %}>{{ c.title }}{% if c.group %}، {{ c.group }}{% endif %}</option>{% endfor %}</select>
           <noscript><button class="btn sm">تغییر</button></noscript>
-          <small>{% if cur_session %}جلسه‌ی {{ cur_session.number|fa }} · {{ cur_session.topic }}{% else %}هنوز جلسه‌ای تعریف نشده{% endif %}</small>
+          <small>{% if cur_session %}جلسه‌ی {{ cur_session.number|fa }}{% if cur_session.date %}، {{ cur_session.date|jdate }}{% endif %}{% else %}هنوز جلسه‌ای تعریف نشده{% endif %}</small>
         </form></div>
       {% endif %}
       <div class="spacer"></div>
-      {% if live_now %}<a class="live-chip on" href="{% url 'panel:live' %}" title="بازگشت به جلسه‌ی زنده"><span class="pill">در حال برگزاری</span><span class="timer"><bdi dir="ltr">{{ live_now.join_code }}</bdi></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M5 5a10 10 0 0 0 0 14M19 5a10 10 0 0 1 0 14"/></svg></a>{% endif %}
-      <button class="theme-btn" id="themeBtn" data-act="toggleTheme" aria-label="حالت شب"></button>
-      <a class="bell" href="{% url 'panel:suggestions' %}" aria-label="{% if pending_count %}اعلان‌ها: {{ pending_count|fa }} پیشنهاد در انتظار{% else %}اعلان‌ها{% endif %}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10 21h4"/></svg>{% if pending_count %}<span class="dot" aria-hidden="true"></span>{% endif %}</a>
-      <div class="teacher"><div class="avatar" style="background:linear-gradient(135deg,#4169f5,#8c62db)" aria-hidden="true">{{ initial }}</div><div><b>{{ user.full_name }}</b><small>استاد</small></div></div>
-      <form method="post" action="{% url 'accounts:logout' %}">{% csrf_token %}<button class="theme-btn" type="submit" aria-label="خروج" title="خروج"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 16l-4-4 4-4M6 12h10"/></svg></button></form>
+      {% if live_now %}<a class="live-chip" href="{% url 'panel:live' %}" title="بازگشت به جلسه‌ی زنده"><span class="pulse" aria-hidden="true"></span><span class="lbl">در حال برگزاری</span><bdi dir="ltr" aria-label="کد ورود">{{ live_now.join_code }}</bdi></a>{% endif %}
+      <button class="theme-btn" id="themeBtn" data-act="toggleTheme" aria-label="حالت شب" title="حالت شب"></button>
+      <a class="bell" href="{% url 'panel:suggestions' %}" title="پیشنهادهای در انتظار" aria-label="{% if pending_count %}{{ pending_count|fa }} پیشنهاد در انتظار تصمیم{% else %}پیشنهاد در انتظاری نیست{% endif %}">{% icon 'bell' %}{% if pending_count %}<span class="count" aria-hidden="true">{{ pending_count|fa }}</span>{% endif %}</a>
+      <div class="teacher"><div class="avatar" aria-hidden="true">{{ initial }}</div><div><b>{{ user.full_name }}</b><small>استاد</small></div></div>
+      <form method="post" action="{% url 'accounts:logout' %}">{% csrf_token %}<button class="icon-btn" type="submit" aria-label="خروج از حساب" title="خروج">{% icon 'logout' %}</button></form>
     </header>
-    <div class="page-head"><h1>{% if page_title %}{{ page_title }}{% else %}سلام {{ user.full_name }} <span class="hand" role="img" aria-label="دست تکان‌دادن">👋</span>{% endif %}</h1><div class="sub">{{ page_sub }}</div></div>
-    <div class="view">{% block content %}{% endblock %}</div>
+    <div class="page-head">{% block page_head %}<h1>{% if page_title %}{{ page_title }}{% else %}سلام {{ user.full_name }}{% endif %}</h1>{% if page_sub %}<div class="sub">{{ page_sub }}</div>{% endif %}{% endblock %}</div>
+    <div class="view" id="content">{% block content %}{% endblock %}</div>
   </main>
 </div>
 <div class="modal-bg" id="modalBg" data-act="modalBg"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" id="modal"></div></div>

@@ -181,4 +181,4 @@ def test_overview_counts_confusion_cues_of_the_last_session(teacher_client, cons
     stt_on.replies.append(['من گیج شدم'])
     send(teacher_client)
     body = teacher_client.get('/t/').content.decode()
-    assert 'نشانه‌ی ابهام گفتاری' in body and 'از رونوشت جلسه‌ی ۸' in body
+    assert 'آخرین رونوشت، جلسه‌ی ۸' in body and '۱ نشانه‌ی ابهام' in body
