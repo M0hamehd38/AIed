@@ -166,8 +166,15 @@ def dashboard(request, data):
         covered='، '.join(x['c'].title for x in cm), response_count=len(data.responses),
         avg_part=sum(ps) / len(ps) if ps else 0, overall=overall, chart=chart,
         heat=heatmap(data), speech=speech_summary(data.course, last),
+        hero={'session': last, 'total': len(data.students), 'mastery_dots': mastery_dots(overall)},
     )
     return render(request, 'panel/dashboard.html', ctx)
+
+
+def mastery_dots(m, count=30):
+    """The header's meter: the average mastery as a row-by-row share of 30 dots (each dot about 3.3%)."""
+    on = js_round(m * count)
+    return [i < on for i in range(count)]
 
 
 def speech_summary(course, session_number):

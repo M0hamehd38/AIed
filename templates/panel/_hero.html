@@ -1,0 +1,16 @@
+{% load ui %}<section class="page-head hero" aria-labelledby="greet">
+  <div class="copy">
+    <div class="eyebrow">{{ course.title }}{% if course.group %} · {{ course.group }}{% endif %} · جلسه‌ی {{ hero.session|fa }}</div>
+    <h1 id="greet">سلام، {{ user.full_name }}</h1>
+    <p class="hero-sub">{{ stats.active|fa }} دانشجوی فعال از {{ hero.total|fa }} نفر · {% if pending %}{{ pending|length|fa }} پیشنهاد منتظر تصمیم شماست{% else %}پیشنهادی منتظر تصمیم شما نیست{% endif %}</p>
+    <div class="chips">
+      <a class="chip" href="{% url 'panel:students' %}?f=attention"><span class="dot" style="background:var(--h-amber)"></span>{{ stats.attention|fa }} نیازمند توجه</a>
+      <a class="chip" href="{% url 'panel:suggestions' %}"><span class="dot" style="background:var(--h-violet)"></span>{{ pending|length|fa }} پیشنهاد هوشمند</a>
+    </div>
+  </div>
+  <div class="meter">
+    <div class="dots" role="img" aria-label="میانگین تسلط مفهومی کلاس {{ stats.mastery|pct }}">{% for on in hero.mastery_dots %}<i{% if on %} class="on"{% endif %}></i>{% endfor %}</div>
+    <div class="meter-label">میانگین تسلط مفهومی</div>
+    <div class="meter-value">{{ stats.mastery|pct }}</div>
+  </div>
+</section>

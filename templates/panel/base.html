@@ -39,7 +39,7 @@
       <a class="teacher" href="{% url 'panel:account' %}" title="ویرایش حساب کاربری"><div class="avatar" style="background:linear-gradient(135deg,#4169f5,#8c62db)" aria-hidden="true">{{ initial }}</div><div><b>{{ user.full_name }}</b><small>حساب کاربری</small></div></a>
       <form method="post" action="{% url 'accounts:logout' %}">{% csrf_token %}<button class="theme-btn" type="submit" aria-label="خروج" title="خروج"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 16l-4-4 4-4M6 12h10"/></svg></button></form>
     </header>
-    <div class="page-head"><h1>{% if page_title %}{{ page_title }}{% else %}سلام {{ user.full_name }} <span class="hand" role="img" aria-label="دست تکان‌دادن">👋</span>{% endif %}</h1><div class="sub">{{ page_sub }}</div></div>
+    {% block page_head %}<div class="page-head"><h1>{% if page_title %}{{ page_title }}{% else %}سلام {{ user.full_name }} <span class="hand" role="img" aria-label="دست تکان‌دادن">👋</span>{% endif %}</h1><div class="sub">{{ page_sub }}</div></div>{% endblock %}
     <div class="view">{% block content %}{% endblock %}</div>
   </main>
 </div>

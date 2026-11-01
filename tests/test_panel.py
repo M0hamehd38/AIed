@@ -27,8 +27,16 @@ def test_pages_render(teacher_client, url):
 
 def test_dashboard_shows_greeting_and_attention_count(teacher_client):
     body = teacher_client.get('/t/').content.decode()
-    assert 'سلام دکتر شهرام گلزاری هرمزی' in body
+    assert 'سلام، دکتر شهرام گلزاری هرمزی' in body
     assert 'مشاهده‌ی همه (۱۲)' in body
+
+
+def test_dashboard_header_meter_matches_average_mastery(teacher_client):
+    body = teacher_client.get('/t/').content.decode()
+    assert 'class="page-head hero"' in body and '۲۵ دانشجوی فعال از ۳۰ نفر' in body
+    # 70% average mastery lights 21 of the 30 dots
+    meter = body.split('class="dots"')[1].split('</div>')[0]
+    assert meter.count('<i class="on">') == 21 and meter.count('<i') == 30
 
 
 @pytest.mark.parametrize('ev', [{'type': 'cell', 'c': 0, 's': 1}, {'type': 'concept', 'c': 2}, {'type': 'question', 'q': 12},

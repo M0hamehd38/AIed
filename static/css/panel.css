@@ -378,3 +378,30 @@ a.live-chip{text-decoration:none;color:inherit}
 
 /* the hidden attribute must win over display rules like .btn{display:inline-flex} */
 [hidden]{display:none!important}
+
+/* dashboard header: a navy band with the greeting, the class at a glance and the mastery meter */
+.hero{--h-bg:#0f1733;--h-ink:#f1f4ff;--h-muted:#b9c3e6;--h-soft:#8b97c7;--h-chip:#1a2550;--h-line:#2a3766;--h-ok:#3ddc97;--h-off:#2a3561;--h-amber:#f5a524;--h-violet:#a78bfa;
+  position:relative;overflow:hidden;margin:24px 28px 18px;padding:40px 56px;border-radius:16px;background:var(--h-bg);color:var(--h-ink);
+  display:flex;align-items:center;justify-content:space-between;gap:40px}
+.hero::before{content:"";position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(#26305a 1.4px,transparent 1.6px);background-size:28px 28px}
+.hero::after{content:"";position:absolute;left:-120px;top:-160px;width:520px;height:520px;border-radius:50%;border:1px solid #1e2a55;pointer-events:none}
+.hero .copy,.hero .meter{position:relative;z-index:1}
+.hero .eyebrow{font-size:14px;color:var(--h-soft)}
+.hero h1{margin:12px 0 8px;font-size:38px;font-weight:800;line-height:1.3;color:var(--h-ink);display:block}
+.hero .hero-sub{margin:0 0 24px;font-size:17px;color:var(--h-muted);line-height:1.7}
+.hero .chips{display:flex;flex-wrap:wrap;gap:12px}
+.hero .chip{display:inline-flex;align-items:center;gap:8px;padding:7px 14px;border-radius:999px;background:var(--h-chip);border:1px solid var(--h-line);font-size:14px;color:var(--h-ink);text-decoration:none;transition:border-color .15s}
+.hero .chip:hover{border-color:#4a5a9a}
+.hero .chip:focus-visible{outline:2px solid #8fb4ff;outline-offset:2px}
+.hero .dot{width:8px;height:8px;border-radius:50%}
+.hero .meter{display:flex;flex-direction:column;align-items:center;gap:12px;flex:none}
+.hero .dots{display:grid;grid-template-columns:repeat(6,22px);gap:14px;direction:ltr}
+.hero .dots i{width:22px;height:22px;border-radius:50%;background:var(--h-off);display:block}
+.hero .dots i.on{background:var(--h-ok)}
+.hero .meter-label{font-size:14px;color:var(--h-muted)}
+.hero .meter-value{font-size:32px;font-weight:800;color:var(--h-ok);line-height:1}
+:root[data-theme=dark] .hero{box-shadow:inset 0 0 0 1px #233061}
+@media (max-width:1100px){.hero{padding:32px 36px;gap:28px}.hero h1{font-size:32px}}
+@media (max-width:768px){.hero{flex-direction:column-reverse;align-items:stretch;margin:16px 16px 12px;padding:28px 20px;gap:24px}
+  .hero::after{display:none}.hero h1{font-size:26px}.hero .hero-sub{font-size:15px}.hero .meter{align-self:center}
+  .hero .dots{grid-template-columns:repeat(6,18px);gap:12px}.hero .dots i{width:18px;height:18px}}

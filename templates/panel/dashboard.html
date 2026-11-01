@@ -1,4 +1,5 @@
 {% extends "panel/base.html" %}{% load ui %}
+{% block page_head %}{% include "panel/_hero.html" %}{% endblock %}
 {% block content %}
 <div class="grid g4">
   <a class="card stat" href="{% url 'panel:students' %}"><span class="top"><span><span class="label">دانشجویان فعال</span><span class="value" style="display:block">{{ stats.active|fa }} <span class="muted small">از {{ data.students|length|fa }}</span></span></span><span class="hic sic blue">{% icon 'students' %}</span></span><span class="delta">{% delta stats.active_delta %}</span></a>
