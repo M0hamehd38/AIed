@@ -33,7 +33,7 @@ const cards = CARDS.map(([ic, t, d, c, side], i) => {
 });
 const bokeh = [];
 const BK = ['rgba(120,200,255,', 'rgba(150,120,255,', 'rgba(90,150,255,', 'rgba(255,190,120,'];
-for (let i = 0; i < 18; i++) {
+for (let i = 0; i < 10; i++) {
   const el = document.createElement('div'); el.className = 'o';
   const r = k => Math.abs((Math.sin(i * k) * 43758.5453) % 1), sz = 10 + r(5.17) * 34, col = BK[i % 4];
   el.innerHTML = `<div class="bk" style="width:${sz}px;height:${sz}px;margin:${-sz / 2}px 0 0 ${-sz / 2}px;background:radial-gradient(circle,${col}.85),${col}.25) 45%,${col}0) 70%)"></div>`;
@@ -51,42 +51,38 @@ const farImg = $('#clsFar');
 function render(D, t, speed) {
   const pass = clamp(D, 0, 1);
   // classroom: down the middle toward the big screen
-  const zc = 1.3 * Math.pow(2.2 / 1.3, clamp(D, 0, 7) / 7) * (1 + 0.006 * Math.sin(t * .9));
+  const zc = 1.3 * Math.pow(2.2 / 1.3, clamp(D, 0, 7) / 7);
   const q = smooth(clamp(D / 7, 0, 1));
-  let cx = 835 + 195 * q + Math.sin(t * .5) * 3, cy = 410 - 5 * q + Math.cos(t * .6) * 2;
+  let cx = 835 + 195 * q, cy = 410 - 5 * q;
   const kc = PORT ? FH / PH : (FW / PW) * zc;   // portrait: the photo already fills the height, so the cards carry the motion
   const hw = FW / 2 / kc, hh = FH / 2 / kc; cx = clamp(cx, hw, PW - hw); cy = clamp(cy, hh, Math.max(hh, Math.min(PH - hh, 782 - hh)));
   PLACE(els.cls, cx, cy, kc); PLACE(els.scr, cx, cy, kc);
   const foc = smooth(clamp((D - 0.08) / 0.75, 0, 1));
   set(farImg, 'opacity', (1 - foc).toFixed(3));
   // fly through the gap between the bot (with its desk) and the headline
-  const sp = smooth(pass), pr = Math.pow(pass, 1.35), sc = 1 + 1.15 * sp, ho = 1 - clamp((pass - 0.5) / 0.38, 0, 1), hb = (Math.round(clamp(pass - .2, 0, 1) * 10) / 2).toFixed(1);
-  const hl = (e, tx, ty, s2) => { set(e, 'transform', `translate(${tx.toFixed(1)}px, ${ty.toFixed(1)}px) scale(${s2.toFixed(4)})`); set(e, 'opacity', ho.toFixed(3)); set(e, 'filter', pass > .2 && hb !== '0.0' ? `blur(${hb}px)` : ''); set(e, 'visibility', ho > 0.001 ? '' : 'hidden'); };
+  const sp = smooth(pass), pr = Math.pow(pass, 1.35), sc = 1 + 1.15 * sp, ho = 1 - clamp((pass - 0.5) / 0.38, 0, 1);
+  const hl = (e, tx, ty, s2) => { set(e, 'transform', `translate(${tx.toFixed(1)}px, ${ty.toFixed(1)}px) scale(${s2.toFixed(4)})`); set(e, 'opacity', ho.toFixed(3)); set(e, 'visibility', ho > 0.001 ? '' : 'hidden'); };
   if (PORT) { hl(els.head, 0, -900 * pr, sc * .95); hl(els.fg, 0, 850 * pr, 1 + .9 * sp); }
   else { hl(els.head, 1350 * pr + 22, -150 * pr + 8, sc * .88); hl(els.fg, -760 * pr, 420 * pr, 1 + .9 * sp); }
-  if (pass < 1) {
-    const g = (0.5 + 0.5 * Math.sin(t * 1.7)).toFixed(2); set(els.eyeL, 'opacity', g); set(els.eyeR, 'opacity', g);
-  }
   // feature cards: the current one is sharp, the next ones wait deeper in the room
   const appear = clamp((D - 0.55) / 0.3, 0, 1);
   for (const c of cards) {
-    const n = c.i + 1; let zz, op, blur;
-    if (D <= n) { zz = (D - n) * 1300; op = clamp((zz + 3300) / 900, 0, 1); blur = clamp(-zz / 210, 0, 9); }
-    else { zz = (D - n) * 1100; op = clamp(1 - zz / 480, 0, 1); blur = clamp(zz / 120, 0, 6); }
+    // cards further away are fainter (opacity is cheap; a blur filter re-rasters the card on every frame)
+    const n = c.i + 1; let zz, op;
+    if (D <= n) { zz = (D - n) * 1300; op = clamp((zz + 3300) / 900, 0, 1) * (1 - clamp(-zz / 2600, 0, .55)); }
+    else { zz = (D - n) * 1100; op = clamp(1 - zz / 480, 0, 1); }
     op *= appear;
-    const x = c.side * (PORT ? 60 : 300), y = [-70, 30, -40, 20, -60, 30][c.i] + Math.sin(t * 1.4 + c.i) * 5;
+    const x = c.side * (PORT ? 60 : 300), y = [-70, 30, -40, 20, -60, 30][c.i];
     const show = op > 0.005 && zz < 860;
     set(c.el, 'display', show ? '' : 'none');
     if (!show) continue;
-    // blur in whole-pixel steps, at most 4px: each new radius costs a new raster
-    const bq = Math.min(4, Math.round(blur));
-    set(c.el, 'transform', `translate3d(${x}px, ${y.toFixed(1)}px, ${zz.toFixed(1)}px) rotateY(${c.side * 12}deg)`);
-    set(c.el, 'opacity', op.toFixed(3)); set(c.el, 'filter', bq ? `blur(${bq}px) brightness(${(1 - bq * .04).toFixed(2)})` : '');
+    set(c.el, 'transform', `translate3d(${x}px, ${y}px, ${zz.toFixed(1)}px) rotateY(${c.side * 12}deg)`);
+    set(c.el, 'opacity', op.toFixed(3));
     set(c.el, 'zIndex', String(Math.round(10000 + zz)));
   }
   for (const b of bokeh) {
-    const z2 = ((b.z0 + D * 700 + t * 30) % 3200) - 2600;
-    const op = clamp((z2 + 2600) / 900, 0, 1) * clamp((700 - z2) / 400, 0, 1) * (0.22 + 0.25 * Math.abs(Math.sin(t * .8 + b.z0))) * appear;
+    const z2 = ((b.z0 + D * 700) % 3200) - 2600;
+    const op = clamp((z2 + 2600) / 900, 0, 1) * clamp((700 - z2) / 400, 0, 1) * (0.22 + 0.25 * Math.abs(Math.sin(b.z0))) * appear;
     if (op < 0.004) { set(b.el, 'opacity', '0'); continue; }
     set(b.el, 'transform', `translate3d(${b.x.toFixed(0)}px, ${b.y.toFixed(0)}px, ${z2.toFixed(0)}px)`); set(b.el, 'opacity', op.toFixed(3));
   }
@@ -94,7 +90,6 @@ function render(D, t, speed) {
   const hero = 1 - clamp(D / 0.25, 0, 1);
   set(els.stats, 'opacity', hero.toFixed(3)); set(els.stats, 'transform', `translateY(${((1 - hero) * 40).toFixed(1)}px)`); set(els.stats, 'visibility', hero > 0 ? '' : 'hidden');
   set(els.chev, 'opacity', hero.toFixed(3)); set(els.chev, 'visibility', hero > 0 ? '' : 'hidden');
-  if (hero > 0) set(els.chev, 'transform', `translateY(${(Math.abs(Math.sin(t * 2.4)) * 6).toFixed(1)}px)`);
   const at = Math.round(D);
   els.dots.forEach((d, i) => d.classList.toggle('on', i === at));
   els.menu[0].classList.toggle('on', D < 0.5); els.menu[1].classList.toggle('on', D >= 0.5 && D < 6.5);
@@ -140,15 +135,18 @@ function fit() {
 addEventListener('resize', fit); fit();
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const target = () => clamp(scrollY / innerHeight, 0, STOPS);
-let D = target(), last = -1;
-function tick(now) {
-  const t = reduce ? 0 : now / 1000, goal = target();
+// the camera eases toward the scroll position and the loop sleeps once it arrives: no work while the page is still
+let D = target(), running = false;
+function tick() {
+  const goal = target();
   D += (goal - D) * (reduce ? 1 : 0.11);
   if (Math.abs(goal - D) < 0.0005) D = goal;
-  render(D, t, clamp(Math.abs(goal - D) * 1.2, 0, 1));
-  requestAnimationFrame(tick);
+  render(D, 0, 0);
+  if (D !== goal) requestAnimationFrame(tick); else running = false;
 }
-requestAnimationFrame(tick);
+function wake() { if (!running) { running = true; requestAnimationFrame(tick); } }
+addEventListener('scroll', wake, {passive:true}); addEventListener('resize', wake);
+wake();
 function go(i) { scrollTo({top:i * innerHeight, behavior:reduce ? 'auto' : 'smooth'}); }
 document.addEventListener('click', e => {
   const g = e.target.closest('[data-go]'); if (g) { e.preventDefault(); go(+g.dataset.go); return; }

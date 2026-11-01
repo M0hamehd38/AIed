@@ -103,14 +103,24 @@ html,body{margin:0;background:var(--bg);color:var(--ink);font-family:'Digi Rasti
 .hl-text>img.cube{position:absolute;right:0;left:auto;top:4.1em;bottom:auto;width:9.6em;height:auto;filter:drop-shadow(0 0 22px rgba(60,140,255,.55))}
 #cls img{position:absolute;left:0;top:0;width:1671px;height:941px}
 #cls{will-change:transform}
+/* the board is scaled with the camera: keep it on its own layer, or every frame re-rasters its text and glow */
+#scr{will-change:transform,opacity}
 #clsFar{will-change:opacity}
 #stage .o .bk{will-change:transform}
+#headline,#fgroup{will-change:transform,opacity}
+#stage .o{will-change:transform,opacity}
+/* idle motion runs on the compositor, not in the scroll loop */
+#eyeL,#eyeR{animation:eyes 3.7s ease-in-out infinite}
+@keyframes eyes{50%{opacity:.15}}
+.chev svg{animation:chev 1.3s ease-in-out infinite}
+@keyframes chev{50%{transform:translateY(6px)}}
+@media (prefers-reduced-motion:reduce){#eyeL,#eyeR,.chev svg{animation:none}}
 
 /* Digi Rastin Plus has a narrow space (0.14em, Sahel's is 0.27em): open it up so words stay apart */
 body{word-spacing:.1em}
 
 /* cup steam: three wisps rise from the rim in turn and fade; pure CSS, no per-frame script */
-#steam{position:absolute;left:199px;top:196px;width:100px;height:150px;overflow:visible;pointer-events:none;filter:drop-shadow(0 0 5px rgba(36,64,140,.55))}
+#steam{position:absolute;left:199px;top:196px;width:100px;height:150px;overflow:visible;pointer-events:none}
 #steam path{fill:none;stroke:url(#stg);stroke-width:9;stroke-linecap:round}
 #steam .w{opacity:0;transform-box:fill-box;transform-origin:50% 100%;animation:steam 3.6s ease-out infinite}
 #steam .w2{animation-delay:1.2s}#steam .w3{animation-delay:2.4s}
