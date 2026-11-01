@@ -92,7 +92,8 @@ tbody tr:hover{background:#fafbfe}
 tr.clickable{cursor:pointer}
 .table-wrap{overflow-x:auto}
 .inline{display:flex;align-items:center;gap:8px}
-input[type=text],input[type=number],select,textarea{border:1px solid var(--line);border-radius:10px;padding:6px 10px;background:var(--card)}
+input[type=text],input[type=number],input[type=email],input[type=tel],input[type=password],select,textarea{border:1px solid var(--line);border-radius:10px;padding:6px 10px;background:var(--card)}
+.account .field input:not([type=checkbox]){min-height:40px;color:var(--ink)}
 textarea{width:100%;min-height:80px}
 /* heatmap */
 .heat{display:grid;gap:5px;align-items:stretch}
@@ -151,6 +152,10 @@ canvas.wave{width:100%;height:60px;display:block;background:var(--bg);border-rad
 .field{display:flex;flex-direction:column;gap:4px;margin-bottom:14px}
 .field label{font-size:13px;font-weight:600}
 .field .help{font-size:12px;color:var(--muted)}
+.field-err{font-size:12px;color:var(--red);font-weight:600;margin:0}
+.field input[aria-invalid=true]{border-color:var(--red)}
+a.teacher{text-decoration:none;color:inherit;border-radius:12px}
+a.teacher:hover b{color:var(--blue)}
 .switch{display:inline-flex;align-items:center;gap:8px}
 .empty{color:var(--muted);text-align:center;padding:24px 0;font-size:13px}
 /* responsive */
@@ -341,11 +346,11 @@ body{transition:background-color .25s,color .25s}
 .ccard-actions{display:flex;gap:8px;margin-top:auto}
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}
 .form-grid .full{grid-column:1/-1}
-.field input[type=text],.field textarea,.field select{width:100%}
+.field input[type=text],.field input[type=email],.field input[type=tel],.field input[type=password],.field textarea,.field select{width:100%}
 .opt-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
 .opt-row input[type=text]{flex:1}
 @media (max-width:720px){.form-grid{grid-template-columns:1fr}.course-sel{max-width:150px;padding-left:4px}}
-@media (max-width:480px){.teacher{display:none}}
+@media (max-width:480px){.teacher .avatar{width:32px;height:32px;font-size:12px}}
 
 /* ===== server-rendered panel ===== */
 a.nav-btn,a.bell,a.btn,a.person,a.pcard{text-decoration:none;color:inherit}

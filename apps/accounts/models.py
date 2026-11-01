@@ -31,6 +31,10 @@ class User(AbstractUser):
     full_name = models.CharField('نام کامل', max_length=120)
     role = models.CharField('نقش', max_length=10, choices=Role.choices, default=Role.TEACHER)
     student_no = models.CharField('شماره‌ی دانشجویی', max_length=20, blank=True)
+    # for SMS notices; stored as 09xxxxxxxxx. Verified only once an SMS provider has sent and checked a code
+    mobile = models.CharField('شماره‌ی موبایل', max_length=11, blank=True)
+    mobile_verified = models.BooleanField('موبایل تأیید شده', default=False)
+    sms_opt_in = models.BooleanField('دریافت پیامک', default=False)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['full_name']

@@ -9,7 +9,9 @@ import jdatetime
 import qrcode
 import qrcode.image.svg
 from django.contrib import messages
+from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.decorators import login_required
+from django.core.cache import cache
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
 from django.db.models import F, Func, IntegerField, Max, OuterRef, Subquery
@@ -19,6 +21,7 @@ from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
+from apps.accounts.forms import EmailChangeForm, PasswordChangeForm, ProfileForm
 from apps.accounts.models import User
 from apps.audio import services as audio_service
 from apps.audio import stt
@@ -835,3 +838,45 @@ def settings_view(request, data):
         messages.success(request, S.MSG['settings_saved'])
         return redirect('panel:settings')
     return render(request, 'panel/settings.html', panel_context(request, 'settings', data, consent=audio_service.consent_given(data.course)))
+
+
+# ---------------------------------------------------------------- the teacher's own account
+ACCOUNT_FAILS, ACCOUNT_WINDOW = 5, 10 * 60   # wrong current passwords before a pause, and the pause in seconds
+
+
+@teacher_required
+def account(request):
+    """Name, mobile and SMS choice; sign-in email; password. Each form saves on its own."""
+    user = request.user
+    forms_ = {'profile': ProfileForm(instance=user), 'email': EmailChangeForm(user), 'password': PasswordChangeForm(user)}
+    status = 200
+    which = request.POST.get('form') if request.method == 'POST' else None
+    if which in forms_:
+        key = f'account-fail:{user.pk}'
+        if which == 'profile':
+            form = ProfileForm(request.POST, instance=user)
+        else:
+            form = (EmailChangeForm if which == 'email' else PasswordChangeForm)(user, request.POST)
+        if which != 'profile' and cache.get(key, 0) >= ACCOUNT_FAILS:
+            form.is_valid()
+            form.errors.clear()
+            form.add_error(None, S.MSG['account_locked'])
+            forms_[which], status = form, 429
+        elif form.is_valid():
+            changed = form.changed_data if which == 'profile' else [which]
+            form.save()
+            if which == 'password':
+                update_session_auth_hash(request, user)   # stay signed in on this device
+            if changed:
+                # what changed, never the values themselves
+                record(user, 'account', user, S.ACCOUNT_AUDIT[which].format(fields='، '.join(S.ACCOUNT_FIELDS.get(f, f) for f in changed)))
+            messages.success(request, S.MSG['account_' + which])
+            return redirect('panel:account')
+        else:
+            if which != 'profile' and 'current_password' in form.errors:
+                cache.set(key, cache.get(key, 0) + 1, ACCOUNT_WINDOW)
+            forms_[which], status = form, 400
+    user.refresh_from_db()
+    ctx = panel_context(request, 'account', None, page_title='حساب کاربری', page_sub='نام، اطلاعات ورود و شماره‌ی موبایل',
+                        f=forms_, sms_ready=False)
+    return render(request, 'panel/account.html', ctx, status=status)

@@ -17,7 +17,9 @@ LEVEL_COLOR = {'g': 'var(--green)', 'o': 'var(--orange)', 'r': 'var(--red)'}
 AUDIT_ACTIONS = {'approve': ('تأیید', 'green'), 'reject': ('رد', 'gray'), 'edit': ('ویرایش', 'purple'),
                  'draft_question': ('ساخت پیش‌نویس', 'blue'), 'settings': ('تنظیمات', 'gray'),
                  'create_course': ('ایجاد درس', 'blue'), 'import_students': ('ورود دانشجو', 'blue'),
-                 'approve_question': ('تأیید سؤال', 'green')}
+                 'approve_question': ('تأیید سؤال', 'green'), 'account': ('حساب کاربری', 'gray')}
+ACCOUNT_FIELDS = {'full_name': 'نام', 'mobile': 'شماره‌ی موبایل', 'sms_opt_in': 'دریافت پیامک'}
+ACCOUNT_AUDIT = {'profile': 'ویرایش حساب: {fields}', 'email': 'تغییر ایمیل ورود', 'password': 'تغییر رمز عبور'}
 MSG = {
     'approved': 'پیشنهاد تأیید و در لاگ ممیزی ثبت شد.',
     'rejected': 'پیشنهاد رد و در لاگ ممیزی ثبت شد.',
@@ -37,4 +39,8 @@ MSG = {
     'csv_skipped': '{n} ردیف نامعتبر یا تکراری نادیده گرفته شد.',
     'csv_bad': 'فایل CSV خوانده نشد. ستون‌ها باید «کد، نام» باشند و فایل با UTF-8 ذخیره شده باشد.',
     'course_bad': 'نام درس و دست‌کم یک مفهوم لازم است.',
+    'account_profile': 'اطلاعات حساب ذخیره شد.',
+    'account_email': 'ایمیل ورود تغییر کرد؛ از این پس با ایمیل جدید وارد شوید.',
+    'account_password': 'رمز عبور تغییر کرد.',
+    'account_locked': 'رمز عبور فعلی چند بار اشتباه وارد شد. چند دقیقه‌ی دیگر دوباره امتحان کنید.',
 }

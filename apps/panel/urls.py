@@ -33,4 +33,5 @@ urlpatterns = [
     path('questions/add/', views.question_add, name='question_add'),
     path('questions/<int:pk>/approve/', views.question_approve, name='question_approve'),
     path('settings/', views.settings_view, name='settings'),
+    path('account/', views.account, name='account'),
 ]

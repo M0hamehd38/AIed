@@ -1,0 +1,58 @@
+{% extends "panel/base.html" %}{% load ui %}
+{% block content %}
+<div class="grid g2 account">
+  {% with p=f.profile %}
+  <form class="card" method="post" novalidate aria-labelledby="pTitle">{% csrf_token %}<input type="hidden" name="form" value="profile">
+    <div class="card-head"><h2 id="pTitle">اطلاعات شخصی</h2></div>
+    {% for e in p.non_field_errors %}<p class="field-err" role="alert">{{ e }}</p>{% endfor %}
+    <div class="field"><label for="aName">نام کامل</label>
+      <input type="text" id="aName" name="full_name" maxlength="120" required autocomplete="name" value="{{ p.full_name.value|default:'' }}" {% if p.full_name.errors %}aria-invalid="true" aria-describedby="aNameErr"{% endif %}>
+      {% if p.full_name.errors %}<span class="field-err" id="aNameErr">{{ p.full_name.errors.0 }}</span>{% endif %}
+      <span class="help">همین نام در سلام پنل و لاگ ممیزی دیده می‌شود.</span></div>
+    <div class="field"><label for="aMobile">شماره‌ی موبایل</label>
+      <input type="tel" id="aMobile" name="mobile" dir="ltr" inputmode="tel" autocomplete="tel" placeholder="09123456789" value="{{ p.mobile.value|default:'' }}" {% if p.mobile.errors %}aria-invalid="true" aria-describedby="aMobileErr"{% endif %}>
+      {% if p.mobile.errors %}<span class="field-err" id="aMobileErr">{{ p.mobile.errors.0 }}</span>{% endif %}
+      <span class="help">{% if user.mobile %}{% if user.mobile_verified %}{% tag 'تأیید شده' 'green' %}{% else %}{% tag 'تأیید نشده' 'gray' %}{% endif %} {% endif %}فقط برای پیامک‌های کلاس‌یار به‌کار می‌رود و به دانشجوها نشان داده نمی‌شود.</span></div>
+    <div class="field"><label class="switch"><input type="checkbox" name="sms_opt_in" {% if p.sms_opt_in.value %}checked{% endif %}> پیامک‌های کلاس‌یار را دریافت می‌کنم</label>
+      <span class="help">مثلاً یادآوری جلسه و خبر پیشنهادهای منتظر تصمیم. هر وقت بخواهید می‌توانید خاموشش کنید.</span></div>
+    {% if not sms_ready %}<div class="alert orange"><span class="ic">!</span><div><b>ارسال پیامک هنوز راه‌اندازی نشده است</b><p>شماره و انتخاب شما ذخیره می‌شود. پس از اتصال سرویس پیامک، اول یک کد تأیید به این شماره فرستاده می‌شود و تا تأیید نشود پیامکی ارسال نمی‌شود.</p></div></div>{% endif %}
+    <div style="margin-top:14px"><button class="btn primary">ذخیره</button></div>
+  </form>
+  {% endwith %}
+
+  <div>
+    {% with e=f.email %}
+    <form class="card" method="post" novalidate aria-labelledby="eTitle">{% csrf_token %}<input type="hidden" name="form" value="email">
+      <div class="card-head"><h2 id="eTitle">ایمیل ورود</h2><span class="hint" dir="ltr">{{ user.email }}</span></div>
+      {% for x in e.non_field_errors %}<p class="field-err" role="alert">{{ x }}</p>{% endfor %}
+      <div class="field"><label for="aEmail">ایمیل جدید</label>
+        <input type="email" id="aEmail" name="email" dir="ltr" autocomplete="email" value="{{ e.email.value|default:'' }}" {% if e.email.errors %}aria-invalid="true" aria-describedby="aEmailErr"{% endif %}>
+        {% if e.email.errors %}<span class="field-err" id="aEmailErr">{{ e.email.errors.0 }}</span>{% endif %}</div>
+      <div class="field"><label for="aEPass">رمز عبور فعلی</label>
+        <input type="password" id="aEPass" name="current_password" dir="ltr" autocomplete="current-password" {% if e.current_password.errors %}aria-invalid="true" aria-describedby="aEPassErr"{% endif %}>
+        {% if e.current_password.errors %}<span class="field-err" id="aEPassErr">{{ e.current_password.errors.0 }}</span>{% endif %}
+        <span class="help">برای تغییر اطلاعات ورود، رمز فعلی لازم است.</span></div>
+      <button class="btn primary">تغییر ایمیل</button>
+    </form>
+    {% endwith %}
+
+    {% with w=f.password %}
+    <form class="card mt" method="post" novalidate aria-labelledby="wTitle">{% csrf_token %}<input type="hidden" name="form" value="password">
+      <div class="card-head"><h2 id="wTitle">رمز عبور</h2></div>
+      {% for x in w.non_field_errors %}<p class="field-err" role="alert">{{ x }}</p>{% endfor %}
+      <div class="field"><label for="aWCur">رمز عبور فعلی</label>
+        <input type="password" id="aWCur" name="current_password" dir="ltr" autocomplete="current-password" {% if w.current_password.errors %}aria-invalid="true" aria-describedby="aWCurErr"{% endif %}>
+        {% if w.current_password.errors %}<span class="field-err" id="aWCurErr">{{ w.current_password.errors.0 }}</span>{% endif %}</div>
+      <div class="field"><label for="aWNew">رمز عبور جدید</label>
+        <input type="password" id="aWNew" name="new_password" dir="ltr" autocomplete="new-password" minlength="8" {% if w.new_password.errors %}aria-invalid="true" aria-describedby="aWNewErr"{% endif %}>
+        {% if w.new_password.errors %}<span class="field-err" id="aWNewErr">{% for x in w.new_password.errors %}{{ x }} {% endfor %}</span>{% endif %}
+        <span class="help">دست‌کم ۸ نویسه، نه فقط عدد و نه رمزهای رایج.</span></div>
+      <div class="field"><label for="aWNew2">تکرار رمز عبور جدید</label>
+        <input type="password" id="aWNew2" name="new_password2" dir="ltr" autocomplete="new-password" {% if w.new_password2.errors %}aria-invalid="true" aria-describedby="aWNew2Err"{% endif %}>
+        {% if w.new_password2.errors %}<span class="field-err" id="aWNew2Err">{{ w.new_password2.errors.0 }}</span>{% endif %}</div>
+      <button class="btn primary">تغییر رمز عبور</button>
+    </form>
+    {% endwith %}
+  </div>
+</div>
+{% endblock %}
