@@ -401,7 +401,8 @@ def suggestions_ai(request, data):
         except assistant.TooSoon:
             messages.error(request, S.MSG['ai_too_soon'])
         except llm.LLMUnavailable as e:
-            messages.error(request, S.MSG['ai_off'] if str(e) == 'not configured' else S.MSG['ai_failed'])
+            messages.error(request, {'not configured': S.MSG['ai_off'], 'rate_limited': S.MSG['ai_rate_limited'],
+                                     'auth': S.MSG['ai_auth']}.get(str(e), S.MSG['ai_failed']))
         else:
             messages.success(request, S.MSG['ai_done'].format(kept=fa(kept), dropped=fa(offered - kept)) if offered > kept
                              else S.MSG['ai_done_all'].format(kept=fa(kept)) if kept else S.MSG['ai_none'])

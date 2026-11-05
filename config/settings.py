@@ -69,10 +69,10 @@ STT_TOKEN = os.environ.get('STT_TOKEN', '')
 STT_TIMEOUT = int(os.environ.get('STT_TIMEOUT', '30'))
 
 # language model for the assistant (phase 4); empty = rule-based drafts only. See apps/insights/llm.py
-LLM_PROVIDER = os.environ.get('LLM_PROVIDER', '')          # '', 'anthropic' or 'openai_compatible'
-LLM_MODEL = os.environ.get('LLM_MODEL', '')                # anthropic: defaults to claude-opus-5-5
+LLM_PROVIDER = os.environ.get('LLM_PROVIDER', '')          # '', 'anthropic', 'openai_compatible' or 'openrouter'
+LLM_MODEL = os.environ.get('LLM_MODEL', '')                # anthropic: claude-opus-5-5; openrouter: deepseek/deepseek-v4-flash:free
 LLM_BASE_URL = os.environ.get('LLM_BASE_URL', '')          # openai_compatible only, e.g. http://llm.uni.local/v1
-LLM_API_KEY = os.environ.get('LLM_API_KEY', '')            # anthropic: falls back to ANTHROPIC_API_KEY
+LLM_API_KEY = os.environ.get('LLM_API_KEY', '')            # anthropic: falls back to ANTHROPIC_API_KEY; openrouter: required
 LLM_EFFORT = os.environ.get('LLM_EFFORT', 'medium')        # anthropic: low / medium / high
 LLM_TIMEOUT = int(os.environ.get('LLM_TIMEOUT', '120'))
 

@@ -228,3 +228,76 @@ def test_provider_choice(settings):
     assert llm.provider().model == 'claude-opus-5-5'
     settings.LLM_PROVIDER, settings.LLM_BASE_URL, settings.LLM_MODEL = 'openai_compatible', '', 'x'
     assert llm.provider() is None   # no address, no provider
+
+
+# ---------------------------------------------------------------- OpenRouter / DeepSeek V4 (free)
+class Endpoint:
+    """Plays an OpenAI-style endpoint that accepts only some response_format types."""
+
+    def __init__(self, accepts, reply, status=None):
+        self.accepts, self.reply, self.status, self.seen = accepts, reply, status, []
+
+    def __call__(self, req, timeout):
+        import urllib.error
+        body = json.loads(req.data)
+        mode = body.get('response_format', {}).get('type', 'prompt')
+        self.seen.append((mode, req.full_url, dict(req.header_items()), body))
+        if self.status:
+            raise urllib.error.HTTPError(req.full_url, self.status, 'x', {}, io.BytesIO(b'{}'))
+        if mode not in self.accepts:
+            raise urllib.error.HTTPError(req.full_url, 400, 'unsupported response_format', {}, io.BytesIO(b'{}'))
+        return io.BytesIO(json.dumps({'choices': [{'message': {'content': self.reply}}]}).encode())
+
+
+def openrouter(settings, monkeypatch, endpoint):
+    settings.LLM_PROVIDER, settings.LLM_API_KEY, settings.LLM_MODEL, settings.LLM_BASE_URL = 'openrouter', 'sk-or-test', '', ''
+    p = llm.provider()
+    monkeypatch.setattr(p, '_opener', SimpleNamespace(open=endpoint))
+    return p
+
+
+def test_openrouter_defaults_to_free_deepseek_v4(settings):
+    settings.LLM_PROVIDER, settings.LLM_API_KEY, settings.LLM_MODEL, settings.LLM_BASE_URL = 'openrouter', 'sk-or-test', '', ''
+    p = llm.provider()
+    assert p.model == 'deepseek/deepseek-v4-flash:free' and p.base_url == 'https://openrouter.ai/api/v1'
+    assert p._opener is p._public   # a public service: goes through the normal outbound route
+    d = llm.describe()
+    assert d['on'] and 'DeepSeek V4' in d['label'] and 'رایگان' in d['where']
+    settings.LLM_API_KEY = ''
+    assert llm.provider() is None and not llm.describe()['on']   # no key, no provider
+
+
+@pytest.mark.parametrize('accepts, tries', [({'json_schema'}, ['json_schema']),
+                                            ({'json_object'}, ['json_schema', 'json_object']),
+                                            ({'prompt'}, ['json_schema', 'json_object', 'prompt'])])
+def test_steps_down_to_what_the_endpoint_accepts(settings, monkeypatch, accepts, tries):
+    reply = 'بفرمایید:\n```json\n' + json.dumps({'drafts': [draft('concept:1')]}, ensure_ascii=False) + '\n```'
+    ep = Endpoint(accepts, reply)
+    out = openrouter(settings, monkeypatch, ep).generate('sys', 'figures', assistant.DraftSet)
+    assert out.drafts[0].evidence_id == 'concept:1'
+    assert [m for m, *_ in ep.seen] == tries
+    mode, url, headers, body = ep.seen[-1]
+    assert url == 'https://openrouter.ai/api/v1/chat/completions' and body['model'] == 'deepseek/deepseek-v4-flash:free'
+    assert headers['Authorization'] == 'Bearer sk-or-test'
+    if mode != 'json_schema':   # without schema support, the schema is spelled out for the model
+        assert '"evidence_id"' in body['messages'][0]['content']
+
+
+@pytest.mark.parametrize('status, reason', [(429, 'rate_limited'), (401, 'auth'), (500, 'status 500')])
+def test_openrouter_errors(settings, monkeypatch, status, reason):
+    with pytest.raises(llm.LLMUnavailable) as e:
+        openrouter(settings, monkeypatch, Endpoint({'json_schema'}, '', status=status)).generate('s', 'p', assistant.DraftSet)
+    assert str(e.value) == reason
+
+
+def test_free_quota_message(teacher_client, use):
+    class Quota(StandIn):
+        def generate(self, *a):
+            raise llm.LLMUnavailable('rate_limited')
+    use(Quota())
+    assert 'سقف روزانه' in teacher_client.post('/t/suggestions/ai/', follow=True).content.decode()
+
+
+def test_internal_hosts_skip_the_proxy():
+    assert llm._internal('http://llm.internal/v1') and llm._internal('http://10.1.2.3:8000/v1') and llm._internal('http://gpu1:8000')
+    assert not llm._internal('https://openrouter.ai/api/v1')
