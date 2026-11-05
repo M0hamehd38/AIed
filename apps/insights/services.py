@@ -133,7 +133,8 @@ def sync_suggestions(data: CourseData):
             setattr(s, f, p[f])
         if changed:
             s.save(update_fields=changed)
-    stale = [s.pk for k, s in existing.items() if s.status == Suggestion.Status.PENDING and k not in {p['key'] for p in produced}]
+    stale = [s.pk for k, s in existing.items() if s.source == Suggestion.Source.RULES and s.status == Suggestion.Status.PENDING
+             and k not in {p['key'] for p in produced}]
     if stale:
         Suggestion.objects.filter(pk__in=stale).delete()
 

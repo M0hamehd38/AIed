@@ -21,6 +21,7 @@ urlpatterns = [
     path('students/import/', views.students_import, name='students_import'),
     path('analytics/', views.analytics, name='analytics'),
     path('suggestions/', views.suggestions, name='suggestions'),
+    path('suggestions/ai/', views.suggestions_ai, name='suggestions_ai'),
     path('suggestions/<int:pk>/decide/', views.suggestion_decide, name='suggestion_decide'),
     path('suggestions/<int:pk>/edit/', views.suggestion_edit, name='suggestion_edit'),
     path('suggestions/<int:pk>/draft-question/', views.suggestion_draft_question, name='suggestion_draft_question'),

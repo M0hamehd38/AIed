@@ -30,7 +30,7 @@ from apps.audio.models import Transcript, TranscriptSignal
 from apps.audit.models import AuditLog, record
 from apps.courses.models import (Concept, Course, Enrollment, Option, Question, QuestionConcept, Response, Session,
                                  SessionQuestion)
-from apps.insights import services
+from apps.insights import assistant, llm, services
 from apps.insights.models import Suggestion
 from apps.live import services as live_service
 from apps.live import strings as LS
@@ -382,8 +382,30 @@ def suggestions(request, data):
     audit = [{'e': e, 'label': S.AUDIT_ACTIONS.get(e.action, (e.action, 'gray'))}
              for e in AuditLog.objects.filter(course=data.course).select_related('actor')[:50]]
     ctx = panel_context(request, 'suggestions', data, pending=qs.filter(status=Suggestion.Status.PENDING),
-                        done=qs.exclude(status=Suggestion.Status.PENDING), audit=audit)
+                        done=qs.exclude(status=Suggestion.Status.PENDING), audit=audit, llm=llm.describe())
+    if data.responses and ctx['llm']['on']:
+        # exactly what a request would send, so the teacher can check it holds nothing about any student
+        ctx['brief'] = json.dumps(assistant.brief(data)[0], ensure_ascii=False, indent=1)
     return render(request, 'panel/suggestions.html', ctx)
+
+
+@with_course
+@require_POST
+def suggestions_ai(request, data):
+    """Ask the language model for drafts. They join the queue like any other and wait for the teacher."""
+    if not data.responses:
+        messages.error(request, S.MSG['ai_no_data'])
+    else:
+        try:
+            kept, offered = assistant.request_drafts(data, request.user)
+        except assistant.TooSoon:
+            messages.error(request, S.MSG['ai_too_soon'])
+        except llm.LLMUnavailable as e:
+            messages.error(request, S.MSG['ai_off'] if str(e) == 'not configured' else S.MSG['ai_failed'])
+        else:
+            messages.success(request, S.MSG['ai_done'].format(kept=fa(kept), dropped=fa(offered - kept)) if offered > kept
+                             else S.MSG['ai_done_all'].format(kept=fa(kept)) if kept else S.MSG['ai_none'])
+    return redirect('panel:suggestions')
 
 
 def my_suggestion(request, pk):
@@ -421,17 +443,27 @@ def suggestion_draft_question(request, pk):
         return HttpResponseBadRequest()
     course = s.course
     src = get_object_or_404(Question, course=course, number=s.evidence_ref.get('q'))
+    data = services.CourseData(course)
+    item = next((it for it in data.a.items() if it['q'].id == src.number), None)
+    # a new question written by the model when one is configured; otherwise a copy for the teacher to rewrite
+    new = assistant.draft_question(data, src, item) if item else None
+    if new:
+        text, options = new['text'], [(i, o, i == new['correct']) for i, o in enumerate(new['options'])]
+    else:
+        text = f'(پیش‌نویس، مشابه سؤال {fa(src.number)}؛ پیش از استفاده بازنویسی کنید) {src.text}'
+        options = [(o.order, o.text, o.is_correct) for o in src.options.all()]
     with transaction.atomic():
         number = (course.questions.aggregate(m=Max('number'))['m'] or 0) + 1
-        q = Question.objects.create(course=course, number=number, text=f'(پیش‌نویس، مشابه سؤال {fa(src.number)}) {src.text}',
+        q = Question.objects.create(course=course, number=number, text=text,
                                     planned_session=course.sessions.last(), status=Question.Status.DRAFT,
                                     source=Question.Source.AI_DRAFT)
         QuestionConcept.objects.bulk_create([QuestionConcept(question=q, concept=c) for c in src.concepts.all()])
-        Option.objects.bulk_create([Option(question=q, order=o.order, text=o.text, is_correct=o.is_correct) for o in src.options.all()])
+        Option.objects.bulk_create([Option(question=q, order=i, text=t, is_correct=ok) for i, t, ok in options])
         s.drafted = True
         s.save(update_fields=['drafted'])
-        record(request.user, 'draft_question', q, f'سؤال {fa(number)} برای بازبینی', course=course)
-    messages.success(request, S.MSG['drafted'])
+        record(request.user, 'draft_question', q, f'سؤال {fa(number)} برای بازبینی'
+               + (f' (نوشته‌ی مدل {new["model"]})' if new else ' (رونوشت؛ مدل زبانی در دسترس نبود)'), course=course)
+    messages.success(request, S.MSG['drafted_ai'] if new else S.MSG['drafted'])
     return redirect('panel:suggestions')
 
 
@@ -844,7 +876,7 @@ def settings_view(request, data):
         services.sync_suggestions(services.CourseData(data.course))
         messages.success(request, S.MSG['settings_saved'])
         return redirect('panel:settings')
-    return render(request, 'panel/settings.html', panel_context(request, 'settings', data, consent=audio_service.consent_given(data.course)))
+    return render(request, 'panel/settings.html', panel_context(request, 'settings', data, consent=audio_service.consent_given(data.course), llm=llm.describe()))
 
 
 # ---------------------------------------------------------------- the teacher's own account

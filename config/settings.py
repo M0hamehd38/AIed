@@ -68,6 +68,14 @@ STT_URL = os.environ.get('STT_URL', '')
 STT_TOKEN = os.environ.get('STT_TOKEN', '')
 STT_TIMEOUT = int(os.environ.get('STT_TIMEOUT', '30'))
 
+# language model for the assistant (phase 4); empty = rule-based drafts only. See apps/insights/llm.py
+LLM_PROVIDER = os.environ.get('LLM_PROVIDER', '')          # '', 'anthropic' or 'openai_compatible'
+LLM_MODEL = os.environ.get('LLM_MODEL', '')                # anthropic: defaults to claude-opus-5-5
+LLM_BASE_URL = os.environ.get('LLM_BASE_URL', '')          # openai_compatible only, e.g. http://llm.uni.local/v1
+LLM_API_KEY = os.environ.get('LLM_API_KEY', '')            # anthropic: falls back to ANTHROPIC_API_KEY
+LLM_EFFORT = os.environ.get('LLM_EFFORT', 'medium')        # anthropic: low / medium / high
+LLM_TIMEOUT = int(os.environ.get('LLM_TIMEOUT', '120'))
+
 # live sessions: Redis when there is more than one server process, otherwise in memory
 REDIS_URL = os.environ.get('REDIS_URL')
 CHANNEL_LAYERS = {'default': {'BACKEND': 'channels_redis.core.RedisChannelLayer', 'CONFIG': {'hosts': [REDIS_URL]}}

@@ -81,3 +81,8 @@ document.addEventListener('change', e => { if (e.target.matches('[data-autosubmi
 document.querySelectorAll('#toasts .toast').forEach(t => setTimeout(() => t.remove(), 4200));
 document.querySelectorAll('[data-href],tr[data-act]').forEach(el => { el.tabIndex = 0; });
 paintThemeBtn();
+// slow forms (a language-model request): show that work is under way and block a second click
+document.addEventListener('submit', e => {
+  const f = e.target; if (!f.dataset.busy) return;
+  const b = f.querySelector('button'); if (b) { b.disabled = true; b.textContent = f.dataset.busy; }
+});

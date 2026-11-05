@@ -1,6 +1,18 @@
 {% extends "panel/base.html" %}{% load ui %}
 {% block content %}
 <div class="alert blue"><span class="ic">i</span><div><b>پیشنهادها پیش‌نویس هستند</b><p>فقط داده‌ی تجمیعی و بدون نام تحلیل می‌شود. هیچ پیشنهادی بدون تأیید شما اجرا یا به دانشجو نشان داده نمی‌شود.</p></div></div>
+<div class="card mt ai-request"><div class="card-head"><h2><span class="ai-badge">AI</span>پیشنهاد از مدل زبانی</h2>
+    {% if llm.on %}{% tag llm.label 'purple' %}<span class="hint">{{ llm.where }}</span>{% else %}{% tag 'تنظیم نشده' 'gray' %}{% endif %}</div>
+  {% if llm.on %}
+    <p class="small" style="margin-top:0">مدل فقط اعداد تجمیعی همین درس را می‌بیند: تسلط هر مفهوم و هر سؤال، تعداد پاسخ‌ها و نرخ پاسخ هر جلسه. نام، کد یا پاسخ هیچ دانشجویی فرستاده نمی‌شود. هر پیشنهاد باید به یکی از شواهد درس استناد کند؛ پیشنهادِ بی‌شواهد یا با داده‌ی ناکافی کنار گذاشته می‌شود. عدد شواهد و سطح اطمینان را خود سامانه حساب می‌کند، نه مدل.</p>
+    <div class="actions" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+      <form method="post" action="{% url 'panel:suggestions_ai' %}" data-busy="در حال تحلیل… (ممکن است تا یک دقیقه طول بکشد)">{% csrf_token %}<button class="btn primary" {% if not data.responses %}disabled{% endif %}>درخواست پیشنهاد تازه</button></form>
+      {% if brief %}<details class="sent-data"><summary>داده‌ای که فرستاده می‌شود</summary><pre dir="ltr">{{ brief }}</pre></details>{% endif %}
+    </div>
+  {% else %}
+    <p class="small" style="margin:0">در این نصب مدل زبانی وصل نیست؛ پیشنهادهای پایین با قواعد ثابت ساخته می‌شوند و کامل کار می‌کنند. مدیر سامانه می‌تواند مدل داخلی دانشگاه یا Claude را با متغیرهای <bdi dir="ltr">LLM_PROVIDER</bdi> تنظیم کند.</p>
+  {% endif %}
+</div>
 <div class="grid g-main mt">
   <div class="card"><div class="card-head"><h2>در انتظار تصمیم</h2><span class="hint">{{ pending|length|fa }} مورد</span></div>
     {% for s in pending %}{% include "panel/_suggestion.html" %}{% empty %}<div class="empty">همه‌ی پیشنهادها بررسی شده‌اند.</div>{% endfor %}

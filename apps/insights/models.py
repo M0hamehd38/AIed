@@ -24,8 +24,14 @@ class Suggestion(models.Model):
         LOW = 'low', 'اطمینان پایین'
         INSUFFICIENT = 'insufficient', 'داده کافی نیست'
 
+    class Source(models.TextChoices):
+        RULES = 'rules', 'قاعده‌محور'
+        AI = 'ai', 'مدل زبانی'
+
     course = models.ForeignKey('courses.Course', on_delete=models.CASCADE, related_name='suggestions')
-    key = models.CharField(max_length=60)  # stable id of the rule that produced it
+    key = models.CharField(max_length=60)  # stable id of the rule that produced it; 'ai-…' for the model's drafts
+    source = models.CharField(max_length=8, choices=Source.choices, default=Source.RULES)
+    model_name = models.CharField(max_length=80, blank=True)  # which language model wrote it
     title = models.CharField(max_length=200)
     action = models.TextField()
     evidence = models.TextField()
